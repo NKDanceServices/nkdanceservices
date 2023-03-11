@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>notifications.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/notifications.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#notifications%20api">Notifications API</a>
+      </div>
+      <div class="heading h2">
+        <a href="#notification%20api%20methods">Notification API Methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#browse">Browse</a>
+      </div>
+      <div class="heading h3">
+        <a href="#add">Add</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#save%20notifications">Save Notifications</a>
+      </div>
+      <div class="heading h3">
+        <a href="#destroy">Destroy</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#destroyall">DestroyAll</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="notifications%20api">
+  <h1>
+    <a href="#notifications%20api" name="notifications%20api" class="pilcrow">&#182;</a>
+    Notifications API
+  </h1>
+</div>
+
+
+<p>RESTful API for creating notifications</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>                  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">permissions</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../permissions&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+    <span class="nx">canThis</span>            <span class="o">=</span> <span class="nx">permissions</span><span class="p">.</span><span class="nx">canThis</span><span class="p">,</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Holds the persistent notifications</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">notificationsStore</span> <span class="o">=</span> <span class="p">[],</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Holds the last used id</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">notificationCounter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nx">notifications</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="notification%20api%20methods">
+  <h2>
+    <a href="#notification%20api%20methods" name="notification%20api%20methods" class="pilcrow">&#182;</a>
+    Notification API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">notifications</span> <span class="o">=</span> <span class="p">{</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="browse">
+  <h3>
+    <a href="#browse" name="browse" class="pilcrow">&#182;</a>
+    Browse
+  </h3>
+</div>
+
+
+<p>Fetch all notifications</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Notifications)
+</span>
+      <span>{Promise(Notifications)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">browse</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">browse</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">browse</span><span class="p">.</span><span class="nx">notification</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">{</span><span class="nx">notifications</span><span class="o">:</span> <span class="nx">notificationsStore</span><span class="p">};</span>
+        <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to browse notifications.&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="add">
+  <h3>
+    <a href="#add" name="add" class="pilcrow">&#182;</a>
+    Add
+  </h3>
+</div>
+
+  </div>
+  <div class="body"><p><strong>takes:</strong> a notification object of the form</p>
+
+<div class='highlight'><pre><code language=''> msg = { notifications: [{
+     type: 'error', // this can be 'error', 'success', 'warn' and 'info'
+     message: 'This is an error', // A string. Should fit in one line.
+     location: 'bottom', // A string where this notification should appear. can be 'bottom' or 'top'
+     dismissible: true // A Boolean. Whether the notification is dismissible or not.
+ }] };
+</code></pre></div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">add</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">permissions</span><span class="p">.</span><span class="nx">parseContext</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">internal</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">add</span><span class="p">.</span><span class="nx">notification</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to add notifications.&#39;</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="save%20notifications">
+  <h3>
+    <a href="#save%20notifications" name="save%20notifications" class="pilcrow">&#182;</a>
+    Save Notifications
+  </h3>
+</div>
+
+
+<p>Save the notifications</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">saveNotifications</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">defaults</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">dismissible</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+                    <span class="nx">location</span><span class="o">:</span> <span class="s1">&#39;bottom&#39;</span><span class="p">,</span>
+                    <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;alert&#39;</span>
+                <span class="p">},</span>
+                <span class="nx">addedNotifications</span> <span class="o">=</span> <span class="p">[];</span>
+
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">notifications</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">notification</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">notificationCounter</span> <span class="o">=</span> <span class="nx">notificationCounter</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+
+                <span class="nx">notification</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span><span class="nx">defaults</span><span class="p">,</span> <span class="nx">notification</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="nx">id</span><span class="o">:</span> <span class="nx">notificationCounter</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>status: 'alert'</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="p">});</span>
+
+                <span class="nx">notificationsStore</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">notification</span><span class="p">);</span>
+                <span class="nx">addedNotifications</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">notification</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="k">return</span> <span class="nx">addedNotifications</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="s1">&#39;notifications&#39;</span><span class="p">),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">saveNotifications</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">{</span><span class="nx">notifications</span><span class="o">:</span> <span class="nx">result</span><span class="p">};</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="destroy">
+  <h3>
+    <a href="#destroy" name="destroy" class="pilcrow">&#182;</a>
+    Destroy
+  </h3>
+</div>
+
+
+<p>Remove a specific notification</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id(required)</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Notifications)
+</span>
+      <span>{Promise(Notifications)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">destroy</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">destroy</span><span class="p">.</span><span class="nx">notification</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to destroy notifications.&#39;</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="kd">function</span> <span class="nx">destroyNotification</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">notification</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">notificationsStore</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">element</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">notification</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">notification</span><span class="p">.</span><span class="nx">dismissible</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span>
+                    <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to dismiss this notification.&#39;</span><span class="p">)</span>
+                <span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">notification</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Notification does not exist.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="nx">notificationsStore</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">notificationsStore</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">element</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="p">});</span>
+            <span class="nx">notificationCounter</span> <span class="o">=</span> <span class="nx">notificationCounter</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">notification</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="s1">&#39;notifications&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">idDefaultOptions</span><span class="p">}),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">destroyNotification</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">{</span><span class="nx">notifications</span><span class="o">:</span> <span class="p">[</span><span class="nx">result</span><span class="p">]};</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="destroyall">
+  <h3>
+    <a href="#destroyall" name="destroyall" class="pilcrow">&#182;</a>
+    DestroyAll
+  </h3>
+</div>
+
+
+<p>Clear all notifications, used for tests</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise
+</span>
+      <span>{Promise}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">destroyAll</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">destroyAll</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">destroy</span><span class="p">.</span><span class="nx">notification</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">notificationsStore</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">notificationCounter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">notificationsStore</span><span class="p">;</span>
+        <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to destroy notifications.&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">notifications</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

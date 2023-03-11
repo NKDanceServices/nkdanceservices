@@ -1,0 +1,11 @@
+{
+	"mail":{
+		"apikey":		"key-7a332ffe796eb17fc2b213bc114d9429",
+		"domain":		"mail.nkdanceservices.com",
+		"clientEmail":	"kaosochi@nkdanceservices.com"
+	},
+	"captcha": {
+		"url": 			"https://www.google.com/recaptcha/api/siteverify",
+		"secretekey":	"6LeJbxoTAAAAAF0zqR0pHrHTCPWPJRwo4rwWYQvu"
+	}
+}

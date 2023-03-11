@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ghost_foot.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/ghost_foot.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#ghost%20foot%20helper">Ghost Foot Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="ghost%20foot%20helper">
+  <h1>
+    <a href="#ghost%20foot%20helper" name="ghost%20foot%20helper" class="pilcrow">&#182;</a>
+    Ghost Foot Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{ghost_foot}}</code></p>
+
+<p>Outputs scripts and other assets at the bottom of a Ghost theme</p>
+
+<p>We use the name ghost_foot to match the helper for consistency:
+jscs:disable requireCamelCaseOrUpperCaseIdentifiers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">hbs</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">filters</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../filters&#39;</span><span class="p">),</span>
+    <span class="nx">api</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">ghost_foot</span><span class="p">;</span>
+
+<span class="nx">ghost_foot</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/*jshint unused:false*/</span>
+    <span class="kd">var</span> <span class="nx">foot</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;ghost_foot&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">foot</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">filters</span><span class="p">.</span><span class="nx">doFilter</span><span class="p">(</span><span class="s1">&#39;ghost_foot&#39;</span><span class="p">,</span> <span class="nx">foot</span><span class="p">);</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">foot</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">footString</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">foot</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">item</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">memo</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">;</span> <span class="p">},</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">(</span><span class="nx">footString</span><span class="p">.</span><span class="nx">trim</span><span class="p">());</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ghost_foot</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

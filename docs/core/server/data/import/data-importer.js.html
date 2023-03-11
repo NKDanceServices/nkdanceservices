@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>data-importer.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/data/import/data-importer.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>data-importer.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">models</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../models&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+
+    <span class="nx">internal</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">internal</span><span class="p">,</span>
+
+    <span class="nx">DataImporter</span><span class="p">;</span>
+
+<span class="nx">DataImporter</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{};</span>
+
+<span class="nx">DataImporter</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">importData</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">doImport</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">DataImporter</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">loadRoles</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">internal</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Role</span><span class="p">.</span><span class="nx">findAll</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">roles</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">DataImporter</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">loadUsers</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">users</span> <span class="o">=</span> <span class="p">{</span><span class="nx">all</span><span class="o">:</span> <span class="p">{}},</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]},</span> <span class="nx">internal</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findAll</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">_users</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">_users</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">users</span><span class="p">.</span><span class="nx">all</span><span class="p">[</span><span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">realId</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)};</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">).</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">).</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span> <span class="o">===</span> <span class="s1">&#39;Owner&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">users</span><span class="p">.</span><span class="nx">owner</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">users</span><span class="p">.</span><span class="nx">owner</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="s1">&#39;Unable to find an owner&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">users</span><span class="p">;</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">DataImporter</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">doUserImport</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">tableData</span><span class="p">,</span> <span class="nx">owner</span><span class="p">,</span> <span class="nx">users</span><span class="p">,</span> <span class="nx">errors</span><span class="p">,</span> <span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">userOps</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="nx">imported</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">tableData</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">roles_users</span> <span class="o">&amp;&amp;</span> <span class="nx">tableData</span><span class="p">.</span><span class="nx">roles_users</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">preProcessRolesUsers</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">owner</span><span class="p">,</span> <span class="nx">roles</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Import users, deduplicating with already present users</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">userOps</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">importUsers</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">users</span><span class="p">,</span> <span class="nx">users</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">userOps</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">descriptors</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">descriptors</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">isRejected</span><span class="p">())</span> <span class="p">{</span>
+                    <span class="nx">errors</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">reason</span><span class="p">());</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="nx">imported</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">value</span><span class="p">().</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">internal</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>If adding the users fails,</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">t</span><span class="p">.</span><span class="nx">rollback</span><span class="p">(</span><span class="nx">errors</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">imported</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({});</span>
+<span class="p">};</span>
+
+<span class="nx">DataImporter</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">doImport</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span>
+        <span class="nx">imported</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="nx">errors</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="nx">users</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="nx">owner</span> <span class="o">=</span> <span class="p">{},</span> <span class="nx">roles</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadRoles</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">_roles</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">roles</span> <span class="o">=</span> <span class="nx">_roles</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">loadUsers</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">owner</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">owner</span><span class="p">;</span>
+            <span class="nx">users</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">all</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Base</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">t</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Step 1: Attempt to handle adding new users</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">doUserImport</span><span class="p">(</span><span class="nx">t</span><span class="p">,</span> <span class="nx">tableData</span><span class="p">,</span> <span class="nx">owner</span><span class="p">,</span> <span class="nx">users</span><span class="p">,</span> <span class="nx">errors</span><span class="p">,</span> <span class="nx">roles</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">importResults</span> <span class="o">=</span> <span class="p">[];</span>
+
+                    <span class="nx">imported</span><span class="p">.</span><span class="nx">users</span> <span class="o">=</span> <span class="nx">result</span><span class="p">;</span>
+
+                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">imported</span><span class="p">.</span><span class="nx">users</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">users</span><span class="p">[</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="nx">realId</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">};</span>
+                    <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>process user data - need to figure out what users we have available for assigning stuff to etc</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">try</span> <span class="p">{</span>
+                        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">processUsers</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">owner</span><span class="p">,</span> <span class="nx">users</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">]);</span>
+                    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">t</span><span class="p">.</span><span class="nx">rollback</span><span class="p">([</span><span class="nx">error</span><span class="p">]);</span>
+                    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Do any pre-processing of relationships (we can't depend on ids)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">posts_tags</span> <span class="o">&amp;&amp;</span> <span class="nx">tableData</span><span class="p">.</span><span class="nx">posts</span> <span class="o">&amp;&amp;</span> <span class="nx">tableData</span><span class="p">.</span><span class="nx">tags</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">preProcessPostTags</span><span class="p">(</span><span class="nx">tableData</span><span class="p">);</span>
+                    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Import things in the right order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+                    <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">importTags</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">tags</span><span class="p">,</span> <span class="nx">t</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">importResults</span> <span class="o">=</span> <span class="nx">importResults</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">importPosts</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">posts</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+                    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">importResults</span> <span class="o">=</span> <span class="nx">importResults</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">importSettings</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">t</span><span class="p">);</span>
+                    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">importResults</span> <span class="o">=</span> <span class="nx">importResults</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">results</span><span class="p">);</span>
+                        <span class="p">}</span>
+                    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                        <span class="nx">importResults</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">p</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">isRejected</span><span class="p">())</span> <span class="p">{</span>
+                                <span class="nx">errors</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">p</span><span class="p">.</span><span class="nx">reason</span><span class="p">());</span>
+                            <span class="p">}</span>
+                        <span class="p">});</span>
+
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">t</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+                        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                            <span class="nx">t</span><span class="p">.</span><span class="nx">rollback</span><span class="p">(</span><span class="nx">errors</span><span class="p">);</span>
+                        <span class="p">}</span>
+                    <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>do nothing with these tables, the data shouldn't have changed from the fixtures
+  permissions
+  roles
+  permissions_roles
+  permissions_users</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>TODO: could return statistics of imported items</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">DataImporter</span><span class="o">:</span> <span class="nx">DataImporter</span><span class="p">,</span>
+    <span class="nx">importData</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">DataImporter</span><span class="p">().</span><span class="nx">importData</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

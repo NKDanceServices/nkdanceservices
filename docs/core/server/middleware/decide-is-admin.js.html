@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>decide-is-admin.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/middleware/decide-is-admin.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#decideisadmin%20middleware">DecideIsAdmin Middleware</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="decideisadmin%20middleware">
+  <h1>
+    <a href="#decideisadmin%20middleware" name="decideisadmin%20middleware" class="pilcrow">&#182;</a>
+    DecideIsAdmin Middleware
+  </h1>
+</div>
+
+
+<p>Usage: decideIsAdmin(request, result, next)
+After:
+Before:
+App: Blog</p>
+
+<p>Helper function to determine if its an admin page.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">decideIsAdmin</span><span class="p">;</span>
+
+<span class="nx">decideIsAdmin</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">decideIsAdmin</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/*jslint unparam:true*/</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">isAdmin</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">.</span><span class="nx">lastIndexOf</span><span class="p">(</span><span class="s1">&#39;/ghost/&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">===</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="nx">next</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">decideIsAdmin</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

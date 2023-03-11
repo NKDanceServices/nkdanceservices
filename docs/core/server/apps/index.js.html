@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/apps/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">api</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">loader</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./loader&#39;</span><span class="p">),</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Holds the available apps</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">availableApps</span> <span class="o">=</span> <span class="p">{};</span>
+
+<span class="kd">function</span> <span class="nx">getInstalledApps</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;installedApps&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">installed</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+        <span class="nx">installed</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">installed</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="s1">&#39;[]&#39;</span><span class="p">;</span>
+
+        <span class="k">try</span> <span class="p">{</span>
+            <span class="nx">installed</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">installed</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">installed</span><span class="p">;</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">saveInstalledApps</span><span class="p">(</span><span class="nx">installedApps</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">getInstalledApps</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">currentInstalledApps</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">updatedAppsInstalled</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">uniq</span><span class="p">(</span><span class="nx">installedApps</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">currentInstalledApps</span><span class="p">));</span>
+
+        <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">({</span><span class="nx">settings</span><span class="o">:</span> <span class="p">[{</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;installedApps&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">updatedAppsInstalled</span><span class="p">}]},</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">init</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">appsToLoad</span><span class="p">;</span>
+
+        <span class="k">try</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>We have to parse the value because it's a string</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;activeApps&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">aApps</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+                <span class="nx">appsToLoad</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">aApps</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="p">[];</span>
+            <span class="p">});</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                <span class="s1">&#39;Failed to parse activeApps setting value: &#39;</span> <span class="o">+</span> <span class="nx">e</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+                <span class="s1">&#39;Your apps will not be loaded.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Check your settings table for typos in the activeApps value. It should look like: [&quot;app-1&quot;, &quot;app2&quot;] (double quotes required).&#39;</span>
+            <span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Grab all installed apps, install any not already installed that are in appsToLoad.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">getInstalledApps</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">installedApps</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">loadedApps</span> <span class="o">=</span> <span class="p">{},</span>
+                <span class="nx">recordLoadedApp</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">loadedApp</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>After loading the app, add it to our hash of loaded apps</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="nx">loadedApps</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">loadedApp</span><span class="p">;</span>
+
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">loadedApp</span><span class="p">);</span>
+                <span class="p">},</span>
+                <span class="nx">loadPromises</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">appsToLoad</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>If already installed, just activate the app</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">installedApps</span><span class="p">,</span> <span class="nx">app</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">activateAppByName</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">loadedApp</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">recordLoadedApp</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">loadedApp</span><span class="p">);</span>
+                        <span class="p">});</span>
+                    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Install, then activate the app</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">installAppByName</span><span class="p">(</span><span class="nx">app</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">loader</span><span class="p">.</span><span class="nx">activateAppByName</span><span class="p">(</span><span class="nx">app</span><span class="p">);</span>
+                    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">loadedApp</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">recordLoadedApp</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">loadedApp</span><span class="p">);</span>
+                    <span class="p">});</span>
+                <span class="p">});</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">loadPromises</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Save our installed apps to settings</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">saveInstalledApps</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">loadedApps</span><span class="p">));</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Extend the loadedApps onto the available apps</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">availableApps</span><span class="p">,</span> <span class="nx">loadedApps</span><span class="p">);</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                    <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">err</span><span class="p">,</span>
+                    <span class="s1">&#39;The app will not be loaded&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Check with the app creator, or read the app documentation for more details on app requirements&#39;</span>
+                <span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+    <span class="nx">availableApps</span><span class="o">:</span> <span class="nx">availableApps</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

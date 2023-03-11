@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>tags.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/tags.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#tag%20api">Tag API</a>
+      </div>
+      <div class="heading h3">
+        <a href="#tags%20api%20methods">Tags API Methods</a>
+      </div>
+      <div class="heading h2">
+        <a href="#browse">Browse</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#read">Read</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#add">Add</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#edit">Edit</a>
+      </div>
+      <div class="heading h2">
+        <a href="#destroy">Destroy</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="tag%20api">
+  <h1>
+    <a href="#tag%20api" name="tag%20api" class="pilcrow">&#182;</a>
+    Tag API
+  </h1>
+</div>
+
+
+<p>RESTful API for the Tag resource</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">dataProvider</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+
+    <span class="nx">docName</span>      <span class="o">=</span> <span class="s1">&#39;tags&#39;</span><span class="p">,</span>
+    <span class="nx">allowedIncludes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;count.posts&#39;</span><span class="p">],</span>
+    <span class="nx">tags</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="tags%20api%20methods">
+  <h3>
+    <a href="#tags%20api%20methods" name="tags%20api%20methods" class="pilcrow">&#182;</a>
+    Tags API Methods
+  </h3>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">tags</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="browse">
+  <h2>
+    <a href="#browse" name="browse" class="pilcrow">&#182;</a>
+    Browse
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;Tags&gt;</span>
+      <span>Tags Collection</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">browse</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">browse</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">findPage</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">browseDefaultOptions</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="read">
+  <h2>
+    <a href="#read" name="read" class="pilcrow">&#182;</a>
+    Read
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;Tag&gt;</span>
+      <span>Tag</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">read</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">read</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">],</span>
+            <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">attrs</span><span class="o">:</span> <span class="nx">attrs</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span><span class="nx">tags</span><span class="o">:</span> <span class="p">[</span><span class="nx">result</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)]};</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Tag not found.&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="add">
+  <h2>
+    <a href="#add" name="add" class="pilcrow">&#182;</a>
+    Add
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Tag</span>
+      <span>the tag to create</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Tag)</span>
+      <span>Newly created Tag</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">add</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">tags</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;add&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">tag</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="p">{</span><span class="nx">tags</span><span class="o">:</span> <span class="p">[</span><span class="nx">tag</span><span class="p">]};</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="edit">
+  <h2>
+    <a href="#edit" name="edit" class="pilcrow">&#182;</a>
+    Edit
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Tag</span>
+      <span>Tag or specific properties to update</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id</span>
+      <span class="dox_type">context</span>
+      <span class="dox_type">include</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;Tag&gt;</span>
+      <span>Edited Tag</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">edit</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">edit</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">tags</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">idDefaultOptions</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;edit&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">tag</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+
+                <span class="k">return</span> <span class="p">{</span><span class="nx">tags</span><span class="o">:</span> <span class="p">[</span><span class="nx">tag</span><span class="p">]};</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Tag not found.&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="destroy">
+  <h2>
+    <a href="#destroy" name="destroy" class="pilcrow">&#182;</a>
+    Destroy
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;Tag&gt;</span>
+      <span>Deleted Tag</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">destroy</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">tags</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">destroy</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">idDefaultOptions</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;destroy&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">tags</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+{{#post}}
+
+<header class="noo-page-heading heading-bg-image">
+	<div class="container-boxed max">
+		<div class="page-heading-info ">
+			<h1 class="page-title"><span class="nth-word-first">About</span> us</h1>
+	  	</div>
+		<!-- Start breadcrumbs -->
+			{{> "breadcrumbs"}}
+		<!-- End breadcrumbs -->
+	</div> 
+</header>
+
+<div class="main-content container-fullwidth">
+	<div class="row">
+		<div class="noo-main col-md-12"> 
+			<div class="container-boxed max">
+				<div class="row about-us-section">
+					<div class="col-md-5 col-sm-6">
+						{{#if image}} <img width="1440" height="900" src="{{image}}" class="img-thumbnail" /> {{else}} <img width="1440" height="900" src="{{asset "images/page-2.png"}}" class="img-thumbnail" /> {{/if}} 
+					</div>
+					<div class="col-md-7 col-sm-6">
+						<div class="text-block">
+							<h3 class="custom-title"><span class="first">our</span> story</h3>
+						</div>
+						<hr class="noo-gap noo-gap-30">
+						<div id="placeContactUs" class="text-block">
+							{{content}}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div> 
+</div>
+{{/post}}

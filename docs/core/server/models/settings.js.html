@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>settings.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/models/settings.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>settings.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Settings</span><span class="p">,</span>
+    <span class="nx">ghostBookshelf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./base&#39;</span><span class="p">),</span>
+    <span class="nx">uuid</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;node-uuid&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">validation</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/validation&#39;</span><span class="p">),</span>
+    <span class="nx">events</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../events&#39;</span><span class="p">),</span>
+    <span class="nx">internal</span>       <span class="o">=</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}},</span>
+
+    <span class="nx">defaultSettings</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>For neatness, the defaults file is split into categories.
+It's much easier for us to work with it as a single level
+instead of iterating those categories every time</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">parseDefaultSettings</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">defaultSettingsInCategories</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/default-settings.json&#39;</span><span class="p">),</span>
+        <span class="nx">defaultSettingsFlattened</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">defaultSettingsInCategories</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">each</span><span class="p">(</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">categoryName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">each</span><span class="p">(</span><span class="nx">setting</span><span class="p">,</span> <span class="nx">settingName</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">setting</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">categoryName</span><span class="p">;</span>
+            <span class="nx">setting</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="nx">settingName</span><span class="p">;</span>
+
+            <span class="nx">defaultSettingsFlattened</span><span class="p">[</span><span class="nx">settingName</span><span class="p">]</span> <span class="o">=</span> <span class="nx">setting</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">defaultSettingsFlattened</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getDefaultSettings</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">defaultSettings</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">defaultSettings</span> <span class="o">=</span> <span class="nx">parseDefaultSettings</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">defaultSettings</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Each setting is saved as a separate row in the database,
+but the overlying API treats them as a single key:value mapping</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">Settings</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">tableName</span><span class="o">:</span> <span class="s1">&#39;settings&#39;</span><span class="p">,</span>
+
+    <span class="nx">defaults</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">defaults</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nx">uuid</span><span class="o">:</span> <span class="nx">uuid</span><span class="p">.</span><span class="nx">v4</span><span class="p">(),</span>
+            <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;core&#39;</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+    <span class="nx">emitChange</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">emitChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">events</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;settings&#39;</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="nx">event</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">initialize</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">initialize</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;created&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;added&#39;</span><span class="p">);</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">key</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="s1">&#39;added&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;updated&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;edited&#39;</span><span class="p">);</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">key</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="s1">&#39;edited&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;destroyed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;deleted&#39;</span><span class="p">);</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">key</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="s1">&#39;deleted&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">validate</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">validate</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">setting</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="nx">validation</span><span class="p">.</span><span class="nx">validateSchema</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">tableName</span><span class="p">,</span> <span class="nx">setting</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">validation</span><span class="p">.</span><span class="nx">validateSettings</span><span class="p">(</span><span class="nx">getDefaultSettings</span><span class="p">(),</span> <span class="nx">self</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">themeName</span> <span class="o">=</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">key</span> <span class="o">!==</span> <span class="s1">&#39;activeTheme&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">validation</span><span class="p">.</span><span class="nx">validateActiveTheme</span><span class="p">(</span><span class="nx">themeName</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">saving</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">saving</span><span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>disabling sanitization until we can implement a better version
+All blog setting keys that need their values to be escaped.
+if (this.get('type') === 'blog' &amp;&amp; _.contains(['title', 'description', 'email'], this.get('key'))) {
+   this.set('value', this.sanitize('value'));
+}</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+        <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">saving</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+    <span class="p">}</span>
+
+<span class="p">},</span> <span class="p">{</span>
+    <span class="nx">findOne</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Allow for just passing the key instead of attributes</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">options</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="nx">options</span><span class="p">};</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">findOne</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">options</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">edit</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;edit&#39;</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">data</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">data</span> <span class="o">=</span> <span class="p">[</span><span class="nx">data</span><span class="p">];</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Accept an array of models as input</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">)</span> <span class="p">{</span> <span class="nx">item</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span> <span class="p">}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">key</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Value in [settings.key] cannot be blank.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="nx">item</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">filterData</span><span class="p">(</span><span class="nx">item</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">Settings</span><span class="p">.</span><span class="nx">forge</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="nx">item</span><span class="p">.</span><span class="nx">key</span><span class="p">}).</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">saveData</span> <span class="o">=</span> <span class="p">{};</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">item</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="nx">saveData</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+                    <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Internal context can overwrite type (for fixture migrations)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">internal</span> <span class="o">&amp;&amp;</span> <span class="nx">item</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="nx">saveData</span><span class="p">.</span><span class="nx">type</span> <span class="o">=</span> <span class="nx">item</span><span class="p">.</span><span class="nx">type</span><span class="p">;</span>
+                    <span class="p">}</span>
+                    <span class="k">return</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="nx">saveData</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Unable to find setting to update: &#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">.</span><span class="nx">key</span><span class="p">));</span>
+            <span class="p">},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">populateDefault</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">getDefaultSettings</span><span class="p">()[</span><span class="nx">key</span><span class="p">])</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Unable to find default setting: &#39;</span> <span class="o">+</span> <span class="nx">key</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="nx">key</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">foundSetting</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">foundSetting</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">foundSetting</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="kd">var</span> <span class="nx">defaultSetting</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">clone</span><span class="p">(</span><span class="nx">getDefaultSettings</span><span class="p">()[</span><span class="nx">key</span><span class="p">]);</span>
+            <span class="nx">defaultSetting</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">defaultSetting</span><span class="p">.</span><span class="nx">defaultValue</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">Settings</span><span class="p">.</span><span class="nx">forge</span><span class="p">(</span><span class="nx">defaultSetting</span><span class="p">).</span><span class="nx">save</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">internal</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">populateDefaults</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">populateDefaults</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">findAll</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">allSettings</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">usedKeys</span> <span class="o">=</span> <span class="nx">allSettings</span><span class="p">.</span><span class="nx">models</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="nx">mapper</span><span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">);</span> <span class="p">}),</span>
+                <span class="nx">insertOperations</span> <span class="o">=</span> <span class="p">[];</span>
+
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">getDefaultSettings</span><span class="p">(),</span> <span class="kd">function</span> <span class="nx">each</span><span class="p">(</span><span class="nx">defaultSetting</span><span class="p">,</span> <span class="nx">defaultSettingKey</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">isMissingFromDB</span> <span class="o">=</span> <span class="nx">usedKeys</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">defaultSettingKey</span><span class="p">)</span> <span class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Temporary code to deal with old databases with currentVersion settings</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">defaultSettingKey</span> <span class="o">===</span> <span class="s1">&#39;databaseVersion&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">usedKeys</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;currentVersion&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">isMissingFromDB</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">isMissingFromDB</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">defaultSetting</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">defaultSetting</span><span class="p">.</span><span class="nx">defaultValue</span><span class="p">;</span>
+                    <span class="nx">insertOperations</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">forge</span><span class="p">(</span><span class="nx">defaultSetting</span><span class="p">).</span><span class="nx">save</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">internal</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">insertOperations</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">Settings</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Settings&#39;</span><span class="p">,</span> <span class="nx">Settings</span><span class="p">)</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

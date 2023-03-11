@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>manager.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../../doc-style.css" />
+  <script src="../../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../../", thisFile = "core/server/data/xml/sitemap/manager.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../../doc-script.js"></script>
+  <script src="../../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>manager.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">IndexMapGenerator</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./index-generator&#39;</span><span class="p">),</span>
+    <span class="nx">PagesMapGenerator</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./page-generator&#39;</span><span class="p">),</span>
+    <span class="nx">PostsMapGenerator</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./post-generator&#39;</span><span class="p">),</span>
+    <span class="nx">UsersMapGenerator</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./user-generator&#39;</span><span class="p">),</span>
+    <span class="nx">TagsMapGenerator</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tag-generator&#39;</span><span class="p">),</span>
+    <span class="nx">SiteMapManager</span><span class="p">;</span>
+
+<span class="nx">SiteMapManager</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">opts</span> <span class="o">=</span> <span class="nx">opts</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">initialized</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">pages</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">pages</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">createPagesGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">posts</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">posts</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">createPostsGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">authors</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">authors</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">createUsersGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">tags</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">tags</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">createTagsGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">index</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">createIndexGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">SiteMapManager</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">createIndexGenerator</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">IndexMapGenerator</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="s1">&#39;pages&#39;</span><span class="p">,</span> <span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">createPagesGenerator</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">PagesMapGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">createPostsGenerator</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">PostsMapGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">createUsersGenerator</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">UsersMapGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">createTagsGenerator</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">TagsMapGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">init</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">initOps</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">pages</span><span class="p">.</span><span class="nx">init</span><span class="p">(),</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">init</span><span class="p">(),</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">authors</span><span class="p">.</span><span class="nx">init</span><span class="p">(),</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">init</span><span class="p">()</span>
+            <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">initOps</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">initialized</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">getIndexXml</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">initialized</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">index</span><span class="p">.</span><span class="nx">getIndexXml</span><span class="p">();</span>
+    <span class="p">},</span>
+
+    <span class="nx">getSiteMapXml</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">initialized</span> <span class="o">||</span> <span class="o">!</span><span class="k">this</span><span class="p">[</span><span class="nx">type</span><span class="p">])</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">[</span><span class="nx">type</span><span class="p">].</span><span class="nx">siteMapContent</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">_refreshAllPosts</span><span class="o">:</span> <span class="nx">_</span><span class="p">.</span><span class="nx">throttle</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">refreshAllPosts</span><span class="p">();</span>
+    <span class="p">},</span> <span class="mi">3000</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">leading</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="nx">trailing</span><span class="o">:</span> <span class="kc">true</span>
+    <span class="p">})</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">SiteMapManager</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>api.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/routes/api.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#api%20routes">API routes</a>
+      </div>
+      <div class="heading h2">
+        <a href="#configuration">Configuration</a>
+      </div>
+      <div class="heading h2">
+        <a href="#posts">Posts</a>
+      </div>
+      <div class="heading h2">
+        <a href="#settings">Settings</a>
+      </div>
+      <div class="heading h2">
+        <a href="#users">Users</a>
+      </div>
+      <div class="heading h2">
+        <a href="#tags">Tags</a>
+      </div>
+      <div class="heading h2">
+        <a href="#roles">Roles</a>
+      </div>
+      <div class="heading h2">
+        <a href="#clients">Clients</a>
+      </div>
+      <div class="heading h2">
+        <a href="#slugs">Slugs</a>
+      </div>
+      <div class="heading h2">
+        <a href="#themes">Themes</a>
+      </div>
+      <div class="heading h2">
+        <a href="#notifications">Notifications</a>
+      </div>
+      <div class="heading h2">
+        <a href="#db">DB</a>
+      </div>
+      <div class="heading h2">
+        <a href="#mail">Mail</a>
+      </div>
+      <div class="heading h2">
+        <a href="#authentication">Authentication</a>
+      </div>
+      <div class="heading h2">
+        <a href="#uploads">Uploads</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="api%20routes">
+  <h1>
+    <a href="#api%20routes" name="api%20routes" class="pilcrow">&#182;</a>
+    API routes
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">express</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express&#39;</span><span class="p">),</span>
+    <span class="nx">api</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">apiRoutes</span><span class="p">;</span>
+
+<span class="nx">apiRoutes</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">apiRoutes</span><span class="p">(</span><span class="nx">middleware</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">router</span> <span class="o">=</span> <span class="nx">express</span><span class="p">.</span><span class="nx">Router</span><span class="p">(),</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Authentication for public endpoints</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">authenticatePublic</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">authenticateClient</span><span class="p">,</span>
+            <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">authenticateUser</span><span class="p">,</span>
+            <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">requiresAuthorizedUserPublicAPI</span>
+        <span class="p">],</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Require user for private endpoints</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">authenticatePrivate</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">authenticateClient</span><span class="p">,</span>
+            <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">authenticateUser</span><span class="p">,</span>
+            <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">requiresAuthorizedUser</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>alias delete with del</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">del</span> <span class="o">=</span> <span class="nx">router</span><span class="p">.</span><span class="k">delete</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="configuration">
+  <h2>
+    <a href="#configuration" name="configuration" class="pilcrow">&#182;</a>
+    Configuration
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/configuration&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">configuration</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/configuration/:key&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">configuration</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="posts">
+  <h2>
+    <a href="#posts" name="posts" class="pilcrow">&#182;</a>
+    Posts
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/posts&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/posts&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">add</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/posts/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/posts/slug/:slug&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/posts/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">edit</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="s1">&#39;/posts/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">destroy</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="settings">
+  <h2>
+    <a href="#settings" name="settings" class="pilcrow">&#182;</a>
+    Settings
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/settings&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/settings/:key&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/settings&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="users">
+  <h2>
+    <a href="#users" name="users" class="pilcrow">&#182;</a>
+    Users
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/users/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/users/slug/:slug&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/users/email/:email&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/users/password&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">changePassword</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/users/owner&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">transferOwnership</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/users/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">edit</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/users&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">add</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="s1">&#39;/users/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">destroy</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="tags">
+  <h2>
+    <a href="#tags" name="tags" class="pilcrow">&#182;</a>
+    Tags
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/tags&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/tags/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/tags/slug/:slug&#39;</span><span class="p">,</span> <span class="nx">authenticatePublic</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/tags&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">add</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/tags/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">edit</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="s1">&#39;/tags/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">destroy</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="roles">
+  <h2>
+    <a href="#roles" name="roles" class="pilcrow">&#182;</a>
+    Roles
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/roles/&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">roles</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="clients">
+  <h2>
+    <a href="#clients" name="clients" class="pilcrow">&#182;</a>
+    Clients
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/clients/slug/:slug&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">clients</span><span class="p">.</span><span class="nx">read</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="slugs">
+  <h2>
+    <a href="#slugs" name="slugs" class="pilcrow">&#182;</a>
+    Slugs
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/slugs/:type/:name&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">slugs</span><span class="p">.</span><span class="nx">generate</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="themes">
+  <h2>
+    <a href="#themes" name="themes" class="pilcrow">&#182;</a>
+    Themes
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/themes&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">themes</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/themes/:name&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">themes</span><span class="p">.</span><span class="nx">edit</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="notifications">
+  <h2>
+    <a href="#notifications" name="notifications" class="pilcrow">&#182;</a>
+    Notifications
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/notifications&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">notifications</span><span class="p">.</span><span class="nx">browse</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/notifications&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">notifications</span><span class="p">.</span><span class="nx">add</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="s1">&#39;/notifications/:id&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">notifications</span><span class="p">.</span><span class="nx">destroy</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="db">
+  <h2>
+    <a href="#db" name="db" class="pilcrow">&#182;</a>
+    DB
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/db&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">db</span><span class="p">.</span><span class="nx">exportContent</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/db&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">middleware</span><span class="p">.</span><span class="nx">busboy</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">db</span><span class="p">.</span><span class="nx">importContent</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">del</span><span class="p">(</span><span class="s1">&#39;/db&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">db</span><span class="p">.</span><span class="nx">deleteAllContent</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="mail">
+  <h2>
+    <a href="#mail" name="mail" class="pilcrow">&#182;</a>
+    Mail
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/mail&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">send</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/mail/test&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">sendTest</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="authentication">
+  <h2>
+    <a href="#authentication" name="authentication" class="pilcrow">&#182;</a>
+    Authentication
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/authentication/passwordreset&#39;</span><span class="p">,</span>
+        <span class="nx">middleware</span><span class="p">.</span><span class="nx">spamPrevention</span><span class="p">.</span><span class="nx">forgotten</span><span class="p">,</span>
+        <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">generateResetToken</span><span class="p">)</span>
+    <span class="p">);</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/authentication/passwordreset&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">resetPassword</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/authentication/invitation&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">acceptInvitation</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/authentication/invitation&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">isInvitation</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/authentication/setup&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">setup</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">put</span><span class="p">(</span><span class="s1">&#39;/authentication/setup&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">updateSetup</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;/authentication/setup&#39;</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">isSetup</span><span class="p">));</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/authentication/token&#39;</span><span class="p">,</span>
+        <span class="nx">middleware</span><span class="p">.</span><span class="nx">spamPrevention</span><span class="p">.</span><span class="nx">signin</span><span class="p">,</span>
+        <span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">authenticateClient</span><span class="p">,</span>
+        <span class="nx">middleware</span><span class="p">.</span><span class="nx">oauth</span><span class="p">.</span><span class="nx">generateAccessToken</span>
+    <span class="p">);</span>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/authentication/revoke&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">authentication</span><span class="p">.</span><span class="nx">revoke</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="uploads">
+  <h2>
+    <a href="#uploads" name="uploads" class="pilcrow">&#182;</a>
+    Uploads
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s1">&#39;/uploads&#39;</span><span class="p">,</span> <span class="nx">authenticatePrivate</span><span class="p">,</span> <span class="nx">middleware</span><span class="p">.</span><span class="nx">busboy</span><span class="p">,</span> <span class="nx">api</span><span class="p">.</span><span class="nx">http</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">uploads</span><span class="p">.</span><span class="nx">add</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>API Router middleware</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">router</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">middleware</span><span class="p">.</span><span class="nx">api</span><span class="p">.</span><span class="nx">errorHandler</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">router</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">apiRoutes</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

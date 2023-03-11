@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>utils.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/data/import/utils.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>utils.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">models</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../models&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../errors&#39;</span><span class="p">),</span>
+    <span class="nx">globalUtils</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../utils&#39;</span><span class="p">),</span>
+
+    <span class="nx">internal</span>    <span class="o">=</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}},</span>
+    <span class="nx">utils</span><span class="p">,</span>
+    <span class="nx">areEmpty</span><span class="p">,</span>
+    <span class="nx">updatedSettingKeys</span><span class="p">,</span>
+    <span class="nx">stripProperties</span><span class="p">;</span>
+
+<span class="nx">updatedSettingKeys</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">activePlugins</span><span class="o">:</span> <span class="s1">&#39;activeApps&#39;</span><span class="p">,</span>
+    <span class="nx">installedPlugins</span><span class="o">:</span> <span class="s1">&#39;installedApps&#39;</span>
+<span class="p">};</span>
+
+<span class="nx">areEmpty</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">fields</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+        <span class="nx">areEmpty</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">fields</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">field</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">object</span><span class="p">[</span><span class="nx">field</span><span class="p">]);</span>
+        <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">areEmpty</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">stripProperties</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">stripProperties</span><span class="p">(</span><span class="nx">properties</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">data</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">clone</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="kc">true</span><span class="p">);</span>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">properties</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">property</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">delete</span> <span class="nx">obj</span><span class="p">[</span><span class="nx">property</span><span class="p">];</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nx">data</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">utils</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">internal</span><span class="o">:</span> <span class="nx">internal</span><span class="p">,</span>
+
+    <span class="nx">processUsers</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">preProcessUsers</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">owner</span><span class="p">,</span> <span class="nx">existingUsers</span><span class="p">,</span> <span class="nx">objs</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>We need to:
+1. figure out who the owner of the blog is
+2. figure out what users we have
+3. figure out what users the import data refers to in foreign keys
+4. try to map each one to a user</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">userKeys</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;created_by&#39;</span><span class="p">,</span> <span class="s1">&#39;updated_by&#39;</span><span class="p">,</span> <span class="s1">&#39;published_by&#39;</span><span class="p">,</span> <span class="s1">&#39;author_id&#39;</span><span class="p">],</span>
+            <span class="nx">userMap</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Search the passed in objects for any user foreign keys</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">objs</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">tableData</span><span class="p">[</span><span class="nx">obj</span><span class="p">])</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>For each object in the tableData that matches</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">[</span><span class="nx">obj</span><span class="p">],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>For each possible user foreign key</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">userKeys</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">userMap</span><span class="p">[</span><span class="nx">data</span><span class="p">[</span><span class="nx">key</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{};</span>
+                        <span class="p">}</span>
+                    <span class="p">});</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>We now have a list of users we need to figure out what their email addresses are</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">userMap</span><span class="p">),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">userToMap</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">userToMap</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">userToMap</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="kd">var</span> <span class="nx">foundUser</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">users</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tableDataUser</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">tableDataUser</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">userToMap</span><span class="p">;</span>
+            <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>we now know that userToMap's email is foundUser.email - look them up in existing users</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">foundUser</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">foundUser</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">existingUsers</span><span class="p">,</span> <span class="nx">foundUser</span><span class="p">.</span><span class="nx">email</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">existingUsers</span><span class="p">[</span><span class="nx">foundUser</span><span class="p">.</span><span class="nx">email</span><span class="p">].</span><span class="nx">importId</span> <span class="o">=</span> <span class="nx">userToMap</span><span class="p">;</span>
+                <span class="nx">userMap</span><span class="p">[</span><span class="nx">userToMap</span><span class="p">]</span> <span class="o">=</span> <span class="nx">existingUsers</span><span class="p">[</span><span class="nx">foundUser</span><span class="p">.</span><span class="nx">email</span><span class="p">].</span><span class="nx">realId</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">userToMap</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>if we don't have user data and the id is 1, we assume this means the owner</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">existingUsers</span><span class="p">[</span><span class="nx">owner</span><span class="p">.</span><span class="nx">email</span><span class="p">].</span><span class="nx">importId</span> <span class="o">=</span> <span class="nx">userToMap</span><span class="p">;</span>
+                <span class="nx">userMap</span><span class="p">[</span><span class="nx">userToMap</span><span class="p">]</span> <span class="o">=</span> <span class="nx">existingUsers</span><span class="p">[</span><span class="nx">owner</span><span class="p">.</span><span class="nx">email</span><span class="p">].</span><span class="nx">realId</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">DataImportError</span><span class="p">(</span>
+                    <span class="s1">&#39;Attempting to import data linked to unknown user id &#39;</span> <span class="o">+</span> <span class="nx">userToMap</span><span class="p">,</span> <span class="s1">&#39;user.id&#39;</span><span class="p">,</span> <span class="nx">userToMap</span>
+                <span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>now replace any user foreign keys</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">objs</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">obj</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">tableData</span><span class="p">[</span><span class="nx">obj</span><span class="p">])</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>For each object in the tableData that matches</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">[</span><span class="nx">obj</span><span class="p">],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>For each possible user foreign key</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">userKeys</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">data</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">userMap</span><span class="p">[</span><span class="nx">data</span><span class="p">[</span><span class="nx">key</span><span class="p">]];</span>
+                        <span class="p">}</span>
+                    <span class="p">});</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">tableData</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">preProcessPostTags</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">preProcessPostTags</span><span class="p">(</span><span class="nx">tableData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">postTags</span><span class="p">,</span>
+            <span class="nx">postsWithTags</span> <span class="o">=</span> <span class="p">{};</span>
+
+        <span class="nx">postTags</span> <span class="o">=</span> <span class="nx">tableData</span><span class="p">.</span><span class="nx">posts_tags</span><span class="p">;</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">postTags</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">postTag</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">postsWithTags</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">postTag</span><span class="p">.</span><span class="nx">post_id</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">postsWithTags</span><span class="p">[</span><span class="nx">postTag</span><span class="p">.</span><span class="nx">post_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="p">}</span>
+            <span class="nx">postsWithTags</span><span class="p">[</span><span class="nx">postTag</span><span class="p">.</span><span class="nx">post_id</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">postTag</span><span class="p">.</span><span class="nx">tag_id</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">postsWithTags</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tagIds</span><span class="p">,</span> <span class="nx">postId</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">post</span><span class="p">,</span> <span class="nx">tags</span><span class="p">;</span>
+            <span class="nx">post</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">posts</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">post</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">postId</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="p">});</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">tags</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">tags</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">tagIds</span><span class="p">,</span> <span class="nx">tag</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+                <span class="p">});</span>
+                <span class="nx">post</span><span class="p">.</span><span class="nx">tags</span> <span class="o">=</span> <span class="p">[];</span>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tags</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>names are unique.. this should get the right tags added
+as long as tags are added first;</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="nx">post</span><span class="p">.</span><span class="nx">tags</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="nx">tag</span><span class="p">.</span><span class="nx">name</span><span class="p">});</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">tableData</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">preProcessRolesUsers</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">preProcessRolesUsers</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">owner</span><span class="p">,</span> <span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">validRoles</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">pluck</span><span class="p">(</span><span class="nx">roles</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">roles</span> <span class="o">||</span> <span class="o">!</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">roles</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">tableData</span><span class="p">.</span><span class="nx">roles</span> <span class="o">=</span> <span class="nx">roles</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">_role</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">match</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Check import data does not contain unknown roles</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">validRoles</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">validRole</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">_role</span><span class="p">.</span><span class="nx">name</span> <span class="o">===</span> <span class="nx">validRole</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">match</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                    <span class="nx">_role</span><span class="p">.</span><span class="nx">oldId</span> <span class="o">=</span> <span class="nx">_role</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+                    <span class="nx">_role</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nx">validRole</span><span class="p">}).</span><span class="nx">id</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>If unknown role is found then remove role to force down to Author</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">match</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">_role</span><span class="p">.</span><span class="nx">oldId</span> <span class="o">=</span> <span class="nx">_role</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+                <span class="nx">_role</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Author&#39;</span><span class="p">}).</span><span class="nx">id</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">roles_users</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">roleUser</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">users</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">roleUser</span><span class="p">.</span><span class="nx">user_id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+            <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>Map role_id to updated roles id</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">roleUser</span><span class="p">.</span><span class="nx">role_id</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">tableData</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">oldId</span><span class="o">:</span> <span class="nx">roleUser</span><span class="p">.</span><span class="nx">role_id</span><span class="p">}).</span><span class="nx">id</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>Check for owner users that do not match current owner and change role to administrator</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">roleUser</span><span class="p">.</span><span class="nx">role_id</span> <span class="o">===</span> <span class="nx">owner</span><span class="p">.</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">email</span> <span class="o">&amp;&amp;</span> <span class="nx">user</span><span class="p">.</span><span class="nx">email</span> <span class="o">!==</span> <span class="nx">owner</span><span class="p">.</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">roleUser</span><span class="p">.</span><span class="nx">role_id</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Administrator&#39;</span><span class="p">}).</span><span class="nx">id</span><span class="p">;</span>
+                <span class="nx">user</span><span class="p">.</span><span class="nx">roles</span> <span class="o">=</span> <span class="p">[</span><span class="nx">roleUser</span><span class="p">.</span><span class="nx">role_id</span><span class="p">];</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>just the one role for now</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">user</span><span class="p">.</span><span class="nx">roles</span> <span class="o">=</span> <span class="p">[</span><span class="nx">roleUser</span><span class="p">.</span><span class="nx">role_id</span><span class="p">];</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">tableData</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">importTags</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">importTags</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">transaction</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">tableData</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">stripProperties</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="nx">tableData</span><span class="p">);</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>Validate minimum tag fields</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">areEmpty</span><span class="p">(</span><span class="nx">tag</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="nx">tag</span><span class="p">.</span><span class="nx">name</span><span class="p">},</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">_tag</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_tag</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">tag</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">internal</span><span class="p">,</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">}))</span>
+                        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">({</span><span class="nx">raw</span><span class="o">:</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;tag&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">tag</span><span class="p">});</span>
+                        <span class="p">});</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">_tag</span><span class="p">;</span>
+            <span class="p">}));</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">importPosts</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">importPosts</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">transaction</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">tableData</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">stripProperties</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="nx">tableData</span><span class="p">);</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>Validate minimum post fields</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">areEmpty</span><span class="p">(</span><span class="nx">post</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;markdown&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>The post importer has auto-timestamping disabled</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">post</span><span class="p">.</span><span class="nx">created_at</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">post</span><span class="p">.</span><span class="nx">created_at</span> <span class="o">=</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+            <span class="p">}</span>
+
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">Post</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">post</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">internal</span><span class="p">,</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">,</span> <span class="nx">importing</span><span class="o">:</span> <span class="kc">true</span><span class="p">}))</span>
+                    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">({</span><span class="nx">raw</span><span class="o">:</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">post</span><span class="p">});</span>
+                    <span class="p">})</span>
+            <span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">importUsers</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">importUsers</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">existingUsers</span><span class="p">,</span> <span class="nx">transaction</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">stripProperties</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="nx">tableData</span><span class="p">);</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21">&#182;</a>
+</div>
+<p>Validate minimum user fields</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">areEmpty</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">existingUsers</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>User is already present, ignore</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-23" id="section-23">&#182;</a>
+</div>
+<p>Set password to a random password, and lock the account</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">user</span><span class="p">.</span><span class="nx">password</span> <span class="o">=</span> <span class="nx">globalUtils</span><span class="p">.</span><span class="nx">uid</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+            <span class="nx">user</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;locked&#39;</span><span class="p">;</span>
+
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">internal</span><span class="p">,</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">}))</span>
+                <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">({</span><span class="nx">raw</span><span class="o">:</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;user&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">user</span><span class="p">});</span>
+                <span class="p">}));</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">ops</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">importSettings</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">importSettings</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">transaction</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">tableData</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-24" id="section-24">&#182;</a>
+</div>
+<p>for settings we need to update individual settings, and insert any missing ones
+settings we MUST NOT update are 'core' and 'theme' settings
+as all of these will cause side effects which don't make sense for an import</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">blackList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;core&#39;</span><span class="p">,</span> <span class="s1">&#39;theme&#39;</span><span class="p">],</span>
+            <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">stripProperties</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="nx">tableData</span><span class="p">);</span>
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">blackList</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25">&#182;</a>
+</div>
+<p>Clean up legacy plugin setting references</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">datum</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">datum</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="nx">updatedSettingKeys</span><span class="p">[</span><span class="nx">datum</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">||</span> <span class="nx">datum</span><span class="p">.</span><span class="nx">key</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">internal</span><span class="p">,</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">})).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26">&#182;</a>
+</div>
+<p>Ignore NotFound errors</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">error</span> <span class="k">instanceof</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">({</span><span class="nx">raw</span><span class="o">:</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;setting&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">tableData</span><span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">}));</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="cm">/** For later **/</span>
+    <span class="nx">importApps</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">importApps</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="nx">transaction</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">tableData</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">tableData</span> <span class="o">=</span> <span class="nx">stripProperties</span><span class="p">([</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="nx">tableData</span><span class="p">);</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tableData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">app</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-27" id="section-27">&#182;</a>
+</div>
+<p>Avoid duplicates</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">App</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="nx">app</span><span class="p">.</span><span class="nx">name</span><span class="p">},</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">_app</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_app</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">App</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">app</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">internal</span><span class="p">,</span> <span class="p">{</span><span class="nx">transacting</span><span class="o">:</span> <span class="nx">transaction</span><span class="p">}))</span>
+                        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">({</span><span class="nx">raw</span><span class="o">:</span> <span class="nx">error</span><span class="p">,</span> <span class="nx">model</span><span class="o">:</span> <span class="s1">&#39;app&#39;</span><span class="p">,</span> <span class="nx">data</span><span class="o">:</span> <span class="nx">app</span><span class="p">});</span>
+                        <span class="p">});</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">_app</span><span class="p">;</span>
+            <span class="p">}));</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>authentication.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/authentication.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h2">
+        <a href="#authentication%20api%20methods">Authentication API Methods</a>
+      </div>
+      <div class="heading h2">
+        <a href="#generate%20reset%20token">Generate Reset Token</a>
+      </div>
+      <div class="heading h2">
+        <a href="#reset%20password">Reset Password</a>
+      </div>
+      <div class="heading h3">
+        <a href="#accept%20invitation">Accept Invitation</a>
+      </div>
+      <div class="heading h3">
+        <a href="#check%20for%20invitation">Check for invitation</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>authentication.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>                <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">dataProvider</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">settings</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./settings&#39;</span><span class="p">),</span>
+    <span class="nx">mail</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./mail&#39;</span><span class="p">),</span>
+    <span class="nx">globalUtils</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">authentication</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">setupTasks</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">setupUser</span><span class="p">,</span>
+        <span class="nx">internal</span> <span class="o">=</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}};</span>
+
+    <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkObject</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="s1">&#39;setup&#39;</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">checkedSetupData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">setupUser</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">name</span><span class="o">:</span> <span class="nx">checkedSetupData</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">,</span>
+            <span class="nx">email</span><span class="o">:</span> <span class="nx">checkedSetupData</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">email</span><span class="p">,</span>
+            <span class="nx">password</span><span class="o">:</span> <span class="nx">checkedSetupData</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">password</span><span class="p">,</span>
+            <span class="nx">blogTitle</span><span class="o">:</span> <span class="nx">checkedSetupData</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">blogTitle</span><span class="p">,</span>
+            <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;active&#39;</span>
+        <span class="p">};</span>
+
+        <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">ownerUser</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">ownerUser</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">setup</span><span class="p">(</span><span class="nx">setupUser</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">ownerUser</span><span class="p">.</span><span class="nx">id</span><span class="p">},</span> <span class="nx">internal</span><span class="p">));</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Role</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">ownerRole</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">setupUser</span><span class="p">.</span><span class="nx">roles</span> <span class="o">=</span> <span class="p">[</span><span class="nx">ownerRole</span><span class="p">.</span><span class="nx">id</span><span class="p">];</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">setupUser</span><span class="p">,</span> <span class="nx">internal</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">userSettings</span> <span class="o">=</span> <span class="p">[];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Handles the additional values set by the setup screen.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">setupUser</span><span class="p">.</span><span class="nx">blogTitle</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">userSettings</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">setupUser</span><span class="p">.</span><span class="nx">blogTitle</span><span class="p">});</span>
+            <span class="nx">userSettings</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Thoughts, stories and ideas.&#39;</span><span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">setupUser</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">internal</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">({</span><span class="nx">settings</span><span class="o">:</span> <span class="nx">userSettings</span><span class="p">},</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">user</span><span class="o">:</span> <span class="nx">setupUser</span><span class="p">.</span><span class="nx">id</span><span class="p">}});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">setupUser</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="authentication%20api%20methods">
+  <h2>
+    <a href="#authentication%20api%20methods" name="authentication%20api%20methods" class="pilcrow">&#182;</a>
+    Authentication API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">authentication</span> <span class="o">=</span> <span class="p">{</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="generate%20reset%20token">
+  <h2>
+    <a href="#generate%20reset%20token" name="generate%20reset%20token" class="pilcrow">&#182;</a>
+    Generate Reset Token
+  </h2>
+</div>
+
+
+<p>generate a reset token for a given email address</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(passwordreset)</span>
+      <span>message</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">generateResetToken</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">generateResetToken</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">expires</span> <span class="o">=</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">+</span> <span class="nx">globalUtils</span><span class="p">.</span><span class="nx">ONE_DAY_MS</span><span class="p">,</span>
+            <span class="nx">email</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">authentication</span><span class="p">.</span><span class="nx">isSetup</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">setup</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">status</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">setup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Setup must be completed before making this request.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkObject</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="s1">&#39;passwordreset&#39;</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">checkedPasswordReset</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">checkedPasswordReset</span><span class="p">.</span><span class="nx">passwordreset</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">email</span> <span class="o">=</span> <span class="nx">checkedPasswordReset</span><span class="p">.</span><span class="nx">passwordreset</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">email</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;No email provided.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;dbHash&#39;</span><span class="p">})</span>
+            <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">dbHash</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">generateResetToken</span><span class="p">(</span><span class="nx">email</span><span class="p">,</span> <span class="nx">expires</span><span class="p">,</span> <span class="nx">dbHash</span><span class="p">);</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">resetToken</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">baseUrl</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">forceAdminSSL</span> <span class="o">?</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">urlSSL</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+                    <span class="nx">resetUrl</span> <span class="o">=</span> <span class="nx">baseUrl</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\/$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/ghost/reset/&#39;</span> <span class="o">+</span> <span class="nx">globalUtils</span><span class="p">.</span><span class="nx">encodeBase64URLsafe</span><span class="p">(</span><span class="nx">resetToken</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">;</span>
+
+                <span class="k">return</span> <span class="nx">mail</span><span class="p">.</span><span class="nx">generateContent</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="p">{</span><span class="nx">resetUrl</span><span class="o">:</span> <span class="nx">resetUrl</span><span class="p">},</span> <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;reset-password&#39;</span><span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">emailContent</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">mail</span><span class="o">:</span> <span class="p">[{</span>
+                        <span class="nx">message</span><span class="o">:</span> <span class="p">{</span>
+                            <span class="nx">to</span><span class="o">:</span> <span class="nx">email</span><span class="p">,</span>
+                            <span class="nx">subject</span><span class="o">:</span> <span class="s1">&#39;Reset Password&#39;</span><span class="p">,</span>
+                            <span class="nx">html</span><span class="o">:</span> <span class="nx">emailContent</span><span class="p">.</span><span class="nx">html</span><span class="p">,</span>
+                            <span class="nx">text</span><span class="o">:</span> <span class="nx">emailContent</span><span class="p">.</span><span class="nx">text</span>
+                        <span class="p">},</span>
+                        <span class="nx">options</span><span class="o">:</span> <span class="p">{}</span>
+                    <span class="p">}]</span>
+                <span class="p">};</span>
+                <span class="k">return</span> <span class="nx">mail</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">passwordreset</span><span class="o">:</span> <span class="p">[{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Check your email for further instructions.&#39;</span><span class="p">}]});</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="reset%20password">
+  <h2>
+    <a href="#reset%20password" name="reset%20password" class="pilcrow">&#182;</a>
+    Reset Password
+  </h2>
+</div>
+
+
+<p>reset password if a valid token and password (2x) is passed</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(passwordreset)</span>
+      <span>message</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">resetPassword</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">resetPassword</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">resetToken</span><span class="p">,</span>
+            <span class="nx">newPassword</span><span class="p">,</span>
+            <span class="nx">ne2Password</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">authentication</span><span class="p">.</span><span class="nx">isSetup</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">setup</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">status</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">setup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Setup must be completed before making this request.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkObject</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="s1">&#39;passwordreset&#39;</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">checkedPasswordReset</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">resetToken</span> <span class="o">=</span> <span class="nx">checkedPasswordReset</span><span class="p">.</span><span class="nx">passwordreset</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">token</span><span class="p">;</span>
+            <span class="nx">newPassword</span> <span class="o">=</span> <span class="nx">checkedPasswordReset</span><span class="p">.</span><span class="nx">passwordreset</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">newPassword</span><span class="p">;</span>
+            <span class="nx">ne2Password</span> <span class="o">=</span> <span class="nx">checkedPasswordReset</span><span class="p">.</span><span class="nx">passwordreset</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">ne2Password</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;dbHash&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">dbHash</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">resetPassword</span><span class="p">({</span>
+                    <span class="nx">token</span><span class="o">:</span> <span class="nx">resetToken</span><span class="p">,</span>
+                    <span class="nx">newPassword</span><span class="o">:</span> <span class="nx">newPassword</span><span class="p">,</span>
+                    <span class="nx">ne2Password</span><span class="o">:</span> <span class="nx">ne2Password</span><span class="p">,</span>
+                    <span class="nx">dbHash</span><span class="o">:</span> <span class="nx">dbHash</span>
+                <span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">passwordreset</span><span class="o">:</span> <span class="p">[{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Password changed successfully.&#39;</span><span class="p">}]});</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnauthorizedError</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="accept%20invitation">
+  <h3>
+    <a href="#accept%20invitation" name="accept%20invitation" class="pilcrow">&#182;</a>
+    Accept Invitation
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">User</span>
+      <span>the user to create</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(User</span>
+      <span>Newly created user</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">acceptInvitation</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">acceptInvitation</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">resetToken</span><span class="p">,</span>
+            <span class="nx">newPassword</span><span class="p">,</span>
+            <span class="nx">ne2Password</span><span class="p">,</span>
+            <span class="nx">name</span><span class="p">,</span>
+            <span class="nx">email</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">authentication</span><span class="p">.</span><span class="nx">isSetup</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">setup</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">status</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">setup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Setup must be completed before making this request.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkObject</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="s1">&#39;invitation&#39;</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">checkedInvitation</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">resetToken</span> <span class="o">=</span> <span class="nx">checkedInvitation</span><span class="p">.</span><span class="nx">invitation</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">token</span><span class="p">;</span>
+            <span class="nx">newPassword</span> <span class="o">=</span> <span class="nx">checkedInvitation</span><span class="p">.</span><span class="nx">invitation</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">password</span><span class="p">;</span>
+            <span class="nx">ne2Password</span> <span class="o">=</span> <span class="nx">checkedInvitation</span><span class="p">.</span><span class="nx">invitation</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">password</span><span class="p">;</span>
+            <span class="nx">email</span> <span class="o">=</span> <span class="nx">checkedInvitation</span><span class="p">.</span><span class="nx">invitation</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">email</span><span class="p">;</span>
+            <span class="nx">name</span> <span class="o">=</span> <span class="nx">checkedInvitation</span><span class="p">.</span><span class="nx">invitation</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">name</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;dbHash&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">dbHash</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">resetPassword</span><span class="p">({</span>
+                    <span class="nx">token</span><span class="o">:</span> <span class="nx">resetToken</span><span class="p">,</span>
+                    <span class="nx">newPassword</span><span class="o">:</span> <span class="nx">newPassword</span><span class="p">,</span>
+                    <span class="nx">ne2Password</span><span class="o">:</span> <span class="nx">ne2Password</span><span class="p">,</span>
+                    <span class="nx">dbHash</span><span class="o">:</span> <span class="nx">dbHash</span>
+                <span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Setting the slug to '' has the model regenerate the slug from the user's name</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">edit</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">email</span><span class="o">:</span> <span class="nx">email</span><span class="p">,</span> <span class="nx">slug</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">invitation</span><span class="o">:</span> <span class="p">[{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Invitation accepted.&#39;</span><span class="p">}]});</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnauthorizedError</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="check%20for%20invitation">
+  <h3>
+    <a href="#check%20for%20invitation" name="check%20for%20invitation" class="pilcrow">&#182;</a>
+    Check for invitation
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options.email</span>
+      <span class="dox_type">string</span>
+      <span>The email to check for an invitation on</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Invitation</span>
+      <span>An invitation status</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">isInvitation</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">isInvitation</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">authentication</span><span class="p">.</span><span class="nx">isSetup</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">setup</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">status</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">setup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Setup must be completed before making this request.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">email</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;invited&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="p">{</span><span class="nx">invitation</span><span class="o">:</span> <span class="p">[{</span><span class="nx">valid</span><span class="o">:</span> <span class="kc">true</span><span class="p">}]};</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="p">{</span><span class="nx">invitation</span><span class="o">:</span> <span class="p">[{</span><span class="nx">valid</span><span class="o">:</span> <span class="kc">false</span><span class="p">}]};</span>
+                    <span class="p">}</span>
+                <span class="p">});</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;The server did not receive a valid email&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">isSetup</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">isSetup</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">qb</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">qb</span><span class="p">.</span><span class="nx">whereIn</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-1&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-2&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-3&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-4&#39;</span><span class="p">,</span> <span class="s1">&#39;locked&#39;</span><span class="p">]);</span>
+        <span class="p">}).</span><span class="nx">fetch</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">users</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">users</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">setup</span><span class="o">:</span> <span class="p">[{</span><span class="nx">status</span><span class="o">:</span> <span class="kc">true</span><span class="p">}]});</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">setup</span><span class="o">:</span> <span class="p">[{</span><span class="nx">status</span><span class="o">:</span> <span class="kc">false</span><span class="p">}]});</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">setup</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">setup</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">setupUser</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">authentication</span><span class="p">.</span><span class="nx">isSetup</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">setup</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">setup</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">status</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">setup</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Setup has already been completed.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">setupTasks</span><span class="p">(</span><span class="nx">object</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">setupUser</span> <span class="o">=</span> <span class="nx">result</span><span class="p">;</span>
+
+            <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">ownerEmail</span><span class="o">:</span> <span class="nx">setupUser</span><span class="p">.</span><span class="nx">email</span>
+            <span class="p">};</span>
+
+            <span class="k">return</span> <span class="nx">mail</span><span class="p">.</span><span class="nx">generateContent</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;welcome&#39;</span><span class="p">});</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">emailContent</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">to</span><span class="o">:</span> <span class="nx">setupUser</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span>
+                    <span class="nx">subject</span><span class="o">:</span> <span class="s1">&#39;Your New Ghost Blog&#39;</span><span class="p">,</span>
+                    <span class="nx">html</span><span class="o">:</span> <span class="nx">emailContent</span><span class="p">.</span><span class="nx">html</span><span class="p">,</span>
+                    <span class="nx">text</span><span class="o">:</span> <span class="nx">emailContent</span><span class="p">.</span><span class="nx">text</span>
+                <span class="p">},</span>
+                <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">mail</span><span class="o">:</span> <span class="p">[{</span>
+                        <span class="nx">message</span><span class="o">:</span> <span class="nx">message</span><span class="p">,</span>
+                        <span class="nx">options</span><span class="o">:</span> <span class="p">{}</span>
+                    <span class="p">}]</span>
+                <span class="p">};</span>
+
+            <span class="nx">mail</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                    <span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span>
+                    <span class="s1">&#39;Unable to send welcome email, your blog will continue to function.&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Please see http://support.ghost.org/mail/ for instructions on configuring email.&#39;</span>
+                <span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">users</span><span class="o">:</span> <span class="p">[</span><span class="nx">setupUser</span><span class="p">]});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">updateSetup</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">updateSetup</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">||</span> <span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You are not logged in.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">user</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You are not the blog owner.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">setupTasks</span><span class="p">(</span><span class="nx">object</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">users</span><span class="o">:</span> <span class="p">[</span><span class="nx">result</span><span class="p">]});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">revoke</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">token</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">token_type_hint</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">token_type_hint</span> <span class="o">===</span> <span class="s1">&#39;access_token&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">token</span> <span class="o">=</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Accesstoken</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">token_type_hint</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">token_type_hint</span> <span class="o">===</span> <span class="s1">&#39;refresh_token&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">token</span> <span class="o">=</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Refreshtoken</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Invalid token_type_hint given.&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">token</span><span class="p">.</span><span class="nx">destroyByToken</span><span class="p">({</span><span class="nx">token</span><span class="o">:</span> <span class="nx">object</span><span class="p">.</span><span class="nx">token</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">token</span><span class="o">:</span> <span class="nx">object</span><span class="p">.</span><span class="nx">token</span><span class="p">});</span>
+        <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>On error we still want a 200. See <a href='https://tools.ietf.org/html/rfc7009#page-5'>https://tools.ietf.org/html/rfc7009#page-5</a></p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">token</span><span class="o">:</span> <span class="nx">object</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span> <span class="nx">error</span><span class="o">:</span> <span class="s1">&#39;Invalid token provided&#39;</span><span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">authentication</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

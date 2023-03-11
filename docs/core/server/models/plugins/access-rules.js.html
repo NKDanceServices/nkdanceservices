@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>access-rules.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/models/plugins/access-rules.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#access%20rules">Access Rules</a>
+      </div>
+      <div class="heading h2">
+        <a href="#is%20public%20context%3F">Is Public Context?</a>
+      </div>
+      <div class="heading h2">
+        <a href="#forge">Forge</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="access%20rules">
+  <h1>
+    <a href="#access%20rules" name="access%20rules" class="pilcrow">&#182;</a>
+    Access Rules
+  </h1>
+</div>
+
+
+<p>Extends Bookshelf.Model.force to take a 'context' option which provides information on how this query should
+be treated in terms of data access rules - currently just detecting public requests</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">Bookshelf</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">model</span> <span class="o">=</span> <span class="nx">Bookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">,</span>
+        <span class="nx">Model</span><span class="p">;</span>
+
+    <span class="nx">Model</span> <span class="o">=</span> <span class="nx">Bookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Cached copy of the context setup for this model instance</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_context</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="is%20public%20context%3F">
+  <h2>
+    <a href="#is%20public%20context%3F" name="is%20public%20context%3F" class="pilcrow">&#182;</a>
+    Is Public Context?
+  </h2>
+</div>
+
+
+<p>A helper to determine if this is a public request or not</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">boolean
+</span>
+      <span>{boolean}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">isPublicContext</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">isPublicContext</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="o">!!</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_context</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">_context</span><span class="p">.</span><span class="kr">public</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="forge">
+  <h2>
+    <a href="#forge" name="forge" class="pilcrow">&#182;</a>
+    Forge
+  </h2>
+</div>
+
+
+<p>Ensure that context gets set as part of the forge</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">attributes</span>
+      <span class="dox_type">object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Bookshelf.Model</span>
+      <span>model</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">forge</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">forge</span><span class="p">(</span><span class="nx">attributes</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="nx">model</span><span class="p">.</span><span class="nx">forge</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">_context</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">self</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+    <span class="nx">Bookshelf</span><span class="p">.</span><span class="nx">Model</span> <span class="o">=</span> <span class="nx">Model</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

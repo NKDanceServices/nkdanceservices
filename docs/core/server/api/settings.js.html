@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>settings.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/settings.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#settings%20api">Settings API</a>
+      </div>
+      <div class="heading h2">
+        <a href="#cache">Cache</a>
+      </div>
+      <div class="heading h3">
+        <a href="#updates%20config%20theme%20settings">Updates Config Theme Settings</a>
+      </div>
+      <div class="heading h3">
+        <a href="#update%20settings%20cache">Update Settings Cache</a>
+      </div>
+      <div class="heading h2">
+        <a href="#helpers">Helpers</a>
+      </div>
+      <div class="heading h3">
+        <a href="#settings%20filter">Settings Filter</a>
+      </div>
+      <div class="heading h3">
+        <a href="#filter%20paths">Filter Paths</a>
+      </div>
+      <div class="heading h3">
+        <a href="#read%20settings%20result">Read Settings Result</a>
+      </div>
+      <div class="heading h3">
+        <a href="#settings%20result">Settings Result</a>
+      </div>
+      <div class="heading h3">
+        <a href="#populate%20default%20setting">Populate Default Setting</a>
+      </div>
+      <div class="heading h3">
+        <a href="#can%20edit%20all%20settings">Can Edit All Settings</a>
+      </div>
+      <div class="heading h2">
+        <a href="#settings%20api%20methods">Settings API Methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#browse">Browse</a>
+      </div>
+      <div class="heading h3">
+        <a href="#read">Read</a>
+      </div>
+      <div class="heading h3">
+        <a href="#edit">Edit</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="settings%20api">
+  <h1>
+    <a href="#settings%20api" name="settings%20api" class="pilcrow">&#182;</a>
+    Settings API
+  </h1>
+</div>
+
+
+<p>RESTful API for the Setting resource</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">dataProvider</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">canThis</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../permissions&#39;</span><span class="p">).</span><span class="nx">canThis</span><span class="p">,</span>
+    <span class="nx">errors</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+
+    <span class="nx">docName</span>      <span class="o">=</span> <span class="s1">&#39;settings&#39;</span><span class="p">,</span>
+    <span class="nx">settings</span><span class="p">,</span>
+
+    <span class="nx">updateConfigCache</span><span class="p">,</span>
+    <span class="nx">updateSettingsCache</span><span class="p">,</span>
+    <span class="nx">settingsFilter</span><span class="p">,</span>
+    <span class="nx">filterPaths</span><span class="p">,</span>
+    <span class="nx">readSettingsResult</span><span class="p">,</span>
+    <span class="nx">settingsResult</span><span class="p">,</span>
+    <span class="nx">canEditAllSettings</span><span class="p">,</span>
+    <span class="nx">populateDefaultSetting</span><span class="p">,</span>
+    <span class="nx">hasPopulatedDefaults</span> <span class="o">=</span> <span class="kc">false</span><span class="p">,</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="cache">
+  <h2>
+    <a href="#cache" name="cache" class="pilcrow">&#182;</a>
+    Cache
+  </h2>
+</div>
+
+
+<p>Holds cached settings</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Type</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">
+</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">settingsCache</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="updates%20config%20theme%20settings">
+  <h3>
+    <a href="#updates%20config%20theme%20settings" name="updates%20config%20theme%20settings" class="pilcrow">&#182;</a>
+    Updates Config Theme Settings
+  </h3>
+</div>
+
+
+<p>Maintains the cache of theme specific variables that are reliant on settings.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">private
+</div>
+
+
+<div class="highlight"><pre><code><span class="o">&lt;</span><span class="nx">div</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;dox_tag_detail&quot;</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+
+
+
+<p></div>
+</div></p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">updateConfigCache</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">errorMessages</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;Error: Invalid JSON in settings.labs&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;The column with key &quot;labs&quot; could not be parsed as JSON&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;Please try updating a setting on the labs page, or manually editing your DB&#39;</span>
+    <span class="p">],</span> <span class="nx">labsValue</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">labs</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">labs</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">try</span> <span class="p">{</span>
+            <span class="nx">labsValue</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">labs</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">errorMessages</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">config</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span>
+        <span class="nx">theme</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">title</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">title</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">title</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">description</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">description</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">description</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">logo</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">logo</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">logo</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">cover</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">cover</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">cover</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">navigation</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">navigation</span> <span class="o">&amp;&amp;</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">navigation</span><span class="p">.</span><span class="nx">value</span><span class="p">))</span> <span class="o">||</span> <span class="p">[],</span>
+            <span class="nx">postsPerPage</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">postsPerPage</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">postsPerPage</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="nx">permalinks</span><span class="o">:</span> <span class="p">(</span><span class="nx">settingsCache</span><span class="p">.</span><span class="nx">permalinks</span> <span class="o">&amp;&amp;</span> <span class="nx">settingsCache</span><span class="p">.</span><span class="nx">permalinks</span><span class="p">.</span><span class="nx">value</span><span class="p">)</span> <span class="o">||</span> <span class="s1">&#39;/:slug/&#39;</span>
+        <span class="p">},</span>
+        <span class="nx">labs</span><span class="o">:</span> <span class="nx">labsValue</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="update%20settings%20cache">
+  <h3>
+    <a href="#update%20settings%20cache" name="update%20settings%20cache" class="pilcrow">&#182;</a>
+    Update Settings Cache
+  </h3>
+</div>
+
+
+<p>Maintain the internal cache of the settings object</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">settings</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Settings
+</span>
+      <span>{Settings}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">updateSettingsCache</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">settings</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">settings</span> <span class="o">=</span> <span class="nx">settings</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">settings</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">settingsCache</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">setting</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="nx">updateConfigCache</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">settingsCache</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">findAll</span><span class="p">()</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">settingsCache</span> <span class="o">=</span> <span class="nx">readSettingsResult</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">models</span><span class="p">);</span>
+
+            <span class="nx">updateConfigCache</span><span class="p">();</span>
+
+            <span class="k">return</span> <span class="nx">settingsCache</span><span class="p">;</span>
+        <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="helpers">
+  <h2>
+    <a href="#helpers" name="helpers" class="pilcrow">&#182;</a>
+    Helpers
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="settings%20filter">
+  <h3>
+    <a href="#settings%20filter" name="settings%20filter" class="pilcrow">&#182;</a>
+    Settings Filter
+  </h3>
+</div>
+
+
+<p>Filters an object based on a given filter object</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">settings</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">filter</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">*
+</span>
+      <span>{*}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">settingsFilter</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">object</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">pairs</span><span class="p">(</span><span class="nx">settings</span><span class="p">),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">filter</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">filter</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">setting</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">type</span> <span class="o">===</span> <span class="nx">f</span><span class="p">;</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}));</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="filter%20paths">
+  <h3>
+    <a href="#filter%20paths" name="filter%20paths" class="pilcrow">&#182;</a>
+    Filter Paths
+  </h3>
+</div>
+
+
+<p>Normalizes paths read by require-tree so that the apps and themes modules can use them. Creates an empty
+array (res), and populates it with useful info about the read packages like name, whether they're active
+(comparison with the second argument), and if they have a package.json, that, otherwise false</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>{object}            paths       as returned by require-tree()</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>{array/string}      active      as read from the settings object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Array</span>
+      <span>of objects with useful info about apps / themes</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">filterPaths</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">paths</span><span class="p">,</span> <span class="nx">active</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">pathKeys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">paths</span><span class="p">),</span>
+        <span class="nx">res</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="nx">item</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>turn active into an array (so themes and apps can be checked the same)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">active</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">active</span> <span class="o">=</span> <span class="p">[</span><span class="nx">active</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">pathKeys</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>do not include hidden files or _messages</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">key</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span>
+                <span class="nx">key</span> <span class="o">!==</span> <span class="s1">&#39;_messages&#39;</span> <span class="o">&amp;&amp;</span>
+                <span class="nx">key</span> <span class="o">!==</span> <span class="s1">&#39;README.md&#39;</span>
+                <span class="p">)</span> <span class="p">{</span>
+            <span class="nx">item</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">name</span><span class="o">:</span> <span class="nx">key</span>
+            <span class="p">};</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">paths</span><span class="p">[</span><span class="nx">key</span><span class="p">].</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;package.json&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">item</span><span class="p">.</span><span class="kr">package</span> <span class="o">=</span> <span class="nx">paths</span><span class="p">[</span><span class="nx">key</span><span class="p">][</span><span class="s1">&#39;package.json&#39;</span><span class="p">];</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">item</span><span class="p">.</span><span class="kr">package</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">active</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">item</span><span class="p">.</span><span class="nx">active</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="nx">res</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">item</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nx">res</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="read%20settings%20result">
+  <h3>
+    <a href="#read%20settings%20result" name="read%20settings%20result" class="pilcrow">&#182;</a>
+    Read Settings Result
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">settingsModels</span>
+      <span class="dox_type">Array</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Settings
+</span>
+      <span>{Settings}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">readSettingsResult</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">settingsModels</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">settings</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">settingsModels</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">member</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">memo</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">member</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">key</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">memo</span><span class="p">[</span><span class="nx">member</span><span class="p">.</span><span class="nx">attributes</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">member</span><span class="p">.</span><span class="nx">attributes</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">memo</span><span class="p">;</span>
+        <span class="p">},</span> <span class="p">{}),</span>
+        <span class="nx">themes</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">availableThemes</span><span class="p">,</span>
+        <span class="nx">apps</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">availableApps</span><span class="p">,</span>
+        <span class="nx">res</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">activeTheme</span> <span class="o">&amp;&amp;</span> <span class="nx">themes</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span> <span class="o">=</span> <span class="nx">filterPaths</span><span class="p">(</span><span class="nx">themes</span><span class="p">,</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">activeTheme</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+
+        <span class="nx">settings</span><span class="p">.</span><span class="nx">availableThemes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;availableThemes&#39;</span><span class="p">,</span>
+            <span class="nx">value</span><span class="o">:</span> <span class="nx">res</span><span class="p">,</span>
+            <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;theme&#39;</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">activeApps</span> <span class="o">&amp;&amp;</span> <span class="nx">apps</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span> <span class="o">=</span> <span class="nx">filterPaths</span><span class="p">(</span><span class="nx">apps</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">settings</span><span class="p">.</span><span class="nx">activeApps</span><span class="p">.</span><span class="nx">value</span><span class="p">));</span>
+
+        <span class="nx">settings</span><span class="p">.</span><span class="nx">availableApps</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;availableApps&#39;</span><span class="p">,</span>
+            <span class="nx">value</span><span class="o">:</span> <span class="nx">res</span><span class="p">,</span>
+            <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;app&#39;</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">settings</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="settings%20result">
+  <h3>
+    <a href="#settings%20result" name="settings%20result" class="pilcrow">&#182;</a>
+    Settings Result
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">settings</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">type</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">settings:*
+</span>
+      <span>{{settings:*}}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">settingsResult</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">filteredSettings</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">values</span><span class="p">(</span><span class="nx">settingsFilter</span><span class="p">(</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">type</span><span class="p">)),</span>
+        <span class="nx">result</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">settings</span><span class="o">:</span> <span class="nx">filteredSettings</span><span class="p">,</span>
+            <span class="nx">meta</span><span class="o">:</span> <span class="p">{}</span>
+        <span class="p">};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">result</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">filters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">type</span><span class="o">:</span> <span class="nx">type</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="populate%20default%20setting">
+  <h3>
+    <a href="#populate%20default%20setting" name="populate%20default%20setting" class="pilcrow">&#182;</a>
+    Populate Default Setting
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">key</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>Promise(Setting)</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">populateDefaultSetting</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Call populateDefault and update the settings cache</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">populateDefault</span><span class="p">(</span><span class="nx">key</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">defaultSetting</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Process the default result and add to settings cache</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">readResult</span> <span class="o">=</span> <span class="nx">readSettingsResult</span><span class="p">([</span><span class="nx">defaultSetting</span><span class="p">]);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>Add to the settings cache</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">updateSettingsCache</span><span class="p">(</span><span class="nx">readResult</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>Get the result from the cache with permission checks</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="p">});</span>
+    <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>Pass along NotFoundError</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span> <span class="nx">err</span> <span class="o">===</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>TODO: Different kind of error?</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Problem finding setting: &#39;</span> <span class="o">+</span> <span class="nx">key</span><span class="p">));</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="can%20edit%20all%20settings">
+  <h3>
+    <a href="#can%20edit%20all%20settings" name="can%20edit%20all%20settings" class="pilcrow">&#182;</a>
+    Can Edit All Settings
+  </h3>
+</div>
+
+
+<p>Check that this edit request is allowed for all settings requested to be updated</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">settingsInfo</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">*
+</span>
+      <span>{*}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">canEditAllSettings</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">settingsInfo</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">checkSettingPermissions</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;core&#39;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">internal</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span>
+                    <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Attempted to access core setting from external request&#39;</span><span class="p">)</span>
+                <span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">edit</span><span class="p">.</span><span class="nx">setting</span><span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">key</span><span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to edit settings.&#39;</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">},</span>
+        <span class="nx">checks</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">settingsInfo</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">settingInfo</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">setting</span> <span class="o">=</span> <span class="nx">settingsCache</span><span class="p">[</span><span class="nx">settingInfo</span><span class="p">.</span><span class="nx">key</span><span class="p">];</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>Try to populate a default setting if not in the cache</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">populateDefaultSetting</span><span class="p">(</span><span class="nx">settingInfo</span><span class="p">.</span><span class="nx">key</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">defaultSetting</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21">&#182;</a>
+</div>
+<p>Get the result from the cache with permission checks</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">checkSettingPermissions</span><span class="p">(</span><span class="nx">defaultSetting</span><span class="p">);</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">checkSettingPermissions</span><span class="p">(</span><span class="nx">setting</span><span class="p">);</span>
+        <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">checks</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="settings%20api%20methods">
+  <h2>
+    <a href="#settings%20api%20methods" name="settings%20api%20methods" class="pilcrow">&#182;</a>
+    Settings API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">settings</span> <span class="o">=</span> <span class="p">{</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="browse">
+  <h3>
+    <a href="#browse" name="browse" class="pilcrow">&#182;</a>
+    Browse
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">*
+</span>
+      <span>{*}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">browse</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">browse</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-24" id="section-24">&#182;</a>
+</div>
+<p>First, check if we have populated the settings from default-settings yet</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">hasPopulatedDefaults</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">populateDefaults</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="nx">hasPopulatedDefaults</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">settings</span><span class="p">.</span><span class="nx">browse</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+        <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="nx">settingsResult</span><span class="p">(</span><span class="nx">settingsCache</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">type</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25">&#182;</a>
+</div>
+<p>If there is no context, return only blog settings</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;blog&#39;</span><span class="p">;</span> <span class="p">}));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26">&#182;</a>
+</div>
+<p>Otherwise return whatever this context is allowed to browse</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">browse</span><span class="p">.</span><span class="nx">setting</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-27" id="section-27">&#182;</a>
+</div>
+<p>Omit core settings unless internal request</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">internal</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">result</span><span class="p">.</span><span class="nx">settings</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">result</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">type</span> <span class="o">!==</span> <span class="s1">&#39;core&#39;</span><span class="p">;</span> <span class="p">});</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="read">
+  <h3>
+    <a href="#read" name="read" class="pilcrow">&#182;</a>
+    Read
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">*
+</span>
+      <span>{*}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">read</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">read</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">options</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span><span class="nx">key</span><span class="o">:</span> <span class="nx">options</span><span class="p">};</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">getSettingsResult</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">setting</span> <span class="o">=</span> <span class="nx">settingsCache</span><span class="p">[</span><span class="nx">options</span><span class="p">.</span><span class="nx">key</span><span class="p">],</span>
+                    <span class="nx">result</span> <span class="o">=</span> <span class="p">{};</span>
+
+                <span class="nx">result</span><span class="p">[</span><span class="nx">options</span><span class="p">.</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">setting</span><span class="p">;</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;core&#39;</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">internal</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span>
+                        <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Attempted to access core setting from external request&#39;</span><span class="p">)</span>
+                    <span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;blog&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">settingsResult</span><span class="p">(</span><span class="nx">result</span><span class="p">));</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">read</span><span class="p">.</span><span class="nx">setting</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">key</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">settingsResult</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+                <span class="p">},</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to read settings.&#39;</span><span class="p">));</span>
+                <span class="p">});</span>
+            <span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-29" id="section-29">&#182;</a>
+</div>
+<p>If the setting is not already in the cache</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">settingsCache</span><span class="p">[</span><span class="nx">options</span><span class="p">.</span><span class="nx">key</span><span class="p">])</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-30" id="section-30">&#182;</a>
+</div>
+<p>Try to populate the setting from default-settings file</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">populateDefaultSetting</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">key</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-31" id="section-31">&#182;</a>
+</div>
+<p>Get the result from the cache with permission checks</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">getSettingsResult</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32">&#182;</a>
+</div>
+<p>Get the result from the cache with permission checks</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">getSettingsResult</span><span class="p">();</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="edit">
+  <h3>
+    <a href="#edit" name="edit" class="pilcrow">&#182;</a>
+    Edit
+  </h3>
+</div>
+
+
+<p>Update properties of a setting</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">settings:</span>
+      <span>Setting or a single string name</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id(required)</span>
+      <span class="dox_type">include</span>
+      <span class="dox_type">...</span>
+      <span>(optional) or a single string value</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Setting)</span>
+      <span>Edited Setting</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">edit</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">edit</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">type</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-34" id="section-34">&#182;</a>
+</div>
+<p>Allow shorthand syntax where a single key and value are passed to edit instead of object and options</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">object</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">object</span> <span class="o">=</span> <span class="p">{</span><span class="nx">settings</span><span class="o">:</span> <span class="p">[{</span><span class="nx">key</span><span class="o">:</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">options</span><span class="p">}]};</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-35" id="section-35">&#182;</a>
+</div>
+<p>clean data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">value</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">setting</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">setting</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="nx">type</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;type&#39;</span><span class="p">;</span> <span class="p">});</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">type</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">type</span> <span class="o">=</span> <span class="nx">type</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">object</span><span class="p">.</span><span class="nx">settings</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">setting</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;type&#39;</span> <span class="o">||</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;availableThemes&#39;</span> <span class="o">||</span> <span class="nx">setting</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;availableApps&#39;</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">canEditAllSettings</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkObject</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">docName</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">checkedData</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">user</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span><span class="nx">checkedData</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">readResult</span> <span class="o">=</span> <span class="nx">readSettingsResult</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+
+                <span class="k">return</span> <span class="nx">updateSettingsCache</span><span class="p">(</span><span class="nx">readResult</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">settingsResult</span><span class="p">(</span><span class="nx">readResult</span><span class="p">,</span> <span class="nx">type</span><span class="p">);</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">settings</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">updateSettingsCache</span> <span class="o">=</span> <span class="nx">updateSettingsCache</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

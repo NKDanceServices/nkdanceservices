@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>date.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/date.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#date%20helper">Date Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="date%20helper">
+  <h1>
+    <a href="#date%20helper" name="date%20helper" class="pilcrow">&#182;</a>
+    Date Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{date format="DD MM, YYYY"}}</code>, <code>{{date updated_at format="DD MM, YYYY"}}</code></p>
+
+<p>Formats a date using moment.js. Formats published_at by default but will also take a date as a parameter</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">moment</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;moment&#39;</span><span class="p">),</span>
+    <span class="nx">date</span><span class="p">;</span>
+
+<span class="nx">date</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span> <span class="o">&amp;&amp;</span> <span class="nx">context</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;hash&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">context</span><span class="p">;</span>
+        <span class="nx">context</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>set to published_at by default, if it's available
+otherwise, this will print the current date</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">published_at</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">context</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">published_at</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>ensure that context is undefined, not null, as that can cause errors</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">context</span> <span class="o">=</span> <span class="nx">context</span> <span class="o">===</span> <span class="kc">null</span> <span class="o">?</span> <span class="kc">undefined</span> <span class="o">:</span> <span class="nx">context</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">f</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">format</span> <span class="o">||</span> <span class="s1">&#39;MMM Do, YYYY&#39;</span><span class="p">,</span>
+        <span class="nx">timeago</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">timeago</span><span class="p">,</span>
+        <span class="nx">date</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">timeago</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">date</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">(</span><span class="nx">context</span><span class="p">).</span><span class="nx">fromNow</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">date</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">(</span><span class="nx">context</span><span class="p">).</span><span class="nx">format</span><span class="p">(</span><span class="nx">f</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">date</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">date</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

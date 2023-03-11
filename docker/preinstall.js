@@ -1,0 +1,1 @@
+require('../core/server/utils/startup-check.js').nodeVersion();

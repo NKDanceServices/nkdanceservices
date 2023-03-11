@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/data/utils/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../config&#39;</span><span class="p">),</span>
+    <span class="nx">schema</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../schema&#39;</span><span class="p">).</span><span class="nx">tables</span><span class="p">,</span>
+    <span class="nx">clients</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./clients&#39;</span><span class="p">),</span>
+
+    <span class="nx">dbConfig</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">addTableColumn</span><span class="p">(</span><span class="nx">tablename</span><span class="p">,</span> <span class="nx">table</span><span class="p">,</span> <span class="nx">columnname</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">column</span><span class="p">,</span>
+        <span class="nx">columnSpec</span> <span class="o">=</span> <span class="nx">schema</span><span class="p">[</span><span class="nx">tablename</span><span class="p">][</span><span class="nx">columnname</span><span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>creation distinguishes between text with fieldtype, string with maxlength and all others</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;text&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;fieldtype&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">column</span> <span class="o">=</span> <span class="nx">table</span><span class="p">[</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">type</span><span class="p">](</span><span class="nx">columnname</span><span class="p">,</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">fieldtype</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;string&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;maxlength&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">column</span> <span class="o">=</span> <span class="nx">table</span><span class="p">[</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">type</span><span class="p">](</span><span class="nx">columnname</span><span class="p">,</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">maxlength</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">column</span> <span class="o">=</span> <span class="nx">table</span><span class="p">[</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">type</span><span class="p">](</span><span class="nx">columnname</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;nullable&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">nullable</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">nullable</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">notNullable</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;primary&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">primary</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">primary</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;unique&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">unique</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">unique</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;unsigned&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">columnSpec</span><span class="p">.</span><span class="nx">unsigned</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">unsigned</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;references&#39;</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>check if table exists?</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">references</span><span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">references</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;defaultTo&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">column</span><span class="p">.</span><span class="nx">defaultTo</span><span class="p">(</span><span class="nx">columnSpec</span><span class="p">.</span><span class="nx">defaultTo</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">addColumn</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">column</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">table</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">t</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">addTableColumn</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">t</span><span class="p">,</span> <span class="nx">column</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">addUnique</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">column</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">table</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">table</span><span class="p">.</span><span class="nx">unique</span><span class="p">(</span><span class="nx">column</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">dropUnique</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">column</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">table</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">table</span><span class="p">.</span><span class="nx">dropUnique</span><span class="p">(</span><span class="nx">column</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">createTable</span><span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">t</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">columnKeys</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">schema</span><span class="p">[</span><span class="nx">table</span><span class="p">]);</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">columnKeys</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">column</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">addTableColumn</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">t</span><span class="p">,</span> <span class="nx">column</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">deleteTable</span><span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">knex</span><span class="p">.</span><span class="nx">schema</span><span class="p">.</span><span class="nx">dropTableIfExists</span><span class="p">(</span><span class="nx">table</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getTables</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">client</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">clients</span><span class="p">),</span> <span class="nx">client</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">clients</span><span class="p">[</span><span class="nx">client</span><span class="p">].</span><span class="nx">getTables</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="s1">&#39;No support for database client &#39;</span> <span class="o">+</span> <span class="nx">client</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getIndexes</span><span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">client</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">clients</span><span class="p">),</span> <span class="nx">client</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">clients</span><span class="p">[</span><span class="nx">client</span><span class="p">].</span><span class="nx">getIndexes</span><span class="p">(</span><span class="nx">table</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="s1">&#39;No support for database client &#39;</span> <span class="o">+</span> <span class="nx">client</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getColumns</span><span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">client</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">clients</span><span class="p">),</span> <span class="nx">client</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">clients</span><span class="p">[</span><span class="nx">client</span><span class="p">].</span><span class="nx">getColumns</span><span class="p">(</span><span class="nx">table</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="s1">&#39;No support for database client &#39;</span> <span class="o">+</span> <span class="nx">client</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">checkTables</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">dbConfig</span> <span class="o">=</span> <span class="nx">dbConfig</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">client</span> <span class="o">=</span> <span class="nx">dbConfig</span><span class="p">.</span><span class="nx">client</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">client</span> <span class="o">===</span> <span class="s1">&#39;mysql&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">clients</span><span class="p">[</span><span class="nx">client</span><span class="p">].</span><span class="nx">checkPostTable</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">checkTables</span><span class="o">:</span> <span class="nx">checkTables</span><span class="p">,</span>
+    <span class="nx">createTable</span><span class="o">:</span> <span class="nx">createTable</span><span class="p">,</span>
+    <span class="nx">deleteTable</span><span class="o">:</span> <span class="nx">deleteTable</span><span class="p">,</span>
+    <span class="nx">getTables</span><span class="o">:</span> <span class="nx">getTables</span><span class="p">,</span>
+    <span class="nx">getIndexes</span><span class="o">:</span> <span class="nx">getIndexes</span><span class="p">,</span>
+    <span class="nx">addUnique</span><span class="o">:</span> <span class="nx">addUnique</span><span class="p">,</span>
+    <span class="nx">dropUnique</span><span class="o">:</span> <span class="nx">dropUnique</span><span class="p">,</span>
+    <span class="nx">addColumn</span><span class="o">:</span> <span class="nx">addColumn</span><span class="p">,</span>
+    <span class="nx">getColumns</span><span class="o">:</span> <span class="nx">getColumns</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

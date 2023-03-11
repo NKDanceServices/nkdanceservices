@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>parse-package-json.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/utils/parse-package-json.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>parse-package-json.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Dependencies</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+
+    <span class="nx">readFile</span> <span class="o">=</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Parse package.json and validate it has
+all the required fields</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="kd">function</span> <span class="nx">parsePackageJson</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">readFile</span><span class="p">(</span><span class="nx">path</span><span class="p">)</span>
+        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Could not read package.json file&#39;</span><span class="p">);</span>
+            <span class="nx">err</span><span class="p">.</span><span class="nx">context</span> <span class="o">=</span> <span class="nx">path</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">source</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">hasRequiredKeys</span><span class="p">,</span> <span class="nx">json</span><span class="p">,</span> <span class="nx">err</span><span class="p">;</span>
+
+            <span class="k">try</span> <span class="p">{</span>
+                <span class="nx">json</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">source</span><span class="p">);</span>
+
+                <span class="nx">hasRequiredKeys</span> <span class="o">=</span> <span class="nx">json</span><span class="p">.</span><span class="nx">name</span> <span class="o">&amp;&amp;</span> <span class="nx">json</span><span class="p">.</span><span class="nx">version</span><span class="p">;</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">hasRequiredKeys</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;&quot;name&quot; or &quot;version&quot; is missing from theme package.json file.&#39;</span><span class="p">);</span>
+                    <span class="nx">err</span><span class="p">.</span><span class="nx">context</span> <span class="o">=</span> <span class="nx">path</span><span class="p">;</span>
+                    <span class="nx">err</span><span class="p">.</span><span class="nx">help</span> <span class="o">=</span> <span class="s1">&#39;This will be required in future. Please see http://docs.ghost.org/themes/&#39;</span><span class="p">;</span>
+
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">json</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">parseError</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Theme package.json file is malformed&#39;</span><span class="p">);</span>
+                <span class="nx">err</span><span class="p">.</span><span class="nx">context</span> <span class="o">=</span> <span class="nx">path</span><span class="p">;</span>
+                <span class="nx">err</span><span class="p">.</span><span class="nx">help</span> <span class="o">=</span> <span class="s1">&#39;This will be required in future. Please see http://docs.ghost.org/themes/&#39;</span><span class="p">;</span>
+
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Expose <code>parsePackageJson</code></p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">parsePackageJson</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

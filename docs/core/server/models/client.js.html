@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>client.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/models/client.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>client.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">ghostBookshelf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./base&#39;</span><span class="p">),</span>
+
+    <span class="nx">Client</span><span class="p">,</span>
+    <span class="nx">Clients</span><span class="p">;</span>
+
+<span class="nx">Client</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">tableName</span><span class="o">:</span> <span class="s1">&#39;clients&#39;</span><span class="p">,</span>
+    <span class="nx">trustedDomains</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">trustedDomains</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">hasMany</span><span class="p">(</span><span class="s1">&#39;ClientTrustedDomain&#39;</span><span class="p">,</span> <span class="s1">&#39;client_id&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Returns an array of keys permitted in a method's <code>options</code> hash, depending on the current method.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">methodName</span>
+      <span class="dox_type">String</span>
+      <span>The name of the method to check valid options for.</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Array</span>
+      <span>Keys allowed in the <code>options</code> hash of the model's method.</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">permittedOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permittedOptions</span><span class="p">(</span><span class="nx">methodName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">permittedOptions</span><span class="p">(),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>whitelists for the <code>options</code> hash argument on methods, by method name.
+these are the only options that can be passed to Bookshelf / Knex.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">validOptions</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">findOne</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;withRelated&#39;</span><span class="p">]</span>
+            <span class="p">};</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">validOptions</span><span class="p">[</span><span class="nx">methodName</span><span class="p">])</span> <span class="p">{</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">validOptions</span><span class="p">[</span><span class="nx">methodName</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">Clients</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">model</span><span class="o">:</span> <span class="nx">Client</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">Client</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Client&#39;</span><span class="p">,</span> <span class="nx">Client</span><span class="p">),</span>
+    <span class="nx">Clients</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;Clients&#39;</span><span class="p">,</span> <span class="nx">Clients</span><span class="p">)</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

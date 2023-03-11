@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/data/importer/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">sequence</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../utils/sequence&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../utils/pipeline&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs-extra&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">os</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;os&#39;</span><span class="p">),</span>
+    <span class="nx">glob</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;glob&#39;</span><span class="p">),</span>
+    <span class="nx">uuid</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;node-uuid&#39;</span><span class="p">),</span>
+    <span class="nx">extract</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;extract-zip&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../errors&#39;</span><span class="p">),</span>
+    <span class="nx">ImageHandler</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./handlers/image&#39;</span><span class="p">),</span>
+    <span class="nx">JSONHandler</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./handlers/json&#39;</span><span class="p">),</span>
+    <span class="nx">MarkdownHandler</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./handlers/markdown&#39;</span><span class="p">),</span>
+    <span class="nx">ImageImporter</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./importers/image&#39;</span><span class="p">),</span>
+    <span class="nx">DataImporter</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./importers/data&#39;</span><span class="p">),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Glob levels</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">ROOT_ONLY</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="nx">ROOT_OR_SINGLE_DIR</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="nx">ALL_DIRS</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+
+    <span class="nx">defaults</span><span class="p">;</span>
+
+<span class="nx">defaults</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">extensions</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;.zip&#39;</span><span class="p">],</span>
+    <span class="nx">types</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;application/zip&#39;</span><span class="p">,</span> <span class="s1">&#39;application/x-zip-compressed&#39;</span><span class="p">],</span>
+    <span class="nx">directories</span><span class="o">:</span> <span class="p">[]</span>
+<span class="p">};</span>
+
+<span class="kd">function</span> <span class="nx">ImportManager</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">importers</span> <span class="o">=</span> <span class="p">[</span><span class="nx">ImageImporter</span><span class="p">,</span> <span class="nx">DataImporter</span><span class="p">];</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="nx">ImageHandler</span><span class="p">,</span> <span class="nx">JSONHandler</span><span class="p">,</span> <span class="nx">MarkdownHandler</span><span class="p">];</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Keep track of files to cleanup at the end</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">this</span><span class="p">.</span><span class="nx">filesToDelete</span> <span class="o">=</span> <span class="p">[];</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>A number, or a string containing a number.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">typedef</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">Object</span>
+      <span>ImportData</span>
+    </div>
+    <div class="dox_tag_title">property</div>
+    <div class="dox_tag_detail">
+      <span>[Object] data</span>
+    </div>
+    <div class="dox_tag_title">property</div>
+    <div class="dox_tag_detail">
+      <span>[Array] images</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">ImportManager</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Get an array of all the file extensions for which we have handlers</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">string[]
+</span>
+      <span>{string[]}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getExtensions</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">flatten</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">pluck</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handlers</span><span class="p">,</span> <span class="s1">&#39;extensions&#39;</span><span class="p">),</span> <span class="nx">defaults</span><span class="p">.</span><span class="nx">extensions</span><span class="p">));</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Get an array of all the mime types for which we have handlers</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">string[]
+</span>
+      <span>{string[]}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getTypes</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">flatten</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">pluck</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handlers</span><span class="p">,</span> <span class="s1">&#39;types&#39;</span><span class="p">),</span> <span class="nx">defaults</span><span class="p">.</span><span class="nx">types</span><span class="p">));</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Get an array of directories for which we have handlers</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">string[]
+</span>
+      <span>{string[]}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getDirectories</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">flatten</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">pluck</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handlers</span><span class="p">,</span> <span class="s1">&#39;directories&#39;</span><span class="p">),</span> <span class="nx">defaults</span><span class="p">.</span><span class="nx">directories</span><span class="p">));</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Convert items into a glob string</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">items</span>
+      <span class="dox_type">String[]</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">String
+</span>
+      <span>{String}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getGlobPattern</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">items</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="s1">&#39;+(&#39;</span> <span class="o">+</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">items</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">ext</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">memo</span> <span class="o">!==</span> <span class="s1">&#39;&#39;</span> <span class="o">?</span> <span class="nx">memo</span> <span class="o">+</span> <span class="s1">&#39;|&#39;</span>  <span class="o">+</span> <span class="nx">ext</span> <span class="o">:</span> <span class="nx">ext</span><span class="p">;</span>
+        <span class="p">},</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">;</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary">
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">extensions</span>
+      <span class="dox_type">String[]</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">level</span>
+      <span class="dox_type">Number</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">String
+</span>
+      <span>{String}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getExtensionGlob</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">extensions</span><span class="p">,</span> <span class="nx">level</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">prefix</span> <span class="o">=</span> <span class="nx">level</span> <span class="o">===</span> <span class="nx">ALL_DIRS</span> <span class="o">?</span> <span class="s1">&#39;**/*&#39;</span> <span class="o">:</span>
+            <span class="p">(</span><span class="nx">level</span> <span class="o">===</span> <span class="nx">ROOT_OR_SINGLE_DIR</span> <span class="o">?</span> <span class="s1">&#39;{*/*,*}&#39;</span> <span class="o">:</span> <span class="s1">&#39;*&#39;</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nx">prefix</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">getGlobPattern</span><span class="p">(</span><span class="nx">extensions</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary">
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">directories</span>
+      <span class="dox_type">String[]</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">level</span>
+      <span class="dox_type">Number</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">String
+</span>
+      <span>{String}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getDirectoryGlob</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">directories</span><span class="p">,</span> <span class="nx">level</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">prefix</span> <span class="o">=</span> <span class="nx">level</span> <span class="o">===</span> <span class="nx">ALL_DIRS</span> <span class="o">?</span> <span class="s1">&#39;**/&#39;</span> <span class="o">:</span>
+            <span class="p">(</span><span class="nx">level</span> <span class="o">===</span> <span class="nx">ROOT_OR_SINGLE_DIR</span> <span class="o">?</span> <span class="s1">&#39;{*/,}&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nx">prefix</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">getGlobPattern</span><span class="p">(</span><span class="nx">directories</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Remove files after we're done (abstracted into a function for easier testing)</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Function
+</span>
+      <span>{Function}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">cleanUp</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">filesToDelete</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filesToDelete</span><span class="p">;</span>
+        <span class="k">return</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">filesToDelete</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fileToDelete</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">fs</span><span class="p">.</span><span class="nx">remove</span><span class="p">(</span><span class="nx">fileToDelete</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="s1">&#39;Import could not clean up file &#39;</span><span class="p">,</span> <span class="s1">&#39;Your blog will continue to work as expected&#39;</span><span class="p">);</span>
+                    <span class="p">}</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+
+            <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Return true if the given file is a Zip</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>Boolean</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">isZip</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">ext</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">defaults</span><span class="p">.</span><span class="nx">extensions</span><span class="p">,</span> <span class="nx">ext</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Checks the content of a zip folder to see if it is valid.
+Importable content includes any files or directories which the handlers can process
+Importable content must be found either in the root, or inside one base directory</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">directory</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise
+</span>
+      <span>{Promise}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">isValidZip</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">directory</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Globs match content in the root or inside a single directory</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">extMatchesBase</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">getExtensionGlob</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getExtensions</span><span class="p">(),</span> <span class="nx">ROOT_OR_SINGLE_DIR</span><span class="p">),</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}</span>
+            <span class="p">),</span>
+            <span class="nx">extMatchesAll</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">getExtensionGlob</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getExtensions</span><span class="p">(),</span> <span class="nx">ALL_DIRS</span><span class="p">),</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}</span>
+            <span class="p">),</span>
+            <span class="nx">dirMatches</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">getDirectoryGlob</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getDirectories</span><span class="p">(),</span> <span class="nx">ROOT_OR_SINGLE_DIR</span><span class="p">),</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}</span>
+            <span class="p">),</span>
+            <span class="nx">oldRoonMatches</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getDirectoryGlob</span><span class="p">([</span><span class="s1">&#39;drafts&#39;</span><span class="p">,</span> <span class="s1">&#39;published&#39;</span><span class="p">,</span> <span class="s1">&#39;deleted&#39;</span><span class="p">],</span> <span class="nx">ROOT_OR_SINGLE_DIR</span><span class="p">),</span>
+                <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>This is a temporary extra message for the old format roon export which doesn't work with Ghost</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">oldRoonMatches</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span>
+                <span class="s1">&#39;Your zip file looks like an old format Roon export, please re-export your Roon blog and try again.&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>If this folder contains importable files or a content or images directory</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">extMatchesBase</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="p">(</span><span class="nx">dirMatches</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nx">extMatchesAll</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">extMatchesAll</span><span class="p">.</span><span class="nx">length</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span><span class="s1">&#39;Zip did not include any content to import.&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">throw</span> <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span><span class="s1">&#39;Invalid zip file structure.&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Use the extract module to extract the given zip file to a temp directory &amp; return the temp directory path</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">filePath</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise[]</span>
+      <span>Files</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">extractZip</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">filePath</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tmpDir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">os</span><span class="p">.</span><span class="nx">tmpdir</span><span class="p">(),</span> <span class="nx">uuid</span><span class="p">.</span><span class="nx">v4</span><span class="p">());</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">filesToDelete</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">tmpDir</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">extract</span><span class="p">)(</span><span class="nx">filePath</span><span class="p">,</span> <span class="p">{</span><span class="nx">dir</span><span class="o">:</span> <span class="nx">tmpDir</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">tmpDir</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Use the handler extensions to get a globbing pattern, then use that to fetch all the files from the zip which
+are relevant to the given handler, and return them as a name and path combo</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">handler</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">directory</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>[] Files</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getFilesFromZip</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">handler</span><span class="p">,</span> <span class="nx">directory</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">globPattern</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">getExtensionGlob</span><span class="p">(</span><span class="nx">handler</span><span class="p">.</span><span class="nx">extensions</span><span class="p">,</span> <span class="nx">ALL_DIRS</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span><span class="nx">globPattern</span><span class="p">,</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nx">file</span><span class="p">,</span> <span class="nx">path</span><span class="o">:</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">directory</span><span class="p">,</span> <span class="nx">file</span><span class="p">)};</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Get the name of the single base directory if there is one, else return an empty string</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">directory</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(String)
+</span>
+      <span>{Promise(String)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getBaseDirectory</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">directory</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>Globs match root level only</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">extMatches</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getExtensionGlob</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getExtensions</span><span class="p">(),</span> <span class="nx">ROOT_ONLY</span><span class="p">),</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}),</span>
+            <span class="nx">dirMatches</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getDirectoryGlob</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getDirectories</span><span class="p">(),</span> <span class="nx">ROOT_ONLY</span><span class="p">),</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}),</span>
+            <span class="nx">extMatchesAll</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21">&#182;</a>
+</div>
+<p>There is no base directory</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">extMatches</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="nx">dirMatches</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>There is a base directory, grab it from any ext match</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">extMatchesAll</span> <span class="o">=</span> <span class="nx">glob</span><span class="p">.</span><span class="nx">sync</span><span class="p">(</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">getExtensionGlob</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">getExtensions</span><span class="p">(),</span> <span class="nx">ALL_DIRS</span><span class="p">),</span> <span class="p">{</span><span class="nx">cwd</span><span class="o">:</span> <span class="nx">directory</span><span class="p">}</span>
+        <span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">extMatchesAll</span><span class="p">.</span><span class="nx">length</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="o">||</span> <span class="nx">extMatchesAll</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Invalid zip file: base directory read failed&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">extMatchesAll</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-23" id="section-23">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Process Zip
+Takes a reference to a zip file, extracts it, sends any relevant files from inside to the right handler, and
+returns an object in the importData format: {data: {}, images: []}
+The data key contains JSON representing any data that should be imported
+The image key contains references to images that will be stored (and where they will be stored)</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">file</span>
+      <span class="dox_type">File</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(ImportData)
+</span>
+      <span>{Promise(ImportData)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">processZip</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">extractZip</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">path</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">zipDirectory</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[],</span>
+                <span class="nx">importData</span> <span class="o">=</span> <span class="p">{},</span>
+                <span class="nx">baseDir</span><span class="p">;</span>
+
+            <span class="nx">self</span><span class="p">.</span><span class="nx">isValidZip</span><span class="p">(</span><span class="nx">zipDirectory</span><span class="p">);</span>
+            <span class="nx">baseDir</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">getBaseDirectory</span><span class="p">(</span><span class="nx">zipDirectory</span><span class="p">);</span>
+
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">handlers</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">handler</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">importData</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">handler</span><span class="p">.</span><span class="nx">type</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-24" id="section-24">&#182;</a>
+</div>
+<p>This limitation is here to reduce the complexity of the importer for now</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span>
+                        <span class="s1">&#39;Zip file contains multiple data formats. Please split up and import separately.&#39;</span>
+                    <span class="p">));</span>
+                <span class="p">}</span>
+
+                <span class="kd">var</span> <span class="nx">files</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">getFilesFromZip</span><span class="p">(</span><span class="nx">handler</span><span class="p">,</span> <span class="nx">zipDirectory</span><span class="p">);</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">files</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">handler</span><span class="p">.</span><span class="nx">loadFile</span><span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="nx">baseDir</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">importData</span><span class="p">[</span><span class="nx">handler</span><span class="p">.</span><span class="nx">type</span><span class="p">]</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
+                        <span class="p">});</span>
+                    <span class="p">});</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">ops</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span>
+                    <span class="s1">&#39;Zip did not include any content to import.&#39;</span>
+                <span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">sequence</span><span class="p">(</span><span class="nx">ops</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">importData</span><span class="p">;</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Process File
+Takes a reference to a single file, sends it to the relevant handler to be loaded and returns an object in the
+importData format: {data: {}, images: []}
+The data key contains JSON representing any data that should be imported
+The image key contains references to images that will be stored (and where they will be stored)</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">file</span>
+      <span class="dox_type">File</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(ImportData)
+</span>
+      <span>{Promise(ImportData)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">processFile</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">ext</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">fileHandler</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">handlers</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">handler</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">handler</span><span class="p">.</span><span class="nx">extensions</span><span class="p">,</span> <span class="nx">ext</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">fileHandler</span><span class="p">.</span><span class="nx">loadFile</span><span class="p">([</span><span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;path&#39;</span><span class="p">)]).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">loadedData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26">&#182;</a>
+</div>
+<p>normalize the returned data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">var</span> <span class="nx">importData</span> <span class="o">=</span> <span class="p">{};</span>
+            <span class="nx">importData</span><span class="p">[</span><span class="nx">fileHandler</span><span class="p">.</span><span class="nx">type</span><span class="p">]</span> <span class="o">=</span> <span class="nx">loadedData</span><span class="p">;</span>
+            <span class="k">return</span> <span class="nx">importData</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-27" id="section-27">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Import Step 1:
+Load the given file into usable importData in the format: {data: {}, images: []}, regardless of
+whether the file is a single importable file like a JSON file, or a zip file containing loads of files.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">file</span>
+      <span class="dox_type">File</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise
+</span>
+      <span>{Promise}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">loadFile</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">ext</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">extname</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">name</span><span class="p">).</span><span class="nx">toLowerCase</span><span class="p">();</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">filesToDelete</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">path</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">isZip</span><span class="p">(</span><span class="nx">ext</span><span class="p">)</span> <span class="o">?</span> <span class="nx">self</span><span class="p">.</span><span class="nx">processZip</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="o">:</span> <span class="nx">self</span><span class="p">.</span><span class="nx">processFile</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">ext</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-28" id="section-28">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Import Step 2:
+Pass the prepared importData through the preProcess function of the various importers, so that the importers can
+make any adjustments to the data based on relationships between it</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">importData</span>
+      <span class="dox_type">ImportData</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(ImportData)
+</span>
+      <span>{Promise(ImportData)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">preProcess</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">importData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">importers</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">importer</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">importer</span><span class="p">.</span><span class="nx">preProcess</span><span class="p">(</span><span class="nx">importData</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-29" id="section-29">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Import Step 3:
+Each importer gets passed the data from importData which has the key matching its type - i.e. it only gets the
+data that it should import. Each importer then handles actually importing that data into Ghost</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">importData</span>
+      <span class="dox_type">ImportData</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(ImportData)
+</span>
+      <span>{Promise(ImportData)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">doImport</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">importData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">importers</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">importer</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">importData</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">importer</span><span class="p">.</span><span class="nx">type</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">importer</span><span class="p">.</span><span class="nx">doImport</span><span class="p">(</span><span class="nx">importData</span><span class="p">[</span><span class="nx">importer</span><span class="p">.</span><span class="nx">type</span><span class="p">]);</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">sequence</span><span class="p">(</span><span class="nx">ops</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">importResult</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">importResult</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-30" id="section-30">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Import Step 4:
+Report on what was imported, currently a no-op</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">importData</span>
+      <span class="dox_type">ImportData</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(ImportData)
+</span>
+      <span>{Promise(ImportData)}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">generateReport</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">importData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">importData</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-31" id="section-31">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Import From File
+The main method of the ImportManager, call this to kick everything off!</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">file</span>
+      <span class="dox_type">File</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise
+</span>
+      <span>{Promise}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">importFromFile</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32">&#182;</a>
+</div>
+<p>Step 1: Handle converting the file to usable data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">loadFile</span><span class="p">(</span><span class="nx">file</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">importData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-33" id="section-33">&#182;</a>
+</div>
+<p>Step 2: Let the importers pre-process the data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">preProcess</span><span class="p">(</span><span class="nx">importData</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">importData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-34" id="section-34">&#182;</a>
+</div>
+<p>Step 3: Actually do the import
+@TODO: It would be cool to have some sort of dry run flag here</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">doImport</span><span class="p">(</span><span class="nx">importData</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">importData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-35" id="section-35">&#182;</a>
+</div>
+<p>Step 4: Report on the import</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">generateReport</span><span class="p">(</span><span class="nx">importData</span><span class="p">)</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-36" id="section-36">&#182;</a>
+</div>
+<p>Step 5: Cleanup any files</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="p">.</span><span class="k">finally</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">cleanUp</span><span class="p">());</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ImportManager</span><span class="p">();</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

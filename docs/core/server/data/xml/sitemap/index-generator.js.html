@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index-generator.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../../doc-style.css" />
+  <script src="../../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../../", thisFile = "core/server/data/xml/sitemap/index-generator.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../../doc-script.js"></script>
+  <script src="../../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index-generator.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">xml</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;xml&#39;</span><span class="p">),</span>
+    <span class="nx">moment</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;moment&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../config&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">RESOURCES</span><span class="p">,</span>
+    <span class="nx">XMLNS_DECLS</span><span class="p">;</span>
+
+<span class="nx">RESOURCES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;pages&#39;</span><span class="p">,</span> <span class="s1">&#39;posts&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">];</span>
+
+<span class="nx">XMLNS_DECLS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">_attr</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">xmlns</span><span class="o">:</span> <span class="s1">&#39;http://www.sitemaps.org/schemas/sitemap/0.9&#39;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="kd">function</span> <span class="nx">SiteMapIndexGenerator</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Grab the other site map generators from the options</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">opts</span><span class="p">,</span> <span class="nx">RESOURCES</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">SiteMapIndexGenerator</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">getIndexXml</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">urlElements</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">generateSiteMapUrlElements</span><span class="p">(),</span>
+            <span class="nx">data</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Concat the elements to the _attr declaration</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">sitemapindex</span><span class="o">:</span> <span class="p">[</span><span class="nx">XMLNS_DECLS</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">urlElements</span><span class="p">)</span>
+            <span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Return the xml</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">getDeclarations</span><span class="p">()</span> <span class="o">+</span> <span class="nx">xml</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">generateSiteMapUrlElements</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">RESOURCES</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">resourceType</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">urlFor</span><span class="p">({</span>
+                    <span class="nx">relativeUrl</span><span class="o">:</span> <span class="s1">&#39;/sitemap-&#39;</span> <span class="o">+</span> <span class="nx">resourceType</span> <span class="o">+</span> <span class="s1">&#39;.xml&#39;</span>
+                <span class="p">},</span> <span class="kc">true</span><span class="p">),</span>
+                <span class="nx">lastModified</span> <span class="o">=</span> <span class="nx">self</span><span class="p">[</span><span class="nx">resourceType</span><span class="p">].</span><span class="nx">lastModified</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="nx">sitemap</span><span class="o">:</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="nx">loc</span><span class="o">:</span> <span class="nx">url</span><span class="p">},</span>
+                    <span class="p">{</span><span class="nx">lastmod</span><span class="o">:</span> <span class="nx">moment</span><span class="p">(</span><span class="nx">lastModified</span><span class="p">).</span><span class="nx">toISOString</span><span class="p">()}</span>
+                <span class="p">]</span>
+            <span class="p">};</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">SiteMapIndexGenerator</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

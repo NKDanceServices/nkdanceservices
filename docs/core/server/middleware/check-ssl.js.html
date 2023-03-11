@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>check-ssl.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/middleware/check-ssl.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>check-ssl.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">url</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">),</span>
+    <span class="nx">checkSSL</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">isSSLrequired</span><span class="p">(</span><span class="nx">isAdmin</span><span class="p">,</span> <span class="nx">configUrl</span><span class="p">,</span> <span class="nx">forceAdminSSL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">forceSSL</span> <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">configUrl</span><span class="p">).</span><span class="nx">protocol</span> <span class="o">===</span> <span class="s1">&#39;https:&#39;</span> <span class="o">?</span> <span class="kc">true</span> <span class="o">:</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">forceSSL</span> <span class="o">||</span> <span class="p">(</span><span class="nx">isAdmin</span> <span class="o">&amp;&amp;</span> <span class="nx">forceAdminSSL</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>The guts of checkSSL. Indicate forbidden or redirect according to configuration.
+Required args: forceAdminSSL, url and urlSSL should be passed from config. reqURL from req.url</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">sslForbiddenOrRedirect</span><span class="p">(</span><span class="nx">opt</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">forceAdminSSL</span> <span class="o">=</span> <span class="nx">opt</span><span class="p">.</span><span class="nx">forceAdminSSL</span><span class="p">,</span>
+        <span class="nx">reqUrl</span>        <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">opt</span><span class="p">.</span><span class="nx">reqUrl</span><span class="p">),</span> <span class="c1">// expected to be relative-to-root</span>
+        <span class="nx">baseUrl</span>       <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">opt</span><span class="p">.</span><span class="nx">configUrlSSL</span> <span class="o">||</span> <span class="nx">opt</span><span class="p">.</span><span class="nx">configUrl</span><span class="p">),</span>
+        <span class="nx">response</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Check if forceAdminSSL: { redirect: false } is set, which means
+we should just deny non-SSL access rather than redirect</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">isForbidden</span><span class="o">:</span> <span class="p">(</span><span class="nx">forceAdminSSL</span> <span class="o">&amp;&amp;</span> <span class="nx">forceAdminSSL</span><span class="p">.</span><span class="nx">redirect</span> <span class="o">!==</span> <span class="kc">undefined</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">forceAdminSSL</span><span class="p">.</span><span class="nx">redirect</span><span class="p">),</span>
+
+        <span class="nx">redirectUrl</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">redirectUrl</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">url</span><span class="p">.</span><span class="nx">format</span><span class="p">({</span>
+                <span class="nx">protocol</span><span class="o">:</span> <span class="s1">&#39;https:&#39;</span><span class="p">,</span>
+                <span class="nx">hostname</span><span class="o">:</span> <span class="nx">baseUrl</span><span class="p">.</span><span class="nx">hostname</span><span class="p">,</span>
+                <span class="nx">port</span><span class="o">:</span> <span class="nx">baseUrl</span><span class="p">.</span><span class="nx">port</span><span class="p">,</span>
+                <span class="nx">pathname</span><span class="o">:</span> <span class="nx">reqUrl</span><span class="p">.</span><span class="nx">pathname</span><span class="p">,</span>
+                <span class="nx">query</span><span class="o">:</span> <span class="nx">query</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">response</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Check to see if we should use SSL
+and redirect if needed</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">checkSSL</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">checkSSL</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isSSLrequired</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">isAdmin</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">forceAdminSSL</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">req</span><span class="p">.</span><span class="nx">secure</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">sslForbiddenOrRedirect</span><span class="p">({</span>
+                <span class="nx">forceAdminSSL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">forceAdminSSL</span><span class="p">,</span>
+                <span class="nx">configUrlSSL</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">urlSSL</span><span class="p">,</span>
+                <span class="nx">configUrl</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+                <span class="nx">reqUrl</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span>
+            <span class="p">});</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">isForbidden</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">sendStatus</span><span class="p">(</span><span class="mi">403</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="mi">301</span><span class="p">,</span> <span class="nx">response</span><span class="p">.</span><span class="nx">redirectUrl</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">query</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="nx">next</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">checkSSL</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

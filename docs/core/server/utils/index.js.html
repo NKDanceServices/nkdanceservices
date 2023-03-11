@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/utils/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">unidecode</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;unidecode&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+
+    <span class="nx">utils</span><span class="p">,</span>
+    <span class="nx">getRandomInt</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Return a random int, used by <code>utils.uid()</code></p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">min</span>
+      <span class="dox_type">Number</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">max</span>
+      <span class="dox_type">Number</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Number</span>
+    </div>
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private
+</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">getRandomInt</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">min</span><span class="p">,</span> <span class="nx">max</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">floor</span><span class="p">(</span><span class="nb">Math</span><span class="p">.</span><span class="nx">random</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="nx">max</span> <span class="o">-</span> <span class="nx">min</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span> <span class="o">+</span> <span class="nx">min</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">utils</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Timespans in seconds and milliseconds for better readability</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">ONE_HOUR_S</span><span class="o">:</span>          <span class="mi">3600</span><span class="p">,</span>
+    <span class="nx">ONE_DAY_S</span><span class="o">:</span>          <span class="mi">86400</span><span class="p">,</span>
+    <span class="nx">ONE_YEAR_S</span><span class="o">:</span>      <span class="mi">31536000</span><span class="p">,</span>
+    <span class="nx">ONE_HOUR_MS</span><span class="o">:</span>      <span class="mi">3600000</span><span class="p">,</span>
+    <span class="nx">ONE_DAY_MS</span><span class="o">:</span>      <span class="mi">86400000</span><span class="p">,</span>
+    <span class="nx">ONE_WEEK_MS</span><span class="o">:</span>    <span class="mi">604800000</span><span class="p">,</span>
+    <span class="nx">ONE_MONTH_MS</span><span class="o">:</span>  <span class="mi">2628000000</span><span class="p">,</span>
+    <span class="nx">ONE_YEAR_MS</span><span class="o">:</span>  <span class="mi">31536000000</span><span class="p">,</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Return a unique identifier with the given <code>len</code>.</p>
+  </div>
+  <div class="body"><p>utils.uid(10);
+    // => "FDaS435D2z"</p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">len</span>
+      <span class="dox_type">Number</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private
+</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">uid</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">len</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">buf</span> <span class="o">=</span> <span class="p">[],</span>
+            <span class="nx">chars</span> <span class="o">=</span> <span class="s1">&#39;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&#39;</span><span class="p">,</span>
+            <span class="nx">charlen</span> <span class="o">=</span> <span class="nx">chars</span><span class="p">.</span><span class="nx">length</span><span class="p">,</span>
+            <span class="nx">i</span><span class="p">;</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="nx">len</span><span class="p">;</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">buf</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chars</span><span class="p">[</span><span class="nx">getRandomInt</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">charlen</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">buf</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="nx">safeString</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">string</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Handle the £ symbol separately, since it needs to be removed before the unicode conversion.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/£/g</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Remove non ascii characters</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">string</span> <span class="o">=</span> <span class="nx">unidecode</span><span class="p">(</span><span class="nx">string</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Replace URL reserved chars: <code>@:/?#[]!$&amp;()*+,;=</code> as well as <code>\%&lt;&gt;|^~£"{}</code> and `</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/(\s|\.|@|:|\/|\?|#|\[|\]|!|\$|&amp;|\(|\)|\*|\+|,|;|=|\\|%|&lt;|&gt;|\||\^|~|&quot;|\{|\}|`|–|—)/g</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Remove apostrophes</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&#39;/g</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Make the whole thing lowercase</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>We do not need to make the following changes when importing data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;importing&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">importing</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>Convert 2 or more dashes into a single dash</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/-+/g</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>Remove trailing dash</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/-$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Remove any dashes at the beginning</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/^-/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Handle whitespace at the beginning or end.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">string</span> <span class="o">=</span> <span class="nx">string</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="nx">string</span><span class="p">;</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>The token is encoded URL safe by replacing '+' with '-', '\' with '_' and removing '='
+NOTE: the token is not encoded using valid base64 anymore</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">encodeBase64URLsafe</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">base64String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">base64String</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\+/g</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\//g</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/=+$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>Decode url safe base64 encoding and add padding ('=')</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">decodeBase64URLsafe</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">base64String</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">base64String</span> <span class="o">=</span> <span class="nx">base64String</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/-/g</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">).</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/_/g</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">);</span>
+        <span class="k">while</span> <span class="p">(</span><span class="nx">base64String</span><span class="p">.</span><span class="nx">length</span> <span class="o">%</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">base64String</span> <span class="o">+=</span> <span class="s1">&#39;=&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">base64String</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

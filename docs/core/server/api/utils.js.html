@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>utils.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/utils.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#api%20utils">API Utils</a>
+      </div>
+      <div class="heading h2">
+        <a href="#default%20options">Default Options</a>
+      </div>
+      <div class="heading h3">
+        <a href="#auto%20default%20options">Auto Default Options</a>
+      </div>
+      <div class="heading h3">
+        <a href="#manual%20default%20options">Manual Default Options</a>
+      </div>
+      <div class="heading h2">
+        <a href="#validate">Validate</a>
+      </div>
+      <div class="heading h3">
+        <a href="#do%20validate">Do Validate</a>
+      </div>
+      <div class="heading h3">
+        <a href="#check%20options">Check Options</a>
+      </div>
+      <div class="heading h2">
+        <a href="#detect%20public%20context">Detect Public Context</a>
+      </div>
+      <div class="heading h2">
+        <a href="#apply%20public%20permissions">Apply Public Permissions</a>
+      </div>
+      <div class="heading h2">
+        <a href="#handle%20public%20permissions">Handle Public Permissions</a>
+      </div>
+      <div class="heading h2">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h2">
+        <a href="#convert%20options">Convert Options</a>
+      </div>
+      <div class="heading h3">
+        <a href="#check%20object">Check Object</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="api%20utils">
+  <h1>
+    <a href="#api%20utils" name="api%20utils" class="pilcrow">&#182;</a>
+    API Utils
+  </h1>
+</div>
+
+
+<p>Shared helpers for working with the API</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">permissions</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../permissions&#39;</span><span class="p">),</span>
+    <span class="nx">validation</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/validation&#39;</span><span class="p">),</span>
+
+    <span class="nx">utils</span><span class="p">;</span>
+
+<span class="nx">utils</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="default%20options">
+  <h2>
+    <a href="#default%20options" name="default%20options" class="pilcrow">&#182;</a>
+    Default Options
+  </h2>
+</div>
+
+
+<p>Various default options for different types of endpoints</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="auto%20default%20options">
+  <h3>
+    <a href="#auto%20default%20options" name="auto%20default%20options" class="pilcrow">&#182;</a>
+    Auto Default Options
+  </h3>
+</div>
+
+
+<p>Handled / Added automatically by the validate function
+globalDefaultOptions - valid for every api endpoint</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">globalDefaultOptions</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;context&#39;</span><span class="p">,</span> <span class="s1">&#39;include&#39;</span><span class="p">],</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>dataDefaultOptions - valid for all endpoints which take object as well as options</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">dataDefaultOptions</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">],</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="manual%20default%20options">
+  <h3>
+    <a href="#manual%20default%20options" name="manual%20default%20options" class="pilcrow">&#182;</a>
+    Manual Default Options
+  </h3>
+</div>
+
+
+<p>These must be provided by the endpoint
+browseDefaultOptions - valid for all browse api endpoints</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">browseDefaultOptions</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="s1">&#39;limit&#39;</span><span class="p">,</span> <span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="s1">&#39;filter&#39;</span><span class="p">,</span> <span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="s1">&#39;debug&#39;</span><span class="p">],</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>idDefaultOptions - valid whenever an id is valid</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">idDefaultOptions</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="validate">
+  <h2>
+    <a href="#validate" name="validate" class="pilcrow">&#182;</a>
+    Validate
+  </h2>
+</div>
+
+
+<p>Prepare to validate the object and options passed to an endpoint</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">docName</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">extras</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Function</span>
+      <span>doValidate</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">validate</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="nx">extras</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="do%20validate">
+  <h3>
+    <a href="#do%20validate" name="do%20validate" class="pilcrow">&#182;</a>
+    Do Validate
+  </h3>
+</div>
+
+
+<p>Validate the object and options passed to an endpoint</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">[arguments]</span>
+      <span class="dox_type">...*</span>
+      <span>object or object and options hash</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="kd">function</span> <span class="nx">doValidate</span><span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">permittedOptions</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">object</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+                <span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">clone</span><span class="p">(</span><span class="nx">arguments</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">||</span> <span class="p">{};</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">clone</span><span class="p">(</span><span class="nx">arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">||</span> <span class="p">{};</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">options</span> <span class="o">=</span> <span class="p">{};</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Setup permitted options, starting with the global defaults</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">permittedOptions</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">globalDefaultOptions</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Add extra permitted options if any are passed in</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">extras</span> <span class="o">&amp;&amp;</span> <span class="nx">extras</span><span class="p">.</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">permittedOptions</span> <span class="o">=</span> <span class="nx">permittedOptions</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">extras</span><span class="p">.</span><span class="nx">opts</span><span class="p">);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>This request will have a data key added during validation</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">((</span><span class="nx">extras</span> <span class="o">&amp;&amp;</span> <span class="nx">extras</span><span class="p">.</span><span class="nx">attrs</span><span class="p">)</span> <span class="o">||</span> <span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">permittedOptions</span> <span class="o">=</span> <span class="nx">permittedOptions</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">utils</span><span class="p">.</span><span class="nx">dataDefaultOptions</span><span class="p">);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>If an 'attrs' object is passed, we use this to pick from options and convert them to data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">extras</span> <span class="o">&amp;&amp;</span> <span class="nx">extras</span><span class="p">.</span><span class="nx">attrs</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">extras</span><span class="p">.</span><span class="nx">attrs</span><span class="p">);</span>
+                <span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">extras</span><span class="p">.</span><span class="nx">attrs</span><span class="p">);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="check%20options">
+  <h3>
+    <a href="#check%20options" name="check%20options" class="pilcrow">&#182;</a>
+    Check Options
+  </h3>
+</div>
+
+
+<p>Ensure that the options provided match exactly with what is permitted
+- incorrect option keys are sanitized
+- incorrect option values are validated</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;options&gt;
+</span>
+      <span>{Promise<options>}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">function</span> <span class="nx">checkOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>@TODO: should we throw an error if there are incorrect options provided?</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">options</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">permittedOptions</span><span class="p">);</span>
+
+                <span class="kd">var</span> <span class="nx">validationErrors</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">validateOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">validationErrors</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+                <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>For now, we can only handle showing the first validation error</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndRejectError</span><span class="p">(</span><span class="nx">validationErrors</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>If we got an object, check that too</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkObject</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">docName</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">options</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="nx">data</span><span class="p">;</span>
+
+                    <span class="k">return</span> <span class="nx">checkOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>Otherwise just check options and return</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">checkOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+    <span class="nx">validateOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">validateOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">globalValidations</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">id</span><span class="o">:</span> <span class="p">{</span><span class="nx">matches</span><span class="o">:</span> <span class="sr">/^\d+|me$/</span><span class="p">},</span>
+                <span class="nx">uuid</span><span class="o">:</span> <span class="p">{</span><span class="nx">isUUID</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
+                <span class="nx">slug</span><span class="o">:</span> <span class="p">{</span><span class="nx">isSlug</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span>
+                <span class="nx">page</span><span class="o">:</span> <span class="p">{</span><span class="nx">matches</span><span class="o">:</span> <span class="sr">/^\d+$/</span><span class="p">},</span>
+                <span class="nx">limit</span><span class="o">:</span> <span class="p">{</span><span class="nx">matches</span><span class="o">:</span> <span class="sr">/^\d+|all$/</span><span class="p">},</span>
+                <span class="nx">fields</span><span class="o">:</span> <span class="p">{</span><span class="nx">matches</span><span class="o">:</span> <span class="sr">/^[\w, ]+$/</span><span class="p">},</span>
+                <span class="nx">order</span><span class="o">:</span> <span class="p">{</span><span class="nx">matches</span><span class="o">:</span> <span class="sr">/^[a-z0-9_,\. ]+$/i</span><span class="p">},</span>
+                <span class="nx">name</span><span class="o">:</span> <span class="p">{}</span>
+            <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>these values are sanitised/validated separately</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">noValidation</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="s1">&#39;context&#39;</span><span class="p">,</span> <span class="s1">&#39;include&#39;</span><span class="p">,</span> <span class="s1">&#39;filter&#39;</span><span class="p">],</span>
+            <span class="nx">errors</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>data is validated elsewhere</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">noValidation</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">globalValidations</span><span class="p">[</span><span class="nx">key</span><span class="p">])</span> <span class="p">{</span>
+                    <span class="nx">errors</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">validation</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">globalValidations</span><span class="p">[</span><span class="nx">key</span><span class="p">]));</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>all other keys should be alpha-numeric with dashes/underscores, like tag, author, status, etc</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="nx">errors</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">validation</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">globalValidations</span><span class="p">.</span><span class="nx">slug</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">errors</span><span class="p">;</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="detect%20public%20context">
+  <h2>
+    <a href="#detect%20public%20context" name="detect%20public%20context" class="pilcrow">&#182;</a>
+    Detect Public Context
+  </h2>
+</div>
+
+
+<p>Calls parse context to expand the options.context object</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Boolean
+</span>
+      <span>{Boolean}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">detectPublicContext</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">detectPublicContext</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">=</span> <span class="nx">permissions</span><span class="p">.</span><span class="nx">parseContext</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="kr">public</span><span class="p">;</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="apply%20public%20permissions">
+  <h2>
+    <a href="#apply%20public%20permissions" name="apply%20public%20permissions" class="pilcrow">&#182;</a>
+    Apply Public Permissions
+  </h2>
+</div>
+
+
+<p>Update the options object so that the rules reflect what is permitted to be retrieved from a public request</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">docName</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">method</span>
+      <span class="dox_type">String</span>
+      <span>(read || browse)</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">applyPublicPermissions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">applyPublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">permissions</span><span class="p">.</span><span class="nx">applyPublicRules</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20public%20permissions">
+  <h2>
+    <a href="#handle%20public%20permissions" name="handle%20public%20permissions" class="pilcrow">&#182;</a>
+    Handle Public Permissions
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">docName</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">method</span>
+      <span class="dox_type">String</span>
+      <span>(read || browse)</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Function
+</span>
+      <span>{Function}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">handlePublicPermissions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">handlePublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">singular</span> <span class="o">=</span> <span class="nx">docName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/s$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-24" id="section-24">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Check if this is a public request, if so use the public permissions, otherwise use standard canThis</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="kd">function</span> <span class="nx">doHandlePublicPermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">permsPromise</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">utils</span><span class="p">.</span><span class="nx">detectPublicContext</span><span class="p">(</span><span class="nx">options</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">permsPromise</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">applyPublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">permsPromise</span> <span class="o">=</span> <span class="nx">permissions</span><span class="p">.</span><span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">)[</span><span class="nx">method</span><span class="p">][</span><span class="nx">singular</span><span class="p">](</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">permsPromise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">permissionGranted</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h2>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">docName</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">method</span>
+      <span class="dox_type">String</span>
+      <span>(browse || read || edit || add || destroy)</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Function
+</span>
+      <span>{Function}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">handlePermissions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">singular</span> <span class="o">=</span> <span class="nx">docName</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/s$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="kd">function</span> <span class="nx">doHandlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">permsPromise</span> <span class="o">=</span> <span class="nx">permissions</span><span class="p">.</span><span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">)[</span><span class="nx">method</span><span class="p">][</span><span class="nx">singular</span><span class="p">](</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">permsPromise</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">permissionGranted</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">handleNoPermissionError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-27" id="section-27">&#182;</a>
+</div>
+<p>pimp error message</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;You do not have permission to &#39;</span> <span class="o">+</span> <span class="nx">method</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="nx">docName</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-28" id="section-28">&#182;</a>
+</div>
+<p>forward error to next catch()</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+    <span class="nx">trimAndLowerCase</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">trimAndLowerCase</span><span class="p">(</span><span class="nx">params</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">params</span> <span class="o">=</span> <span class="nx">params</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">params</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">params</span> <span class="o">=</span> <span class="nx">params</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">params</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">item</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">item</span><span class="p">.</span><span class="nx">trim</span><span class="p">().</span><span class="nx">toLowerCase</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">prepareInclude</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">prepareInclude</span><span class="p">(</span><span class="nx">include</span><span class="p">,</span> <span class="nx">allowedIncludes</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">intersection</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">trimAndLowerCase</span><span class="p">(</span><span class="nx">include</span><span class="p">),</span> <span class="nx">allowedIncludes</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">prepareFields</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">prepareFields</span><span class="p">(</span><span class="nx">fields</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">trimAndLowerCase</span><span class="p">(</span><span class="nx">fields</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="convert%20options">
+  <h2>
+    <a href="#convert%20options" name="convert%20options" class="pilcrow">&#182;</a>
+    Convert Options
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">allowedIncludes</span>
+      <span class="dox_type">Array</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Function</span>
+      <span>doConversion</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">convertOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-30" id="section-30">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Convert our options from API-style to Model-style</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="kd">function</span> <span class="nx">doConversion</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">include</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">prepareInclude</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">,</span> <span class="nx">allowedIncludes</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">fields</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">columns</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">prepareFields</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">fields</span><span class="p">);</span>
+                <span class="k">delete</span> <span class="nx">options</span><span class="p">.</span><span class="nx">fields</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="check%20object">
+  <h3>
+    <a href="#check%20object" name="check%20object" class="pilcrow">&#182;</a>
+    Check Object
+  </h3>
+</div>
+
+
+<p>Check an object passed to the API is in the correct format</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">docName</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Object)</span>
+      <span>resolves to the original object if it checks out</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">checkObject</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">docName</span><span class="p">,</span> <span class="nx">editId</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">object</span><span class="p">[</span><span class="nx">docName</span><span class="p">])</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">object</span><span class="p">[</span><span class="nx">docName</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndRejectError</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;No root key (\&#39;&#39;</span> <span class="o">+</span> <span class="nx">docName</span> <span class="o">+</span> <span class="s1">&#39;\&#39;) provided.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32">&#182;</a>
+</div>
+<p>convert author property to author_id to match the name in the database</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">docName</span> <span class="o">===</span> <span class="s1">&#39;posts&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">posts</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">object</span><span class="p">.</span><span class="nx">posts</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">author_id</span> <span class="o">=</span> <span class="nx">object</span><span class="p">.</span><span class="nx">posts</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">author</span><span class="p">;</span>
+                <span class="k">delete</span> <span class="nx">object</span><span class="p">.</span><span class="nx">posts</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">author</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">editId</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">[</span><span class="nx">docName</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span> <span class="o">&amp;&amp;</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">editId</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">!==</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">object</span><span class="p">[</span><span class="nx">docName</span><span class="p">][</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndRejectError</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Invalid id provided.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">object</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="nx">checkFileExists</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="nx">filename</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="o">!!</span><span class="p">(</span><span class="nx">options</span><span class="p">[</span><span class="nx">filename</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">[</span><span class="nx">filename</span><span class="p">].</span><span class="nx">type</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">[</span><span class="nx">filename</span><span class="p">].</span><span class="nx">path</span><span class="p">);</span>
+    <span class="p">},</span>
+    <span class="nx">checkFileIsValid</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nx">types</span><span class="p">,</span> <span class="nx">extensions</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">file</span><span class="p">.</span><span class="nx">type</span><span class="p">,</span>
+            <span class="nx">ext</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">extname</span><span class="p">(</span><span class="nx">file</span><span class="p">.</span><span class="nx">name</span><span class="p">).</span><span class="nx">toLowerCase</span><span class="p">();</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">types</span><span class="p">,</span> <span class="nx">type</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">extensions</span><span class="p">,</span> <span class="nx">ext</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

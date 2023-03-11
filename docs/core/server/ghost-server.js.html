@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ghost-server.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../", thisFile = "core/server/ghost-server.js", defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+  <script src="../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#ghost%20server">Ghost Server</a>
+      </div>
+      <div class="heading h2">
+        <a href="#ghostserver">GhostServer</a>
+      </div>
+      <div class="heading h2">
+        <a href="#public%20api%20methods">Public API methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#start">Start</a>
+      </div>
+      <div class="heading h3">
+        <a href="#stop">Stop</a>
+      </div>
+      <div class="heading h3">
+        <a href="#restart">Restart</a>
+      </div>
+      <div class="heading h3">
+        <a href="#hammertime">Hammertime</a>
+      </div>
+      <div class="heading h2">
+        <a href="#private%20(internal)%20methods">Private (internal) methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#connection">Connection</a>
+      </div>
+      <div class="heading h3">
+        <a href="#close%20connections">Close Connections</a>
+      </div>
+      <div class="heading h3">
+        <a href="#log%20start%20messages">Log Start Messages</a>
+      </div>
+      <div class="heading h3">
+        <a href="#log%20shutdown%20messages">Log Shutdown Messages</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="ghost%20server">
+  <h1>
+    <a href="#ghost%20server" name="ghost%20server" class="pilcrow">&#182;</a>
+    Ghost Server
+  </h1>
+</div>
+
+
+<p>Handles the creation of an HTTP Server for Ghost</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">chalk</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;chalk&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./errors&#39;</span><span class="p">),</span>
+    <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./config&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="ghostserver">
+  <h2>
+    <a href="#ghostserver" name="ghostserver" class="pilcrow">&#182;</a>
+    GhostServer
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">constructor</div>
+    <div class="dox_tag_detail">
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">rootApp</span>
+      <span class="dox_type">Object</span>
+      <span><ul>
+<li>parent express instance</li>
+</ul></span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">GhostServer</span><span class="p">(</span><span class="nx">rootApp</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rootApp</span> <span class="o">=</span> <span class="nx">rootApp</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">httpServer</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">connections</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">connectionId</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Expose config module for use externally.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">this</span><span class="p">.</span><span class="nx">config</span> <span class="o">=</span> <span class="nx">config</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="public%20api%20methods">
+  <h2>
+    <a href="#public%20api%20methods" name="public%20api%20methods" class="pilcrow">&#182;</a>
+    Public API methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+<div class="pilwrap" id="start">
+  <h3>
+    <a href="#start" name="start" class="pilcrow">&#182;</a>
+    Start
+  </h3>
+</div>
+
+
+<p>Starts the ghost server listening on the configured port.
+Alternatively you can pass in your own express instance and let Ghost
+start listening for you.</p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>{Object} externalApp - Optional express app instance.</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Resolves once Ghost has started</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">start</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">externalApp</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+        <span class="nx">rootApp</span> <span class="o">=</span> <span class="nx">externalApp</span> <span class="o">?</span> <span class="nx">externalApp</span> <span class="o">:</span> <span class="nx">self</span><span class="p">.</span><span class="nx">rootApp</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">socketConfig</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">getSocket</span><span class="p">();</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">socketConfig</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Make sure the socket is gone before trying to create another</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">try</span> <span class="p">{</span>
+                <span class="nx">fs</span><span class="p">.</span><span class="nx">unlinkSync</span><span class="p">(</span><span class="nx">socketConfig</span><span class="p">.</span><span class="nx">path</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>We can ignore this.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="p">}</span>
+
+            <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span> <span class="o">=</span> <span class="nx">rootApp</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="nx">socketConfig</span><span class="p">.</span><span class="nx">path</span><span class="p">);</span>
+
+            <span class="nx">fs</span><span class="p">.</span><span class="nx">chmod</span><span class="p">(</span><span class="nx">socketConfig</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">socketConfig</span><span class="p">.</span><span class="nx">permissions</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span> <span class="o">=</span> <span class="nx">rootApp</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span>
+                <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">port</span><span class="p">,</span>
+                <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">host</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">errno</span> <span class="o">===</span> <span class="s1">&#39;EADDRINUSE&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                    <span class="s1">&#39;(EADDRINUSE) Cannot start Ghost.&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Port &#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">port</span> <span class="o">+</span> <span class="s1">&#39; is already in use by another program.&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Is another Ghost instance already running?&#39;</span>
+                <span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                    <span class="s1">&#39;(Code: &#39;</span> <span class="o">+</span> <span class="nx">error</span><span class="p">.</span><span class="nx">errno</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;There was an error starting your server.&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Please use the error code above to search for a solution.&#39;</span>
+                <span class="p">);</span>
+            <span class="p">}</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;connection&#39;</span><span class="p">,</span> <span class="nx">self</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">self</span><span class="p">));</span>
+        <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;listening&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">logStartMessages</span><span class="p">();</span>
+            <span class="nx">resolve</span><span class="p">(</span><span class="nx">self</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="stop">
+  <h3>
+    <a href="#stop" name="stop" class="pilcrow">&#182;</a>
+    Stop
+  </h3>
+</div>
+
+
+<p>Returns a promise that will be fulfilled when the server stops. If the server has not been started,
+the promise will be fulfilled immediately</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Resolves once Ghost has stopped</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">stop</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">resolve</span><span class="p">(</span><span class="nx">self</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span><span class="p">.</span><span class="nx">close</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">httpServer</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">logShutdownMessages</span><span class="p">();</span>
+                <span class="nx">resolve</span><span class="p">(</span><span class="nx">self</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="nx">self</span><span class="p">.</span><span class="nx">closeConnections</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="restart">
+  <h3>
+    <a href="#restart" name="restart" class="pilcrow">&#182;</a>
+    Restart
+  </h3>
+</div>
+
+
+<p>Restarts the ghost application</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Resolves once Ghost has restarted</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">restart</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">stop</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">start</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="hammertime">
+  <h3>
+    <a href="#hammertime" name="hammertime" class="pilcrow">&#182;</a>
+    Hammertime
+  </h3>
+</div>
+
+
+<p>To be called after <code>stop</code></p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">hammertime</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">green</span><span class="p">(</span><span class="s1">&#39;Can\&#39;t touch this&#39;</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="private%20(internal)%20methods">
+  <h2>
+    <a href="#private%20(internal)%20methods" name="private%20(internal)%20methods" class="pilcrow">&#182;</a>
+    Private (internal) methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+<div class="pilwrap" id="connection">
+  <h3>
+    <a href="#connection" name="connection" class="pilcrow">&#182;</a>
+    Connection
+  </h3>
+</div>
+
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">socket
+</span>
+      <span class="dox_type">Object</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">connection</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+    <span class="nx">self</span><span class="p">.</span><span class="nx">connectionId</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="nx">socket</span><span class="p">.</span><span class="nx">_ghostId</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">connectionId</span><span class="p">;</span>
+
+    <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;close&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">delete</span> <span class="nx">self</span><span class="p">.</span><span class="nx">connections</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">_ghostId</span><span class="p">];</span>
+    <span class="p">});</span>
+
+    <span class="nx">self</span><span class="p">.</span><span class="nx">connections</span><span class="p">[</span><span class="nx">socket</span><span class="p">.</span><span class="nx">_ghostId</span><span class="p">]</span> <span class="o">=</span> <span class="nx">socket</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="close%20connections">
+  <h3>
+    <a href="#close%20connections" name="close%20connections" class="pilcrow">&#182;</a>
+    Close Connections
+  </h3>
+</div>
+
+
+<p>Most browsers keep a persistent connection open to the server, which prevents the close callback of
+httpServer from returning. We need to destroy all connections manually.</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">closeConnections</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+    <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">connections</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">socketId</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">socket</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">connections</span><span class="p">[</span><span class="nx">socketId</span><span class="p">];</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">socket</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="log%20start%20messages">
+  <h3>
+    <a href="#log%20start%20messages" name="log%20start%20messages" class="pilcrow">&#182;</a>
+    Log Start Messages
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">logStartMessages</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Startup &amp; Shutdown messages</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;production&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+            <span class="nx">chalk</span><span class="p">.</span><span class="nx">green</span><span class="p">(</span><span class="s1">&#39;Ghost is running in &#39;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">+</span> <span class="s1">&#39;...&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;\nYour blog is now available on&#39;</span><span class="p">,</span>
+            <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+            <span class="nx">chalk</span><span class="p">.</span><span class="nx">gray</span><span class="p">(</span><span class="s1">&#39;\nCtrl+C to shut down&#39;</span><span class="p">)</span>
+        <span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+            <span class="nx">chalk</span><span class="p">.</span><span class="nx">green</span><span class="p">(</span><span class="s1">&#39;Ghost is running in &#39;</span> <span class="o">+</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">+</span> <span class="s1">&#39;...&#39;</span><span class="p">),</span>
+            <span class="s1">&#39;\nListening on&#39;</span><span class="p">,</span>
+                <span class="nx">config</span><span class="p">.</span><span class="nx">getSocket</span><span class="p">()</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">host</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nx">port</span><span class="p">,</span>
+            <span class="s1">&#39;\nUrl configured as:&#39;</span><span class="p">,</span>
+            <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+            <span class="nx">chalk</span><span class="p">.</span><span class="nx">gray</span><span class="p">(</span><span class="s1">&#39;\nCtrl+C to shut down&#39;</span><span class="p">)</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">shutdown</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">red</span><span class="p">(</span><span class="s1">&#39;\nGhost has shut down&#39;</span><span class="p">));</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;production&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+                <span class="s1">&#39;\nYour blog is now offline&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span>
+                <span class="s1">&#39;\nGhost was running for&#39;</span><span class="p">,</span>
+                <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">uptime</span><span class="p">()),</span>
+                <span class="s1">&#39;seconds&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+        <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>ensure that Ghost exits correctly on Ctrl+C and SIGTERM</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">process</span><span class="p">.</span>
+        <span class="nx">removeAllListeners</span><span class="p">(</span><span class="s1">&#39;SIGINT&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;SIGINT&#39;</span><span class="p">,</span> <span class="nx">shutdown</span><span class="p">).</span>
+        <span class="nx">removeAllListeners</span><span class="p">(</span><span class="s1">&#39;SIGTERM&#39;</span><span class="p">).</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;SIGTERM&#39;</span><span class="p">,</span> <span class="nx">shutdown</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="log%20shutdown%20messages">
+  <h3>
+    <a href="#log%20shutdown%20messages" name="log%20shutdown%20messages" class="pilcrow">&#182;</a>
+    Log Shutdown Messages
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostServer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">logShutdownMessages</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">red</span><span class="p">(</span><span class="s1">&#39;Ghost is closing connections&#39;</span><span class="p">));</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">GhostServer</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

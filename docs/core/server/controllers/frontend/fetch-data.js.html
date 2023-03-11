@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>fetch-data.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/controllers/frontend/fetch-data.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#fetch%20data">Fetch Data</a>
+      </div>
+      <div class="heading h2">
+        <a href="#fetch%20posts%20per%20page">Fetch Posts Per page</a>
+      </div>
+      <div class="heading h2">
+        <a href="#process%20query">Process Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#fetch%20data">Fetch Data</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="fetch%20data">
+  <h1>
+    <a href="#fetch%20data" name="fetch%20data" class="pilcrow">&#182;</a>
+    Fetch Data
+  </h1>
+</div>
+
+
+<p>Dynamically build and execute queries on the API for channels</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">api</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../api&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../config&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">queryDefaults</span><span class="p">,</span>
+    <span class="nx">defaultPostQuery</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>The default settings for a default post query</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">queryDefaults</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;browse&#39;</span><span class="p">,</span>
+    <span class="nx">resource</span><span class="o">:</span> <span class="s1">&#39;posts&#39;</span><span class="p">,</span>
+    <span class="nx">options</span><span class="o">:</span> <span class="p">{}</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Default post query needs to always include author &amp; tags</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">defaultPostQuery</span><span class="p">,</span> <span class="nx">queryDefaults</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">include</span><span class="o">:</span> <span class="s1">&#39;author,tags,fields&#39;</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="fetch%20posts%20per%20page">
+  <h2>
+    <a href="#fetch%20posts%20per%20page" name="fetch%20posts%20per%20page" class="pilcrow">&#182;</a>
+    Fetch Posts Per page
+  </h2>
+</div>
+
+
+<p>Grab the postsPerPage setting</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>postOptions</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">fetchPostsPerPage</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="kd">var</span> <span class="nx">postsPerPage</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">.</span><span class="nx">postsPerPage</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>No negative posts per page, must be number</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">isNaN</span><span class="p">(</span><span class="nx">postsPerPage</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">postsPerPage</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">limit</span> <span class="o">=</span> <span class="nx">postsPerPage</span><span class="p">;</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Ensure the options key is present, so this can be merged with other options</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">options</span><span class="o">:</span> <span class="nx">options</span><span class="p">};</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary">
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">typedef</div>
+    <div class="dox_tag_detail">
+      <span>query</span>
+    </div>
+    <div class="dox_tag_title">
+</div>
+
+
+<div class="highlight"><pre><code><span class="o">&lt;</span><span class="nx">div</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;dox_tag_detail&quot;</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+
+
+
+<p></div>
+</div></p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="process%20query">
+  <h2>
+    <a href="#process%20query" name="process%20query" class="pilcrow">&#182;</a>
+    Process Query
+  </h2>
+</div>
+
+
+<p>Takes a 'query' object, ensures that type, resource and options are set
+Replaces occurrences of <code>%s</code> in options with slugParam
+Converts the query config to a promise for the result</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">query</span>
+      <span class="dox_type">type:String</span>
+      <span class="dox_type">resource:String</span>
+      <span class="dox_type">options:Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">slugParam</span>
+      <span class="dox_type">String</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>promise for an API call</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">processQuery</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">slugParam</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">query</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">cloneDeep</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Ensure that all the properties are filled out</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">defaultsDeep</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">queryDefaults</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Replace any slugs</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">query</span><span class="p">.</span><span class="nx">options</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">option</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">query</span><span class="p">.</span><span class="nx">options</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">option</span><span class="p">)</span> <span class="o">?</span> <span class="nx">option</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/%s/g</span><span class="p">,</span> <span class="nx">slugParam</span><span class="p">)</span> <span class="o">:</span> <span class="nx">option</span><span class="p">;</span>
+    <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>Return a promise for the api query</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">api</span><span class="p">[</span><span class="nx">query</span><span class="p">.</span><span class="nx">resource</span><span class="p">][</span><span class="nx">query</span><span class="p">.</span><span class="nx">type</span><span class="p">](</span><span class="nx">query</span><span class="p">.</span><span class="nx">options</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="fetch%20data">
+  <h2>
+    <a href="#fetch%20data" name="fetch%20data" class="pilcrow">&#182;</a>
+    Fetch Data
+  </h2>
+</div>
+
+
+<p>Calls out to get posts per page, builds the final posts query &amp; builds any additional queries
+Wraps the queries using Promise.props to ensure it gets named responses
+Does a first round of formatting on the response, and returns</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">channelOptions</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>response</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">fetchData</span><span class="p">(</span><span class="nx">channelOptions</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>@TODO improve this further</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="kd">var</span> <span class="nx">pageOptions</span> <span class="o">=</span> <span class="nx">channelOptions</span><span class="p">.</span><span class="nx">isRSS</span> <span class="o">?</span>
+        <span class="p">{</span><span class="nx">options</span><span class="o">:</span> <span class="nx">channelOptions</span><span class="p">.</span><span class="nx">postOptions</span><span class="p">}</span> <span class="o">:</span> <span class="nx">fetchPostsPerPage</span><span class="p">(</span><span class="nx">channelOptions</span><span class="p">.</span><span class="nx">postOptions</span><span class="p">),</span>
+        <span class="nx">postQuery</span><span class="p">,</span>
+        <span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>All channels must have a posts query, use the default if not provided</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">postQuery</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">defaultsDeep</span><span class="p">({},</span> <span class="nx">pageOptions</span><span class="p">,</span> <span class="nx">defaultPostQuery</span><span class="p">);</span>
+    <span class="nx">props</span><span class="p">.</span><span class="nx">posts</span> <span class="o">=</span> <span class="nx">processQuery</span><span class="p">(</span><span class="nx">postQuery</span><span class="p">,</span> <span class="nx">channelOptions</span><span class="p">.</span><span class="nx">slugParam</span><span class="p">);</span>
+
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">channelOptions</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">props</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">processQuery</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span> <span class="nx">channelOptions</span><span class="p">.</span><span class="nx">slugParam</span><span class="p">);</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">props</span><span class="p">(</span><span class="nx">props</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">response</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">cloneDeep</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">posts</span><span class="p">);</span>
+        <span class="k">delete</span> <span class="nx">results</span><span class="p">.</span><span class="nx">posts</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>process any remaining data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">results</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">response</span><span class="p">.</span><span class="nx">data</span> <span class="o">=</span> <span class="p">{};</span>
+
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">results</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">channelOptions</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">name</span><span class="p">].</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;browse&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">result</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="nx">response</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">name</span><span class="p">]</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="nx">channelOptions</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">name</span><span class="p">].</span><span class="nx">resource</span><span class="p">];</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">response</span><span class="p">;</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">fetchData</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>theme-handler.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/middleware/theme-handler.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#ghostlocals%20middleware">GhostLocals Middleware</a>
+      </div>
+      <div class="heading h3">
+        <a href="#confighbsforcontext%20middleware">configHbsForContext Middleware</a>
+      </div>
+      <div class="heading h3">
+        <a href="#activate%20theme">Activate Theme</a>
+      </div>
+      <div class="heading h3">
+        <a href="#updateactivetheme">updateActiveTheme</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>theme-handler.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">hbs</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">api</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">themeHandler</span><span class="p">;</span>
+
+<span class="nx">themeHandler</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="ghostlocals%20middleware">
+  <h3>
+    <a href="#ghostlocals%20middleware" name="ghostlocals%20middleware" class="pilcrow">&#182;</a>
+    GhostLocals Middleware
+  </h3>
+</div>
+
+
+<p>Expose the standard locals that every external page should have available,
+separating between the theme and the admin</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">ghostLocals</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">ghostLocals</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Make sure we have a locals value.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span> <span class="o">||</span> <span class="p">{};</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">version</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">ghostVersion</span><span class="p">;</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">safeVersion</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">ghostVersion</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/^(\d+\.)?(\d+)/</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>relative path from the URL</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">path</span><span class="p">;</span>
+
+        <span class="nx">next</span><span class="p">();</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="confighbsforcontext%20middleware">
+  <h3>
+    <a href="#confighbsforcontext%20middleware" name="confighbsforcontext%20middleware" class="pilcrow">&#182;</a>
+    configHbsForContext Middleware
+  </h3>
+</div>
+
+
+<p>Setup handlebars for the current context (admin or theme)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">configHbsForContext</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">configHbsForContext</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">themeData</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">cloneDeep</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">),</span>
+            <span class="nx">blogApp</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">app</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">secure</span> <span class="o">&amp;&amp;</span> <span class="nx">config</span><span class="p">.</span><span class="nx">urlSSL</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>For secure requests override .url property with the SSL version</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">themeData</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">urlSSL</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\/$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Change camelCase to snake_case</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">themeData</span><span class="p">.</span><span class="nx">posts_per_page</span> <span class="o">=</span> <span class="nx">themeData</span><span class="p">.</span><span class="nx">postsPerPage</span><span class="p">;</span>
+        <span class="k">delete</span> <span class="nx">themeData</span><span class="p">.</span><span class="nx">postsPerPage</span><span class="p">;</span>
+
+        <span class="nx">hbs</span><span class="p">.</span><span class="nx">updateTemplateOptions</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="p">{</span><span class="nx">blog</span><span class="o">:</span> <span class="nx">themeData</span><span class="p">}});</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">themePath</span> <span class="o">&amp;&amp;</span> <span class="nx">blogApp</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;activeTheme&#39;</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">blogApp</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;views&#39;</span><span class="p">,</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">themePath</span><span class="p">,</span> <span class="nx">blogApp</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;activeTheme&#39;</span><span class="p">)));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Pass 'secure' flag to the view engine
+so that templates can choose 'url' vs 'urlSSL'</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">secure</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">secure</span><span class="p">;</span>
+
+        <span class="nx">next</span><span class="p">();</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="activate%20theme">
+  <h3>
+    <a href="#activate%20theme" name="activate%20theme" class="pilcrow">&#182;</a>
+    Activate Theme
+  </h3>
+</div>
+
+
+<p>Helper for updateActiveTheme</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">activateTheme</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">activateTheme</span><span class="p">(</span><span class="nx">blogApp</span><span class="p">,</span> <span class="nx">activeTheme</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">hbsOptions</span><span class="p">,</span>
+            <span class="nx">themePartials</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">themePath</span><span class="p">,</span> <span class="nx">activeTheme</span><span class="p">,</span> <span class="s1">&#39;partials&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>clear the view cache</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">blogApp</span><span class="p">.</span><span class="nx">cache</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>set view engine</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">hbsOptions</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">partialsDir</span><span class="o">:</span> <span class="p">[</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">helperTemplates</span><span class="p">],</span>
+            <span class="nx">onCompile</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">onCompile</span><span class="p">(</span><span class="nx">exhbs</span><span class="p">,</span> <span class="nx">source</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">exhbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">compile</span><span class="p">(</span><span class="nx">source</span><span class="p">,</span> <span class="p">{</span><span class="nx">preventIndent</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">};</span>
+
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">themePartials</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">stat</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">stats</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>Check that the theme has a partials directory before trying to use it</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">&amp;&amp;</span> <span class="nx">stats</span> <span class="o">&amp;&amp;</span> <span class="nx">stats</span><span class="p">.</span><span class="nx">isDirectory</span><span class="p">())</span> <span class="p">{</span>
+                <span class="nx">hbsOptions</span><span class="p">.</span><span class="nx">partialsDir</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">themePartials</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+
+        <span class="nx">blogApp</span><span class="p">.</span><span class="nx">engine</span><span class="p">(</span><span class="s1">&#39;hbs&#39;</span><span class="p">,</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">express3</span><span class="p">(</span><span class="nx">hbsOptions</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Update user error template</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">errors</span><span class="p">.</span><span class="nx">updateActiveTheme</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Set active theme variable on the express server</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">blogApp</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;activeTheme&#39;</span><span class="p">,</span> <span class="nx">activeTheme</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="updateactivetheme">
+  <h3>
+    <a href="#updateactivetheme" name="updateactivetheme" class="pilcrow">&#182;</a>
+    updateActiveTheme
+  </h3>
+</div>
+
+
+<p>Updates the blogApp's activeTheme variable and subsequently
+activates that theme's views with the hbs templating engine if it
+is not yet activated.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">updateActiveTheme</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">updateActiveTheme</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">blogApp</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">app</span><span class="p">;</span>
+
+        <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;activeTheme&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">activeTheme</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>Check if the theme changed</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">activeTheme</span><span class="p">.</span><span class="nx">value</span> <span class="o">!==</span> <span class="nx">blogApp</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;activeTheme&#39;</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>Change theme</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">availableThemes</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">.</span><span class="nx">value</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">.</span><span class="nx">isAdmin</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>Throw an error if the theme is not available, but not on the admin UI</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">throwError</span><span class="p">(</span><span class="s1">&#39;The currently active theme &quot;&#39;</span> <span class="o">+</span> <span class="nx">activeTheme</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s1">&#39;&quot; is missing.&#39;</span><span class="p">);</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>At this point the activated theme is not present and the current
+request is for the admin client.  In order to allow the user access
+to the admin client we set an hbs instance on the app so that middleware
+processing can continue.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                        <span class="nx">blogApp</span><span class="p">.</span><span class="nx">engine</span><span class="p">(</span><span class="s1">&#39;hbs&#39;</span><span class="p">,</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">express3</span><span class="p">());</span>
+                        <span class="nx">errors</span><span class="p">.</span><span class="nx">logWarn</span><span class="p">(</span><span class="s1">&#39;The currently active theme &quot;&#39;</span> <span class="o">+</span> <span class="nx">activeTheme</span><span class="p">.</span><span class="nx">value</span> <span class="o">+</span> <span class="s1">&#39;&quot; is missing.&#39;</span><span class="p">);</span>
+
+                        <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+                    <span class="p">}</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                    <span class="nx">themeHandler</span><span class="p">.</span><span class="nx">activateTheme</span><span class="p">(</span><span class="nx">blogApp</span><span class="p">,</span> <span class="nx">activeTheme</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+            <span class="nx">next</span><span class="p">();</span>
+        <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>Trying to start up without the active theme present, setup a simple hbs instance
+and render an error page straight away.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">blogApp</span><span class="p">.</span><span class="nx">engine</span><span class="p">(</span><span class="s1">&#39;hbs&#39;</span><span class="p">,</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">express3</span><span class="p">());</span>
+            <span class="nx">next</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">themeHandler</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

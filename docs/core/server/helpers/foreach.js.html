@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>foreach.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/foreach.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#foreach%20helper">Foreach Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="foreach%20helper">
+  <h1>
+    <a href="#foreach%20helper" name="foreach%20helper" class="pilcrow">&#182;</a>
+    Foreach Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{#foreach data}}{{/foreach}}</code></p>
+
+<p>Block helper designed for looping through posts</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">hbs</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+
+    <span class="nx">hbsUtils</span>        <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">,</span>
+    <span class="nx">foreach</span><span class="p">;</span>
+
+<span class="nx">foreach</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">errors</span><span class="p">.</span><span class="nx">logWarn</span><span class="p">(</span><span class="s1">&#39;Need to pass an iterator to #foreach&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">fn</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">fn</span><span class="p">,</span>
+        <span class="nx">inverse</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">inverse</span><span class="p">,</span>
+        <span class="nx">columns</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">columns</span><span class="p">,</span>
+        <span class="nx">length</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">size</span><span class="p">(</span><span class="nx">context</span><span class="p">),</span>
+        <span class="nx">limit</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">limit</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">||</span> <span class="nx">length</span><span class="p">,</span>
+        <span class="nx">from</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">from</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">||</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="nx">to</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">to</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="nx">from</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="nx">limit</span><span class="p">,</span>
+        <span class="nx">output</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="nx">data</span><span class="p">,</span>
+        <span class="nx">contextPath</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">ids</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">contextPath</span> <span class="o">=</span> <span class="nx">hbsUtils</span><span class="p">.</span><span class="nx">appendContextPath</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">contextPath</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">hbsUtils</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">context</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">context</span> <span class="o">=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">data</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">createFrame</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">execIteration</span><span class="p">(</span><span class="nx">field</span><span class="p">,</span> <span class="nx">index</span><span class="p">,</span> <span class="nx">last</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">key</span> <span class="o">=</span> <span class="nx">field</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">index</span> <span class="o">=</span> <span class="nx">index</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">number</span> <span class="o">=</span> <span class="nx">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">first</span> <span class="o">=</span> <span class="nx">index</span> <span class="o">===</span> <span class="nx">from</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// From uses 1-indexed, but array uses 0-indexed.</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">last</span> <span class="o">=</span> <span class="o">!!</span><span class="nx">last</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">even</span> <span class="o">=</span> <span class="nx">index</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">===</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">odd</span> <span class="o">=</span> <span class="o">!</span><span class="nx">data</span><span class="p">.</span><span class="nx">even</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">rowStart</span> <span class="o">=</span> <span class="nx">index</span> <span class="o">%</span> <span class="nx">columns</span> <span class="o">===</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="nx">data</span><span class="p">.</span><span class="nx">rowEnd</span> <span class="o">=</span> <span class="nx">index</span> <span class="o">%</span> <span class="nx">columns</span> <span class="o">===</span> <span class="p">(</span><span class="nx">columns</span> <span class="o">-</span> <span class="mi">1</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">contextPath</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">data</span><span class="p">.</span><span class="nx">contextPath</span> <span class="o">=</span> <span class="nx">contextPath</span> <span class="o">+</span> <span class="nx">field</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="nx">output</span> <span class="o">=</span> <span class="nx">output</span> <span class="o">+</span> <span class="nx">fn</span><span class="p">(</span><span class="nx">context</span><span class="p">[</span><span class="nx">field</span><span class="p">],</span> <span class="p">{</span>
+            <span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">,</span>
+            <span class="nx">blockParams</span><span class="o">:</span> <span class="nx">hbsUtils</span><span class="p">.</span><span class="nx">blockParams</span><span class="p">([</span><span class="nx">context</span><span class="p">[</span><span class="nx">field</span><span class="p">],</span> <span class="nx">field</span><span class="p">],</span> <span class="p">[</span><span class="nx">contextPath</span> <span class="o">+</span> <span class="nx">field</span><span class="p">,</span> <span class="kc">null</span><span class="p">])</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="kd">function</span> <span class="nx">iterateCollection</span><span class="p">(</span><span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="nx">current</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">current</span> <span class="o">&lt;</span> <span class="nx">from</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">current</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">current</span> <span class="o">&lt;=</span> <span class="nx">to</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">execIteration</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">current</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">current</span> <span class="o">===</span> <span class="nx">to</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="nx">count</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="nx">current</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="k">typeof</span> <span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;object&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">iterateCollection</span><span class="p">(</span><span class="nx">context</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">output</span> <span class="o">=</span> <span class="nx">inverse</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">output</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">foreach</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

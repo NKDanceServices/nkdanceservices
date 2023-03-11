@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../../doc-style.css" />
+  <script src="../../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../../", thisFile = "core/server/data/fixtures/permissions/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../../doc-script.js"></script>
+  <script src="../../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#permissions%20fixtures">Permissions Fixtures</a>
+      </div>
+      <div class="heading h2">
+        <a href="#populate">Populate</a>
+      </div>
+      <div class="heading h3">
+        <a href="#ensure%20all%20permissions%20are%20added">Ensure all permissions are added</a>
+      </div>
+      <div class="heading h3">
+        <a href="#ensure%20all%20roles_permissions%20are%20added">Ensure all roles_permissions are added</a>
+      </div>
+      <div class="heading h2">
+        <a href="#update">Update</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="permissions%20fixtures">
+  <h1>
+    <a href="#permissions%20fixtures" name="permissions%20fixtures" class="pilcrow">&#182;</a>
+    Permissions Fixtures
+  </h1>
+</div>
+
+
+<p>Sets up the permissions, and the default permissions_roles relationships</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">sequence</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../utils/sequence&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../errors&#39;</span><span class="p">),</span>
+    <span class="nx">models</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../models&#39;</span><span class="p">),</span>
+    <span class="nx">fixtures</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./permissions&#39;</span><span class="p">),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>private</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">logInfo</span><span class="p">,</span>
+    <span class="nx">addAllPermissions</span><span class="p">,</span>
+    <span class="nx">addAllRolesPermissions</span><span class="p">,</span>
+    <span class="nx">addRolesPermissionsForRole</span><span class="p">,</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>public</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">populate</span><span class="p">,</span>
+    <span class="nx">to003</span><span class="p">;</span>
+
+<span class="nx">logInfo</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">logInfo</span><span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">errors</span><span class="p">.</span><span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Migrations&#39;</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">addRolesPermissionsForRole</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">roleName</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">fixturesForRole</span> <span class="o">=</span> <span class="nx">fixtures</span><span class="p">.</span><span class="nx">permissions_roles</span><span class="p">[</span><span class="nx">roleName</span><span class="p">],</span>
+        <span class="nx">permissionsToAdd</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Role</span><span class="p">.</span><span class="nx">forge</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="nx">roleName</span><span class="p">}).</span><span class="nx">fetch</span><span class="p">({</span><span class="nx">withRelated</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;permissions&#39;</span><span class="p">]}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">role</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Permissions</span><span class="p">.</span><span class="nx">forge</span><span class="p">().</span><span class="nx">fetch</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">permissions</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">fixturesForRole</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">permissionsToAdd</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">permissions</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">permission</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">objectPermissions</span> <span class="o">=</span> <span class="nx">fixturesForRole</span><span class="p">[</span><span class="nx">permission</span><span class="p">.</span><span class="nx">object_type</span><span class="p">];</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">objectPermissions</span> <span class="o">===</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">permission</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">objectPermissions</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">objectPermissions</span><span class="p">,</span> <span class="nx">permission</span><span class="p">.</span><span class="nx">action_type</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">permission</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+                    <span class="p">}</span>
+                    <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+                <span class="p">});</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">role</span><span class="p">.</span><span class="nx">permissions</span><span class="p">().</span><span class="nx">attach</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">compact</span><span class="p">(</span><span class="nx">permissionsToAdd</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">addAllRolesPermissions</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">roleNames</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">fixtures</span><span class="p">.</span><span class="nx">permissions_roles</span><span class="p">),</span>
+        <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">roleNames</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">roleName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">addRolesPermissionsForRole</span><span class="p">(</span><span class="nx">roleName</span><span class="p">));</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">addAllPermissions</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">fixtures</span><span class="p">.</span><span class="nx">permissions</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">permissions</span><span class="p">,</span> <span class="nx">objectType</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">permissions</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">permission</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="nx">permission</span><span class="p">.</span><span class="nx">object_type</span> <span class="o">=</span> <span class="nx">objectType</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Permission</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">permission</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">sequence</span><span class="p">(</span><span class="nx">ops</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="populate">
+  <h2>
+    <a href="#populate" name="populate" class="pilcrow">&#182;</a>
+    Populate
+  </h2>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">populate</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Populating permissions&#39;</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="ensure%20all%20permissions%20are%20added">
+  <h3>
+    <a href="#ensure%20all%20permissions%20are%20added" name="ensure%20all%20permissions%20are%20added" class="pilcrow">&#182;</a>
+    Ensure all permissions are added
+  </h3>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">addAllPermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="ensure%20all%20roles_permissions%20are%20added">
+  <h3>
+    <a href="#ensure%20all%20roles_permissions%20are%20added" name="ensure%20all%20roles_permissions%20are%20added" class="pilcrow">&#182;</a>
+    Ensure all roles_permissions are added
+  </h3>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">addAllRolesPermissions</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="update">
+  <h2>
+    <a href="#update" name="update" class="pilcrow">&#182;</a>
+    Update
+  </h2>
+</div>
+
+
+<p>Update permissions to 003
+Need to rename old permissions, and then add all of the missing ones</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">to003</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Upgrading permissions&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>To safely upgrade, we need to clear up the existing permissions and permissions_roles before recreating the new
+full set of permissions defined as of version 003</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Permissions</span><span class="p">.</span><span class="nx">forge</span><span class="p">().</span><span class="nx">fetch</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">permissions</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Removing old permissions&#39;</span><span class="p">);</span>
+        <span class="nx">permissions</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">permission</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">permission</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">).</span><span class="nx">detach</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">permission</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+            <span class="p">}));</span>
+        <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Now we can perform the normal populate</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">ops</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">populate</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">populate</span><span class="o">:</span> <span class="nx">populate</span><span class="p">,</span>
+    <span class="nx">to003</span><span class="o">:</span> <span class="nx">to003</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

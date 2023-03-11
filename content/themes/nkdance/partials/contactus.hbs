@@ -1,0 +1,39 @@
+<form name="contactus" id="contactus" method="POST">
+	<div class="row">
+		<div class="col-md-9">
+			<p style="display:none" class="text-danger empty name">name is empty</p>
+			<input type="text" id="name" name="name" value="" size="40" placeholder="Name" class=""/>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-9">
+			<p style="display:none" class="text-danger empty email">email is empty</p>
+			<p style="display:none" class="text-danger valid email">email is invalid</p>
+			<input type="text" id="email" name="email" value="" size="40" placeholder="Email" />
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-9">
+			<p style="display:none" class="text-danger empty phone">phone is empty</p>
+			<p style="display:none" class="text-danger valid phone">phone is invalid</p>
+			<input type="text" id="phone" name="phone" value="" size="40" placeholder="Phone" />
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-9">
+			<p style="display:none" class="text-danger empty message">message is empty</p>
+			<textarea name="message" id="message"  cols="40" rows="10" class="form-control textarea" placeholder="Your Message"></textarea>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-9">
+			<p style="display:none" class="text-danger empty captcha">captcha is not selected</p>
+			<div class="g-recaptcha captcha-fix" data-sitekey="6LeJbxoTAAAAALlF3cGSMznFfPiauiFcxfSb23g1"></div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-3">
+			<input type="submit" value="Send" class="form-control form-submit"/>
+		</div>
+	</div>
+</form>

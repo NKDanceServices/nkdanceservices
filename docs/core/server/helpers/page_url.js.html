@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>page_url.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/page_url.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#page%20url%20helper">Page URL Helper</a>
+      </div>
+      <div class="heading h3">
+        <a href="#page%20url%20helper%3A%20deprecated">Page URL Helper: DEPRECATED</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>page_url.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="page%20url%20helper">
+  <h3>
+    <a href="#page%20url%20helper" name="page%20url%20helper" class="pilcrow">&#182;</a>
+    Page URL Helper
+  </h3>
+</div>
+
+
+<p><em>Usage example:</em>
+<code>{{page_url 2}}</code></p>
+
+<p>Returns the URL for the page specified in the current object
+context.</p>
+
+<p>We use the name page_url to match the helper for consistency:
+jscs:disable requireCamelCaseOrUpperCaseIdentifiers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">config</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">page_url</span><span class="p">,</span>
+    <span class="nx">pageUrl</span><span class="p">;</span>
+
+<span class="nx">page_url</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">block</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/*jshint unused:false*/</span>
+    <span class="kd">var</span> <span class="nx">url</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">subdir</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">tagSlug</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">url</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="nx">tag</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">tagSlug</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">authorSlug</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">url</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="nx">author</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">authorSlug</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">url</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="nx">page</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nx">context</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nx">url</span> <span class="o">+=</span> <span class="s1">&#39;/&#39;</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">url</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="page%20url%20helper%3A%20deprecated">
+  <h3>
+    <a href="#page%20url%20helper%3A%20deprecated" name="page%20url%20helper%3A%20deprecated" class="pilcrow">&#182;</a>
+    Page URL Helper: DEPRECATED
+  </h3>
+</div>
+
+
+<p><em>Usage example:</em>
+<code>{{pageUrl 2}}</code></p>
+
+<p>Returns the URL for the page specified in the current object
+context. This helper is deprecated and will be removed in future versions.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">pageUrl</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">block</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">errors</span><span class="p">.</span><span class="nx">logWarn</span><span class="p">(</span><span class="s1">&#39;Warning: pageUrl is deprecated, please use page_url instead\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;The helper pageUrl has been replaced with page_url in Ghost 0.4.2, and will be removed entirely in Ghost 0.6\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;In your theme\&#39;s pagination.hbs file, pageUrl should be renamed to page_url&#39;</span><span class="p">);</span>
+
+    <span class="cm">/*jshint unused:false*/</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">page_url</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">block</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">page_url</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">deprecated</span> <span class="o">=</span> <span class="nx">pageUrl</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

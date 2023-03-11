@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>update-check.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../", thisFile = "core/server/update-check.js", defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+  <script src="../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#update%20checking%20service">Update Checking Service</a>
+      </div>
+      <div class="heading h2">
+        <a href="#update%20check%20response">Update Check Response</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="update%20checking%20service">
+  <h1>
+    <a href="#update%20checking%20service" name="update%20checking%20service" class="pilcrow">&#182;</a>
+    Update Checking Service
+  </h1>
+</div>
+
+
+<p>Makes a request to Ghost.org to check if there is a new version of Ghost available.
+The service is provided in return for users opting in to anonymous usage data collection.</p>
+
+<p>Blog owners can opt-out of update checks by setting <code>privacy: { useUpdateCheck: false }</code> in their config.js</p>
+
+<p>The data collected is as follows:</p>
+
+<ul>
+<li>blog id - a hash of the blog hostname, pathname and dbHash. No identifiable info is stored.</li>
+<li>ghost version</li>
+<li>node version</li>
+<li>npm version</li>
+<li>env - production or development</li>
+<li>database type - SQLite, MySQL, PostgreSQL</li>
+<li>email transport - mail.options.service, or otherwise mail.transport</li>
+<li>created date - database creation date</li>
+<li>post count - total number of posts</li>
+<li>user count - total number of users</li>
+<li>theme - name of the currently active theme</li>
+<li>apps - names of any active apps</li>
+</ul>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">crypto</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;crypto&#39;</span><span class="p">),</span>
+    <span class="nx">exec</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">exec</span><span class="p">,</span>
+    <span class="nx">https</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;https&#39;</span><span class="p">),</span>
+    <span class="nx">moment</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;moment&#39;</span><span class="p">),</span>
+    <span class="nx">semver</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;semver&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">url</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">),</span>
+
+    <span class="nx">api</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./api&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./config&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./errors&#39;</span><span class="p">),</span>
+
+    <span class="nx">internal</span> <span class="o">=</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}},</span>
+    <span class="nx">allowedCheckEnvironments</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;development&#39;</span><span class="p">,</span> <span class="s1">&#39;production&#39;</span><span class="p">],</span>
+    <span class="nx">checkEndpoint</span> <span class="o">=</span> <span class="s1">&#39;updates.ghost.org&#39;</span><span class="p">,</span>
+    <span class="nx">currentVersion</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">ghostVersion</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">updateCheckError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span>
+        <span class="p">{</span><span class="nx">settings</span><span class="o">:</span> <span class="p">[{</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;nextUpdateCheck&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">round</span><span class="p">(</span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">/</span> <span class="mi">1000</span> <span class="o">+</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">3600</span><span class="p">)}]},</span>
+        <span class="nx">internal</span>
+    <span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">);</span>
+
+    <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+        <span class="nx">error</span><span class="p">,</span>
+        <span class="s1">&#39;Checking for updates failed, your blog will continue to function.&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;If you get this error repeatedly, please seek help on http://support.ghost.org.&#39;</span>
+    <span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">updateCheckData</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="nx">ops</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="nx">mailConfig</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">mail</span><span class="p">;</span>
+
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;dbHash&#39;</span><span class="p">},</span> <span class="nx">internal</span><span class="p">)).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">));</span>
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;activeTheme&#39;</span><span class="p">},</span> <span class="nx">internal</span><span class="p">)).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">));</span>
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;activeApps&#39;</span><span class="p">},</span> <span class="nx">internal</span><span class="p">))</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">apps</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+            <span class="k">try</span> <span class="p">{</span>
+                <span class="nx">apps</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">apps</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">apps</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">item</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">memo</span> <span class="o">===</span> <span class="s1">&#39;&#39;</span> <span class="o">?</span> <span class="nx">memo</span> <span class="o">+</span> <span class="nx">item</span> <span class="o">:</span> <span class="nx">memo</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">;</span> <span class="p">},</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+        <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">));</span>
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">browse</span><span class="p">().</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">));</span>
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">browse</span><span class="p">(</span><span class="nx">internal</span><span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">));</span>
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">exec</span><span class="p">)(</span><span class="s1">&#39;npm -v&#39;</span><span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">));</span>
+
+    <span class="nx">data</span><span class="p">.</span><span class="nx">ghost_version</span>   <span class="o">=</span> <span class="nx">currentVersion</span><span class="p">;</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">node_version</span>    <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">versions</span><span class="p">.</span><span class="nx">node</span><span class="p">;</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">env</span>             <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span><span class="p">;</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">database_type</span>   <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">database</span><span class="p">.</span><span class="nx">client</span><span class="p">;</span>
+    <span class="nx">data</span><span class="p">.</span><span class="nx">email_transport</span> <span class="o">=</span> <span class="nx">mailConfig</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">mailConfig</span><span class="p">.</span><span class="nx">options</span> <span class="o">&amp;&amp;</span> <span class="nx">mailConfig</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">service</span> <span class="o">?</span> <span class="nx">mailConfig</span><span class="p">.</span><span class="nx">options</span><span class="p">.</span><span class="nx">service</span> <span class="o">:</span> <span class="nx">mailConfig</span><span class="p">.</span><span class="nx">transport</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">ops</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">descriptors</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">hash</span>             <span class="o">=</span> <span class="nx">descriptors</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">().</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nx">theme</span>            <span class="o">=</span> <span class="nx">descriptors</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">value</span><span class="p">().</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nx">apps</span>             <span class="o">=</span> <span class="nx">descriptors</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">value</span><span class="p">(),</span>
+            <span class="nx">posts</span>            <span class="o">=</span> <span class="nx">descriptors</span><span class="p">[</span><span class="mi">3</span><span class="p">].</span><span class="nx">value</span><span class="p">(),</span>
+            <span class="nx">users</span>            <span class="o">=</span> <span class="nx">descriptors</span><span class="p">[</span><span class="mi">4</span><span class="p">].</span><span class="nx">value</span><span class="p">(),</span>
+            <span class="nx">npm</span>              <span class="o">=</span> <span class="nx">descriptors</span><span class="p">[</span><span class="mi">5</span><span class="p">].</span><span class="nx">value</span><span class="p">(),</span>
+            <span class="nx">blogUrl</span>          <span class="o">=</span> <span class="nx">url</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">),</span>
+            <span class="nx">blogId</span>           <span class="o">=</span> <span class="nx">blogUrl</span><span class="p">.</span><span class="nx">hostname</span> <span class="o">+</span> <span class="nx">blogUrl</span><span class="p">.</span><span class="nx">pathname</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\//</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nx">hash</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+
+        <span class="nx">data</span><span class="p">.</span><span class="nx">blog_id</span>         <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createHash</span><span class="p">(</span><span class="s1">&#39;md5&#39;</span><span class="p">).</span><span class="nx">update</span><span class="p">(</span><span class="nx">blogId</span><span class="p">).</span><span class="nx">digest</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">);</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">theme</span>           <span class="o">=</span> <span class="nx">theme</span> <span class="o">?</span> <span class="nx">theme</span><span class="p">.</span><span class="nx">value</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">apps</span>            <span class="o">=</span> <span class="nx">apps</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">post_count</span>      <span class="o">=</span> <span class="nx">posts</span> <span class="o">&amp;&amp;</span> <span class="nx">posts</span><span class="p">.</span><span class="nx">meta</span> <span class="o">&amp;&amp;</span> <span class="nx">posts</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">pagination</span> <span class="o">?</span> <span class="nx">posts</span><span class="p">.</span><span class="nx">meta</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">total</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">user_count</span>      <span class="o">=</span> <span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">users</span><span class="p">.</span><span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">users</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">length</span> <span class="o">?</span> <span class="nx">users</span><span class="p">.</span><span class="nx">users</span><span class="p">.</span><span class="nx">length</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">blog_created_at</span> <span class="o">=</span> <span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">users</span><span class="p">.</span><span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">users</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">users</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">created_at</span> <span class="o">?</span> <span class="nx">moment</span><span class="p">(</span><span class="nx">users</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">created_at</span><span class="p">).</span><span class="nx">unix</span><span class="p">()</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="nx">data</span><span class="p">.</span><span class="nx">npm_version</span>     <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">npm</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">npm</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">?</span> <span class="nx">npm</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">toString</span><span class="p">().</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\n/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">data</span><span class="p">;</span>
+    <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">updateCheckError</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">updateCheckRequest</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">updateCheckData</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">reqData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">resData</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">headers</span><span class="p">,</span>
+            <span class="nx">req</span><span class="p">;</span>
+
+        <span class="nx">reqData</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">reqData</span><span class="p">);</span>
+
+        <span class="nx">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;Content-Length&#39;</span><span class="o">:</span> <span class="nx">reqData</span><span class="p">.</span><span class="nx">length</span>
+        <span class="p">};</span>
+
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span> <span class="nx">p</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">req</span> <span class="o">=</span> <span class="nx">https</span><span class="p">.</span><span class="nx">request</span><span class="p">({</span>
+                <span class="nx">hostname</span><span class="o">:</span> <span class="nx">checkEndpoint</span><span class="p">,</span>
+                <span class="nx">method</span><span class="o">:</span> <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+                <span class="nx">headers</span><span class="o">:</span> <span class="nx">headers</span>
+            <span class="p">},</span> <span class="kd">function</span> <span class="nx">handler</span><span class="p">(</span><span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">res</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span> <span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span> <span class="p">});</span>
+                <span class="nx">res</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onData</span><span class="p">(</span><span class="nx">chunk</span><span class="p">)</span> <span class="p">{</span> <span class="nx">resData</span> <span class="o">+=</span> <span class="nx">chunk</span><span class="p">;</span> <span class="p">});</span>
+                <span class="nx">res</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;end&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onEnd</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="k">try</span> <span class="p">{</span>
+                        <span class="nx">resData</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">resData</span><span class="p">);</span>
+                        <span class="nx">resolve</span><span class="p">(</span><span class="nx">resData</span><span class="p">);</span>
+                    <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">reject</span><span class="p">(</span><span class="s1">&#39;Unable to decode update response&#39;</span><span class="p">);</span>
+                    <span class="p">}</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+
+            <span class="nx">req</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;socket&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onSocket</span><span class="p">(</span><span class="nx">socket</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Wait a maximum of 10seconds</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">socket</span><span class="p">.</span><span class="nx">setTimeout</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+                <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onTimeout</span><span class="p">()</span> <span class="p">{</span>
+                    <span class="nx">req</span><span class="p">.</span><span class="nx">abort</span><span class="p">();</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+
+            <span class="nx">req</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="nx">req</span><span class="p">.</span><span class="nx">write</span><span class="p">(</span><span class="nx">reqData</span><span class="p">);</span>
+            <span class="nx">req</span><span class="p">.</span><span class="nx">end</span><span class="p">();</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="update%20check%20response">
+  <h2>
+    <a href="#update%20check%20response" name="update%20check%20response" class="pilcrow">&#182;</a>
+    Update Check Response
+  </h2>
+</div>
+
+
+<p>Handles the response from the update check
+Does two things with the information received:
+1. Updates the time we can next make a check
+2. Checks if the version in the response is new, and updates the notification setting</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">updateCheckResponse</span><span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">ops</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="nx">ops</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span>
+        <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span>
+            <span class="p">{</span><span class="nx">settings</span><span class="o">:</span> <span class="p">[{</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;nextUpdateCheck&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">response</span><span class="p">.</span><span class="nx">next_check</span><span class="p">}]},</span>
+            <span class="nx">internal</span>
+        <span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">),</span>
+        <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span>
+            <span class="p">{</span><span class="nx">settings</span><span class="o">:</span> <span class="p">[{</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;displayUpdateNotification&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">response</span><span class="p">.</span><span class="nx">version</span><span class="p">}]},</span>
+            <span class="nx">internal</span>
+        <span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">)</span>
+    <span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">settle</span><span class="p">(</span><span class="nx">ops</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">descriptors</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">descriptors</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="nx">forEach</span><span class="p">(</span><span class="nx">d</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">isRejected</span><span class="p">())</span> <span class="p">{</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="nx">d</span><span class="p">.</span><span class="nx">reason</span><span class="p">());</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">updateCheck</span><span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>The check will not happen if:
+1. updateCheck is defined as false in config.js
+2. we've already done a check this session
+3. we're not in production or development mode
+TODO: need to remove config.updateCheck in favor of config.privacy.updateCheck in future version (it is now deprecated)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">updateCheck</span> <span class="o">===</span> <span class="kc">false</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">isPrivacyDisabled</span><span class="p">(</span><span class="s1">&#39;useUpdateCheck&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">allowedCheckEnvironments</span><span class="p">,</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span><span class="p">)</span> <span class="o">===</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>No update check</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;nextUpdateCheck&#39;</span><span class="p">},</span> <span class="nx">internal</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">nextUpdateCheck</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">nextUpdateCheck</span> <span class="o">&amp;&amp;</span> <span class="nx">nextUpdateCheck</span><span class="p">.</span><span class="nx">value</span> <span class="o">&amp;&amp;</span> <span class="nx">nextUpdateCheck</span><span class="p">.</span><span class="nx">value</span> <span class="o">&gt;</span> <span class="nx">moment</span><span class="p">().</span><span class="nx">unix</span><span class="p">())</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>It's not time to check yet</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>We need to do a check</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">updateCheckRequest</span><span class="p">()</span>
+                    <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">updateCheckResponse</span><span class="p">)</span>
+                    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">updateCheckError</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">updateCheckError</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">showUpdateNotification</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;displayUpdateNotification&#39;</span><span class="p">},</span> <span class="nx">internal</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">display</span> <span class="o">=</span> <span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Version 0.4 used boolean to indicate the need for an update. This special case is
+translated to the version string.
+TODO: remove in future version.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">display</span><span class="p">.</span><span class="nx">value</span> <span class="o">===</span> <span class="s1">&#39;false&#39;</span> <span class="o">||</span> <span class="nx">display</span><span class="p">.</span><span class="nx">value</span> <span class="o">===</span> <span class="s1">&#39;true&#39;</span> <span class="o">||</span> <span class="nx">display</span><span class="p">.</span><span class="nx">value</span> <span class="o">===</span> <span class="s1">&#39;1&#39;</span> <span class="o">||</span> <span class="nx">display</span><span class="p">.</span><span class="nx">value</span> <span class="o">===</span> <span class="s1">&#39;0&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">display</span><span class="p">.</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;0.4.0&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">display</span> <span class="o">&amp;&amp;</span> <span class="nx">display</span><span class="p">.</span><span class="nx">value</span> <span class="o">&amp;&amp;</span> <span class="nx">currentVersion</span> <span class="o">&amp;&amp;</span> <span class="nx">semver</span><span class="p">.</span><span class="nx">gt</span><span class="p">(</span><span class="nx">display</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span> <span class="nx">currentVersion</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">display</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">updateCheck</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">showUpdateNotification</span> <span class="o">=</span> <span class="nx">showUpdateNotification</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

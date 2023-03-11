@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>filter.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/models/plugins/filter.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h2">
+        <a href="#combine%20filters">Combine Filters</a>
+      </div>
+      <div class="heading h2">
+        <a href="#post%20process%20filters">Post process Filters</a>
+      </div>
+      <div class="heading h2">
+        <a href="#fetchandcombinefilters">fetchAndCombineFilters</a>
+      </div>
+      <div class="heading h2">
+        <a href="#apply%20filters">Apply Filters</a>
+      </div>
+      <div class="heading h2">
+        <a href="#export%20filter%20plugin">Export Filter plugin</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>filter.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../errors&#39;</span><span class="p">),</span>
+    <span class="nx">gql</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;ghost-gql&#39;</span><span class="p">),</span>
+    <span class="nx">filter</span><span class="p">,</span>
+    <span class="nx">filterUtils</span><span class="p">;</span>
+
+<span class="nx">filterUtils</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="combine%20filters">
+  <h2>
+    <a href="#combine%20filters" name="combine%20filters" class="pilcrow">&#182;</a>
+    Combine Filters
+  </h2>
+</div>
+
+
+<p>Util to combine the enforced, default and custom filters such that they behave accordingly</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">enforced</span>
+      <span class="dox_type">String</span>
+      <span class="dox_type">Object</span>
+      <span><ul>
+<li>filters which must ALWAYS be applied</li>
+</ul></span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">defaults</span>
+      <span class="dox_type">String</span>
+      <span class="dox_type">Object</span>
+      <span><ul>
+<li>filters which must be applied if a matching filter isn't provided</li>
+</ul></span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">[custom]</span>
+      <span class="dox_type">...String</span>
+      <span class="dox_type">Object</span>
+      <span><ul>
+<li>custom filters which are additional</li>
+</ul></span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">*
+</span>
+      <span>{*}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">combineFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">combineFilters</span><span class="p">(</span><span class="nx">enforced</span><span class="p">,</span> <span class="nx">defaults</span><span class="p">,</span> <span class="nx">custom</span> <span class="cm">/* ...custom */</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">custom</span> <span class="o">=</span> <span class="nb">Array</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">slice</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">arguments</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Ensure everything has been run through the gql parser</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">try</span> <span class="p">{</span>
+            <span class="nx">enforced</span> <span class="o">=</span> <span class="nx">enforced</span> <span class="o">?</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">enforced</span><span class="p">)</span> <span class="o">?</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">enforced</span><span class="p">)</span> <span class="o">:</span> <span class="nx">enforced</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="nx">defaults</span> <span class="o">=</span> <span class="nx">defaults</span> <span class="o">?</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">defaults</span><span class="p">)</span> <span class="o">?</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">defaults</span><span class="p">)</span> <span class="o">:</span> <span class="nx">defaults</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+            <span class="nx">custom</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">custom</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">arg</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">arg</span><span class="p">)</span> <span class="o">?</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">arg</span><span class="p">)</span> <span class="o">:</span> <span class="nx">arg</span><span class="p">;</span>
+            <span class="p">});</span>
+        <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span>
+                <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">,</span> <span class="s1">&#39;filter&#39;</span><span class="p">),</span>
+                <span class="s1">&#39;Error parsing filter&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;For more information on how to use filter, see http://api.ghost.org/docs/filter&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Merge custom filter options into a single set of statements</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">custom</span> <span class="o">=</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">mergeStatements</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">custom</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>if there is no enforced or default statements, return just the custom statements;</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">enforced</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">defaults</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">custom</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Reduce custom filters based on enforced filters</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">custom</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">enforced</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">enforced</span><span class="p">.</span><span class="nx">statements</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span> <span class="o">=</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">rejectStatements</span><span class="p">(</span><span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">customStatement</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">findStatement</span><span class="p">(</span><span class="nx">enforced</span><span class="p">.</span><span class="nx">statements</span><span class="p">,</span> <span class="nx">customStatement</span><span class="p">,</span> <span class="s1">&#39;prop&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Reduce default filters based on custom filters</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">defaults</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">defaults</span><span class="p">.</span><span class="nx">statements</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">custom</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">defaults</span><span class="p">.</span><span class="nx">statements</span> <span class="o">=</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">rejectStatements</span><span class="p">(</span><span class="nx">defaults</span><span class="p">.</span><span class="nx">statements</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">defaultStatement</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">findStatement</span><span class="p">(</span><span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span><span class="p">,</span> <span class="nx">defaultStatement</span><span class="p">,</span> <span class="s1">&#39;prop&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Merge enforced and defaults</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">enforced</span> <span class="o">=</span> <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">mergeStatements</span><span class="p">(</span><span class="nx">enforced</span><span class="p">,</span> <span class="nx">defaults</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">enforced</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">enforced</span><span class="p">.</span><span class="nx">statements</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">custom</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nx">statements</span><span class="o">:</span> <span class="p">[</span>
+                <span class="p">{</span><span class="nx">group</span><span class="o">:</span> <span class="nx">enforced</span><span class="p">.</span><span class="nx">statements</span><span class="p">},</span>
+                <span class="p">{</span><span class="nx">group</span><span class="o">:</span> <span class="nx">custom</span><span class="p">.</span><span class="nx">statements</span><span class="p">,</span> <span class="nx">func</span><span class="o">:</span> <span class="s1">&#39;and&#39;</span><span class="p">}</span>
+            <span class="p">]</span>
+        <span class="p">};</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">filter</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">Bookshelf</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">Model</span> <span class="o">=</span> <span class="nx">Bookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Cached copy of the filters setup for this model instance</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">_filters</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Override these on the various models</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">enforcedFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">enforcedFilters</span><span class="p">()</span> <span class="p">{},</span>
+        <span class="nx">defaultFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">defaultFilters</span><span class="p">()</span> <span class="p">{},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="post%20process%20filters">
+  <h2>
+    <a href="#post%20process%20filters" name="post%20process%20filters" class="pilcrow">&#182;</a>
+    Post process Filters
+  </h2>
+</div>
+
+
+<p>Post Process filters looking for joins etc</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">TODO</div>
+    <div class="dox_tag_detail">
+      <span>refactor this</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options
+</span>
+      <span class="dox_type">object</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">postProcessFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">postProcessFilters</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">joinTables</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">_filters</span><span class="p">.</span><span class="nx">joins</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">joinTables</span> <span class="o">&amp;&amp;</span> <span class="nx">joinTables</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>We need to use leftOuterJoin to insure we still include posts which don't have tags in the result
+The where clause should restrict which items are returned</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">this</span>
+                    <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;leftOuterJoin&#39;</span><span class="p">,</span> <span class="s1">&#39;posts_tags&#39;</span><span class="p">,</span> <span class="s1">&#39;posts_tags.post_id&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;posts.id&#39;</span><span class="p">)</span>
+                    <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;leftOuterJoin&#39;</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="s1">&#39;posts_tags.tag_id&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;tags.id&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>The order override should ONLY happen if we are doing an "IN" query
+TODO move the order handling to the query building that is currently inside pagination
+TODO make the order handling in pagination handle orderByRaw
+TODO extend this handling to all joins</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">findStatement</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_filters</span><span class="p">.</span><span class="nx">statements</span><span class="p">,</span> <span class="p">{</span><span class="nx">prop</span><span class="o">:</span> <span class="sr">/^tags/</span><span class="p">,</span> <span class="nx">op</span><span class="o">:</span> <span class="s1">&#39;IN&#39;</span><span class="p">}))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>TODO make this count the number of MATCHING tags, not just the number of tags</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">this</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;orderByRaw&#39;</span><span class="p">,</span> <span class="s1">&#39;count(tags.id) DESC&#39;</span><span class="p">);</span>
+                <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>We need to add a group by to counter the double left outer join
+TODO improve on the group by handling</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">groups</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">groups</span> <span class="o">||</span> <span class="p">[];</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">groups</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;posts.id&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">joinTables</span> <span class="o">&amp;&amp;</span> <span class="nx">joinTables</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span>
+                    <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;join&#39;</span><span class="p">,</span> <span class="s1">&#39;users as author&#39;</span><span class="p">,</span> <span class="s1">&#39;author.id&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;posts.author_id&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="fetchandcombinefilters">
+  <h2>
+    <a href="#fetchandcombinefilters" name="fetchandcombinefilters" class="pilcrow">&#182;</a>
+    fetchAndCombineFilters
+  </h2>
+</div>
+
+
+<p>Helper method, uses the combineFilters util to apply filters to the current model instance
+based on options and the set enforced/default filters for this resource</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Bookshelf.Model
+</span>
+      <span>{Bookshelf.Model}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">fetchAndCombineFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">fetchAndCombineFilters</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+            <span class="k">this</span><span class="p">.</span><span class="nx">_filters</span> <span class="o">=</span> <span class="nx">filterUtils</span><span class="p">.</span><span class="nx">combineFilters</span><span class="p">(</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">enforcedFilters</span><span class="p">(),</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">defaultFilters</span><span class="p">(),</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">filter</span><span class="p">,</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">where</span>
+            <span class="p">);</span>
+
+            <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
+        <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="apply%20filters">
+  <h2>
+    <a href="#apply%20filters" name="apply%20filters" class="pilcrow">&#182;</a>
+    Apply Filters
+  </h2>
+</div>
+
+
+<p>Method which makes the necessary query builder calls (through knex) for the filters set
+on this model instance</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Bookshelf.Model
+</span>
+      <span>{Bookshelf.Model}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">applyFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">applyFilters</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>@TODO figure out a better place/way to trigger loading filters</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">_filters</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">this</span><span class="p">.</span><span class="nx">fetchAndCombineFilters</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_filters</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">debug</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">gql</span><span class="p">.</span><span class="nx">json</span><span class="p">.</span><span class="nx">printStatements</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_filters</span><span class="p">.</span><span class="nx">statements</span><span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="k">this</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">qb</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">gql</span><span class="p">.</span><span class="nx">knexify</span><span class="p">(</span><span class="nx">qb</span><span class="p">,</span> <span class="nx">self</span><span class="p">.</span><span class="nx">_filters</span><span class="p">);</span>
+                <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>Replaces processGQLResult</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">this</span><span class="p">.</span><span class="nx">postProcessFilters</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="k">this</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+
+    <span class="nx">Bookshelf</span><span class="p">.</span><span class="nx">Model</span> <span class="o">=</span> <span class="nx">Model</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="export%20filter%20plugin">
+  <h2>
+    <a href="#export%20filter%20plugin" name="export%20filter%20plugin" class="pilcrow">&#182;</a>
+    Export Filter plugin
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public
+</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">filter</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

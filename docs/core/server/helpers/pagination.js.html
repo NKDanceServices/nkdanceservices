@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>pagination.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/pagination.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#pagination%20helper">Pagination Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>pagination.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="pagination%20helper">
+  <h3>
+    <a href="#pagination%20helper" name="pagination%20helper" class="pilcrow">&#182;</a>
+    Pagination Helper
+  </h3>
+</div>
+
+
+<p><code>{{pagination}}</code>
+Outputs previous and next buttons, along with info about the current page</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">template</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./template&#39;</span><span class="p">),</span>
+    <span class="nx">pagination</span><span class="p">;</span>
+
+<span class="nx">pagination</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/*jshint unused:false*/</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="s1">&#39;pagination data is not an object or is a function&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">page</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">pages</span><span class="p">)</span> <span class="o">||</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">total</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">limit</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="s1">&#39;All values must be defined for page, pages, limit and total&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNull</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">next</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">next</span><span class="p">))</span> <span class="o">||</span>
+        <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNull</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">prev</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">prev</span><span class="p">)))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="s1">&#39;Invalid value, Next/Prev must be a number&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">page</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">pages</span><span class="p">)</span> <span class="o">||</span>
+        <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">total</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">limit</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="s1">&#39;Invalid value, check page, pages, limit and total are numbers&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="kd">var</span> <span class="nx">context</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">merge</span><span class="p">({},</span> <span class="k">this</span><span class="p">.</span><span class="nx">pagination</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">tag</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">context</span><span class="p">.</span><span class="nx">tagSlug</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tag</span><span class="p">.</span><span class="nx">slug</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">author</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">context</span><span class="p">.</span><span class="nx">authorSlug</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">slug</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">template</span><span class="p">.</span><span class="nx">execute</span><span class="p">(</span><span class="s1">&#39;pagination&#39;</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">pagination</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

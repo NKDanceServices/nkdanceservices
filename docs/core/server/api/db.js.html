@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>db.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/db.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#db%20api">DB API</a>
+      </div>
+      <div class="heading h2">
+        <a href="#db%20api%20methods">DB API Methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#export%20content">Export Content</a>
+      </div>
+      <div class="heading h3">
+        <a href="#import%20content">Import Content</a>
+      </div>
+      <div class="heading h3">
+        <a href="#delete%20all%20content">Delete All Content</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="db%20api">
+  <h1>
+    <a href="#db%20api" name="db%20api" class="pilcrow">&#182;</a>
+    DB API
+  </h1>
+</div>
+
+
+<p>API for DB operations</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>                <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">dataExport</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/export&#39;</span><span class="p">),</span>
+    <span class="nx">importer</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/importer&#39;</span><span class="p">),</span>
+    <span class="nx">models</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+
+    <span class="nx">api</span>              <span class="o">=</span> <span class="p">{},</span>
+    <span class="nx">docName</span>      <span class="o">=</span> <span class="s1">&#39;db&#39;</span><span class="p">,</span>
+    <span class="nx">db</span><span class="p">;</span>
+
+<span class="nx">api</span><span class="p">.</span><span class="nx">settings</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./settings&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="db%20api%20methods">
+  <h2>
+    <a href="#db%20api%20methods" name="db%20api%20methods" class="pilcrow">&#182;</a>
+    DB API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">db</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="export%20content">
+  <h3>
+    <a href="#export%20content" name="export%20content" class="pilcrow">&#182;</a>
+    Export Content
+  </h3>
+</div>
+
+
+<p>Generate the JSON to export</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Ghost Export JSON format</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">exportContent</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Export data, otherwise send error 500</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">exportContent</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataExport</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">exportedData</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span><span class="nx">db</span><span class="o">:</span> <span class="p">[</span><span class="nx">exportedData</span><span class="p">]};</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">InternalServerError</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">error</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;exportContent&#39;</span><span class="p">),</span>
+            <span class="nx">exportContent</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="import%20content">
+  <h3>
+    <a href="#import%20content" name="import%20content" class="pilcrow">&#182;</a>
+    Import Content
+  </h3>
+</div>
+
+
+<p>Import posts, tags etc from a JSON blob</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Success</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">importContent</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+        <span class="kd">function</span> <span class="nx">validate</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Check if a file was provided</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">utils</span><span class="p">.</span><span class="nx">checkFileExists</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;importfile&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Please select a file to import.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Check if the file is valid</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">utils</span><span class="p">.</span><span class="nx">checkFileIsValid</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">importfile</span><span class="p">,</span> <span class="nx">importer</span><span class="p">.</span><span class="nx">getTypes</span><span class="p">(),</span> <span class="nx">importer</span><span class="p">.</span><span class="nx">getExtensions</span><span class="p">()))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span>
+                    <span class="s1">&#39;Unsupported file. Please try any of the following formats: &#39;</span> <span class="o">+</span>
+                        <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">importer</span><span class="p">.</span><span class="nx">getExtensions</span><span class="p">(),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">ext</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">memo</span> <span class="o">?</span> <span class="nx">memo</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span> <span class="o">+</span> <span class="nx">ext</span> <span class="o">:</span> <span class="nx">ext</span><span class="p">;</span>
+                        <span class="p">})</span>
+                <span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="kd">function</span> <span class="nx">importContent</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">importer</span><span class="p">.</span><span class="nx">importFromFile</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">importfile</span><span class="p">)</span>
+                <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">updateSettingsCache</span><span class="p">)</span>
+                <span class="p">.</span><span class="k">return</span><span class="p">({</span><span class="nx">db</span><span class="o">:</span> <span class="p">[]});</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">validate</span><span class="p">,</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;importContent&#39;</span><span class="p">),</span>
+            <span class="nx">importContent</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="delete%20all%20content">
+  <h3>
+    <a href="#delete%20all%20content" name="delete%20all%20content" class="pilcrow">&#182;</a>
+    Delete All Content
+  </h3>
+</div>
+
+
+<p>Remove all posts and tags</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Success</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">deleteAllContent</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+        <span class="kd">function</span> <span class="nx">deleteContent</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">models</span><span class="p">.</span><span class="nx">deleteAllContent</span><span class="p">())</span>
+                <span class="p">.</span><span class="k">return</span><span class="p">({</span><span class="nx">db</span><span class="o">:</span> <span class="p">[]})</span>
+                <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">InternalServerError</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">error</span><span class="p">));</span>
+                <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;deleteAllContent&#39;</span><span class="p">),</span>
+            <span class="nx">deleteContent</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">db</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>roles.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/roles.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#roles%20api">Roles API</a>
+      </div>
+      <div class="heading h2">
+        <a href="#roles%20api%20methods">Roles API Methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#browse">Browse</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="roles%20api">
+  <h1>
+    <a href="#roles%20api" name="roles%20api" class="pilcrow">&#182;</a>
+    Roles API
+  </h1>
+</div>
+
+
+<p>RESTful API for the Role resource</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">canThis</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../permissions&#39;</span><span class="p">).</span><span class="nx">canThis</span><span class="p">,</span>
+    <span class="nx">dataProvider</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">docName</span>         <span class="o">=</span> <span class="s1">&#39;roles&#39;</span><span class="p">,</span>
+
+    <span class="nx">roles</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="roles%20api%20methods">
+  <h2>
+    <a href="#roles%20api%20methods" name="roles%20api%20methods" class="pilcrow">&#182;</a>
+    Roles API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">roles</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="browse">
+  <h3>
+    <a href="#browse" name="browse" class="pilcrow">&#182;</a>
+    Browse
+  </h3>
+</div>
+
+
+<p>Find all roles</p>
+  </div>
+  <div class="body"><p>If a 'permissions' property is passed in the options object then
+the results will be filtered based on whether or not the context user has the given
+permission on a role.</p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+      <span class="dox_type">permissions</span>
+      <span>(optional)</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(Roles)</span>
+      <span>Roles Collection</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">browse</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">browse</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">permittedOptions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;permissions&#39;</span><span class="p">],</span>
+            <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">modelQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Role</span><span class="p">.</span><span class="nx">findAll</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">permittedOptions</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">),</span>
+            <span class="nx">modelQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">roles</span> <span class="o">=</span> <span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">r</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+            <span class="p">});</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">permissions</span> <span class="o">!==</span> <span class="s1">&#39;assign&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span><span class="nx">roles</span><span class="o">:</span> <span class="nx">roles</span><span class="p">};</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">roles</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">role</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">assign</span><span class="p">.</span><span class="nx">role</span><span class="p">(</span><span class="nx">role</span><span class="p">)</span>
+                    <span class="p">.</span><span class="k">return</span><span class="p">(</span><span class="nx">role</span><span class="p">)</span>
+                    <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{});</span>
+            <span class="p">}),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">value</span> <span class="o">&amp;&amp;</span> <span class="nx">value</span><span class="p">.</span><span class="nx">name</span> <span class="o">!==</span> <span class="s1">&#39;Owner&#39;</span><span class="p">;</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span><span class="nx">roles</span><span class="o">:</span> <span class="nx">roles</span><span class="p">};</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">roles</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

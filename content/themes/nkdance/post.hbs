@@ -1,0 +1,76 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+{{#post}}
+<header class="noo-page-heading">
+    <div class="container-boxed max">
+        <div class="page-heading-info ">
+            <h1 class="page-title">Blog</h1>
+        </div>
+        <!-- Start breadcrumbs -->
+        {{> "breadcrumbs"}}
+        <!-- End breadcrumbs -->
+    </div>
+</header>
+
+<div class="container-boxed max offset">
+    <div class="row">
+        <div class="noo-main col-md-9 post-area">
+            <article class="hentry">
+                <header class="content-header clearfix">
+                    <h1 class="content-title">{{title}}</h1>
+                    <p class="content-meta">
+                        <span><i class="fa fa-user"></i><a href="#" title="">{{author}}</a></span>
+                        <span>
+                            <time class="entry-date">
+                                <i class="fa fa-calendar"></i> {{created_at}}                                       
+                            </time>
+                        </span>
+                        <span>
+                            <i class="fa fa-comments-o"></i>
+                            <a href="{{url}}#disqus_thread" title="" class="meta-comments"> 1 Comment</a>
+                        </span>
+                    </p>
+                </header>
+                <div class="content-featured">
+                    {{#if image}} <img width="1440" height="900" src="{{image}}" /> {{else}} <img width="1440" height="900" src="{{asset "images/temp-large.png"}}" /> {{/if}}          
+                </div>
+                <div class="content-wrap">
+                    {{content}}
+                    <div class="entry-tags">
+                        <i class="fa fa-tags"></i>{{tags}}
+                    </div>
+
+                    <div class="noo-social">
+                        <!-- Go to www.addthis.com/dashboard to customize your tools -->
+                        <div class="addthis_sharing_toolbox"></div>
+                    </div>
+                </div>
+               {{> "disqus"}}
+            </article>
+            <nav class="post-navigation post-navigation-line">
+                {{#prev_post}}
+                <div class="prev-post">
+                    <h4>
+                        <i class="fa fa-arrow-circle-left">&nbsp;</i>
+                        <a href="{{url}}">{{title}}</a>
+                    </h4>
+                </div>
+                {{/prev_post}}
+                {{#next_post}}
+                <div class="next-post">
+                    <h4>
+                        <a href="{{url}}">{{title}}</a>
+                        <i class="fa fa-arrow-circle-right">&nbsp;</i>
+                    </h4>
+                </div>
+                {{/next_post}}
+            </nav>
+        </div>  
+    </div>
+</div>
+{{/post}}

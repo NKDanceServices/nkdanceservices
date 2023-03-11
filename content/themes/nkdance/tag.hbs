@@ -1,0 +1,62 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+{{#tag}}
+<header class="noo-page-heading">
+    <div class="container-boxed max">
+        <div class="page-heading-info ">
+            <h1 class="page-title">{{name}}</h1>
+        </div>
+        <!-- Start breadcrumbs -->
+        {{> "breadcrumbs"}}
+        <!-- End breadcrumbs -->
+    </div>
+</header>
+{{/tag}}
+<div class="container-boxed max offset">
+    <div class="row">
+        <div class="noo-main col-md-9 post-area standard-blog">
+            {{#foreach posts}}
+                <article class="hentry">
+                    <div class="row">
+                        <div class="content-featured col-sm-6">
+                            {{#if image}} <img width="600" height="450" src="{{image}}" /> {{else}} <img width="600" height="450" src="{{asset "images/temp.png"}}" /> {{/if}}          
+                        </div>
+
+                        <div class="content-wrap col-sm-6">
+                            <h3 class="content-title">
+                                <a href="{{url}}" title="{{title}}">{{title}}</a>
+                            </h3>
+                            <div class="content-excerpt">
+                                {{excerpt words="26"}}
+                            </div>
+                            <p class="content-meta">
+                                <span>
+                                    <i class="fa fa-user"></i>
+                                    <a href="#" title="">{{author}}</a>
+                                </span>
+                                <span>
+                                    <time class="entry-date">
+                                        <i class="fa fa-calendar"></i>{{date format="DD MMMM YYYY"}}
+                                    </time>
+                                </span>
+                                <span>
+                                    <a href="#" class="meta-comments">
+                                        <i class="fa fa-comments-o"></i> 1 Comment
+                                    </a>
+                                </span>
+                            </p>
+                            <a href="<%- post.url %>" class="read-more">
+                                <i class="fa fa-chevron-circle-right"></i>Read More
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            {{/foreach}}
+        </div>
+    </div>
+</div>

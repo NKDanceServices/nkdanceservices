@@ -1,0 +1,52 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+
+{{#post}}
+
+<header class="noo-page-heading heading-bg-image">
+    <div class="container-boxed max">
+        <div class="page-heading-info ">
+            <h1 class="page-title">NK</h1>
+        </div>
+        <!-- Start breadcrumbs -->
+            {{> "breadcrumbs"}}
+        <!-- End breadcrumbs -->
+    </div> 
+</header>
+
+<div class="main-content container-fullwidth">
+    <div class="row">
+        <div class="noo-main col-md-12"> 
+            <div class="container-boxed max">
+                <div class="row about-us-section">
+                    <header class="content-header clearfix">
+                        <h1 class="content-title">{{title}}</h1>
+                    </header>
+                    {{#if image}}
+                        <div class="col-md-5 col-sm-6">
+                            <img width="1440" height="900" src="{{image}}" /> 
+                        </div>
+                        <div class="col-md-7 col-sm-6">
+                            <div class="text-block">
+                                {{content}}
+                            </div>
+                        </div>
+                    {{else}}
+                        <div class="col-md-12 col-sm-12">
+                            <div class="text-block">
+                                {{content}}
+                            </div>
+                        </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div> 
+</div>
+
+{{/post}}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>upload.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/upload.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h2">
+        <a href="#upload%20api%20methods">Upload API Methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#add%20image">Add Image</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>upload.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">config</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs-extra&#39;</span><span class="p">),</span>
+    <span class="nx">storage</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../storage&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+
+    <span class="nx">upload</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="upload%20api%20methods">
+  <h2>
+    <a href="#upload%20api%20methods" name="upload%20api%20methods" class="pilcrow">&#182;</a>
+    Upload API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">upload</span> <span class="o">=</span> <span class="p">{</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="add%20image">
+  <h3>
+    <a href="#add%20image" name="add%20image" class="pilcrow">&#182;</a>
+    Add Image
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise</span>
+      <span>Success</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">add</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">storage</span><span class="p">.</span><span class="nx">getStorage</span><span class="p">(),</span>
+            <span class="nx">filepath</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Check if a file was provided</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">utils</span><span class="p">.</span><span class="nx">checkFileExists</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;uploadimage&#39;</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Please select an image.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Check if the file is valid</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">utils</span><span class="p">.</span><span class="nx">checkFileIsValid</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">uploadimage</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">uploads</span><span class="p">.</span><span class="nx">contentTypes</span><span class="p">,</span> <span class="nx">config</span><span class="p">.</span><span class="nx">uploads</span><span class="p">.</span><span class="nx">extensions</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span><span class="p">(</span><span class="s1">&#39;Please select a valid image.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="nx">filepath</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">uploadimage</span><span class="p">.</span><span class="nx">path</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">store</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">uploadimage</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">url</span><span class="p">;</span>
+        <span class="p">}).</span><span class="k">finally</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Remove uploaded file from tmp location</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">unlink</span><span class="p">)(</span><span class="nx">filepath</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">upload</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

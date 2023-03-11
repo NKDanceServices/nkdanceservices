@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>json.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../../doc-style.css" />
+  <script src="../../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../../", thisFile = "core/server/data/importer/handlers/json.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../../doc-script.js"></script>
+  <script src="../../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>json.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs-extra&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../errors&#39;</span><span class="p">),</span>
+    <span class="nx">JSONHandler</span><span class="p">;</span>
+
+<span class="nx">JSONHandler</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;data&#39;</span><span class="p">,</span>
+    <span class="nx">extensions</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;.json&#39;</span><span class="p">],</span>
+    <span class="nx">types</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;application/octet-stream&#39;</span><span class="p">,</span> <span class="s1">&#39;application/json&#39;</span><span class="p">],</span>
+    <span class="nx">directories</span><span class="o">:</span> <span class="p">[],</span>
+
+    <span class="nx">loadFile</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="nx">startDir</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false */</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>@TODO: Handle multiple JSON files</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">filePath</span> <span class="o">=</span> <span class="nx">files</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">path</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">)(</span><span class="nx">filePath</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">fileData</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">importData</span><span class="p">;</span>
+            <span class="k">try</span> <span class="p">{</span>
+                <span class="nx">importData</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">fileData</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>if importData follows JSON-API format <code>{ db: [exportedData] }</code></p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">importData</span><span class="p">).</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">importData</span><span class="p">.</span><span class="nx">db</span> <span class="o">||</span> <span class="o">!</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">importData</span><span class="p">.</span><span class="nx">db</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Invalid JSON format, expected `{ db: [exportedData] }`&#39;</span><span class="p">);</span>
+                    <span class="p">}</span>
+
+                    <span class="nx">importData</span> <span class="o">=</span> <span class="nx">importData</span><span class="p">.</span><span class="nx">db</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">importData</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="s1">&#39;API DB import content&#39;</span><span class="p">,</span> <span class="s1">&#39;check that the import file is valid JSON.&#39;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Failed to parse the import JSON file.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">JSONHandler</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

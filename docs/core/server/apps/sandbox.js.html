@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>sandbox.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/apps/sandbox.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>sandbox.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">path</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">Module</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;module&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">AppSandbox</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">opts</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">defaults</span><span class="p">(</span><span class="nx">opts</span> <span class="o">||</span> <span class="p">{},</span> <span class="nx">AppSandbox</span><span class="p">.</span><span class="nx">defaults</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">AppSandbox</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">loadApp</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">loadAppSandboxed</span><span class="p">(</span><span class="nx">appPath</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">appFile</span> <span class="o">=</span> <span class="nx">require</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">appPath</span><span class="p">),</span>
+        <span class="nx">appBase</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">dirname</span><span class="p">(</span><span class="nx">appFile</span><span class="p">);</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">opts</span><span class="p">.</span><span class="nx">appRoot</span> <span class="o">=</span> <span class="nx">appBase</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">loadModule</span><span class="p">(</span><span class="nx">appPath</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">AppSandbox</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">loadModule</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">loadModuleSandboxed</span><span class="p">(</span><span class="nx">modulePath</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Set loaded modules parent to this</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+        <span class="nx">moduleDir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">dirname</span><span class="p">(</span><span class="nx">modulePath</span><span class="p">),</span>
+        <span class="nx">parentModulePath</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">opts</span><span class="p">.</span><span class="nx">parent</span> <span class="o">||</span> <span class="nx">module</span><span class="p">.</span><span class="nx">parent</span><span class="p">,</span>
+        <span class="nx">appRoot</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">opts</span><span class="p">.</span><span class="nx">appRoot</span> <span class="o">||</span> <span class="nx">moduleDir</span><span class="p">,</span>
+        <span class="nx">currentModule</span><span class="p">,</span>
+        <span class="nx">nodeRequire</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Resolve the modules path</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">modulePath</span> <span class="o">=</span> <span class="nx">Module</span><span class="p">.</span><span class="nx">_resolveFilename</span><span class="p">(</span><span class="nx">modulePath</span><span class="p">,</span> <span class="nx">parentModulePath</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Instantiate a Node Module class</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">currentModule</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Module</span><span class="p">(</span><span class="nx">modulePath</span><span class="p">,</span> <span class="nx">parentModulePath</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Grab the original modules require function</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">nodeRequire</span> <span class="o">=</span> <span class="nx">currentModule</span><span class="p">.</span><span class="nx">require</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Set a new proxy require function</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">currentModule</span><span class="p">.</span><span class="nx">require</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">requireProxy</span><span class="p">(</span><span class="nx">module</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>check whitelist, plugin config, etc.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">opts</span><span class="p">.</span><span class="nx">blacklist</span><span class="p">,</span> <span class="nx">module</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Unsafe App require: &#39;</span> <span class="o">+</span> <span class="nx">module</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="kd">var</span> <span class="nx">firstTwo</span> <span class="o">=</span> <span class="nx">module</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+            <span class="nx">resolvedPath</span><span class="p">,</span>
+            <span class="nx">relPath</span><span class="p">,</span>
+            <span class="nx">innerBox</span><span class="p">,</span>
+            <span class="nx">newOpts</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Load relative modules with their own sandbox</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">firstTwo</span> <span class="o">===</span> <span class="s1">&#39;./&#39;</span> <span class="o">||</span> <span class="nx">firstTwo</span> <span class="o">===</span> <span class="s1">&#39;..&#39;</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Get the path relative to the modules directory</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">resolvedPath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">moduleDir</span><span class="p">,</span> <span class="nx">module</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Check relative path from the appRoot for outside requires</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">relPath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">appRoot</span><span class="p">,</span> <span class="nx">resolvedPath</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">relPath</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;..&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Unsafe App require: &#39;</span> <span class="o">+</span> <span class="nx">relPath</span><span class="p">);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>Assign as new module path</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">module</span> <span class="o">=</span> <span class="nx">resolvedPath</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>Pass down the same options</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">newOpts</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">self</span><span class="p">.</span><span class="nx">opts</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Make sure the appRoot and parent are appropriate</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">newOpts</span><span class="p">.</span><span class="nx">appRoot</span> <span class="o">=</span> <span class="nx">appRoot</span><span class="p">;</span>
+            <span class="nx">newOpts</span><span class="p">.</span><span class="nx">parent</span> <span class="o">=</span> <span class="nx">currentModule</span><span class="p">.</span><span class="nx">parent</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Create the inner sandbox for loading this module.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">innerBox</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">AppSandbox</span><span class="p">(</span><span class="nx">newOpts</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">innerBox</span><span class="p">.</span><span class="nx">loadModule</span><span class="p">(</span><span class="nx">module</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>Call the original require method for white listed named modules</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">nodeRequire</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">currentModule</span><span class="p">,</span> <span class="nx">module</span><span class="p">);</span>
+    <span class="p">};</span>
+
+    <span class="nx">currentModule</span><span class="p">.</span><span class="nx">load</span><span class="p">(</span><span class="nx">currentModule</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">currentModule</span><span class="p">.</span><span class="nx">exports</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="nx">AppSandbox</span><span class="p">.</span><span class="nx">defaults</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">blacklist</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;knex&#39;</span><span class="p">,</span> <span class="s1">&#39;fs&#39;</span><span class="p">,</span> <span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite3&#39;</span><span class="p">,</span> <span class="s1">&#39;pg&#39;</span><span class="p">,</span> <span class="s1">&#39;mysql&#39;</span><span class="p">,</span> <span class="s1">&#39;ghost&#39;</span><span class="p">]</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">AppSandbox</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

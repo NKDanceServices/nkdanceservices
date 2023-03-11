@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>user.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/models/user.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#find%20one">Find One</a>
+      </div>
+      <div class="heading h3">
+        <a href="#edit">Edit</a>
+      </div>
+      <div class="heading h2">
+        <a href="#add">Add</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>user.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">),</span>
+    <span class="nx">bcrypt</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bcryptjs&#39;</span><span class="p">),</span>
+    <span class="nx">ghostBookshelf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./base&#39;</span><span class="p">),</span>
+    <span class="nx">crypto</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;crypto&#39;</span><span class="p">),</span>
+    <span class="nx">validator</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;validator&#39;</span><span class="p">),</span>
+    <span class="nx">request</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;request&#39;</span><span class="p">),</span>
+    <span class="nx">validation</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/validation&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">events</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../events&#39;</span><span class="p">),</span>
+
+    <span class="nx">bcryptGenSalt</span>  <span class="o">=</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">bcrypt</span><span class="p">.</span><span class="nx">genSalt</span><span class="p">),</span>
+    <span class="nx">bcryptHash</span>     <span class="o">=</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">bcrypt</span><span class="p">.</span><span class="nx">hash</span><span class="p">),</span>
+    <span class="nx">bcryptCompare</span>  <span class="o">=</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">bcrypt</span><span class="p">.</span><span class="nx">compare</span><span class="p">),</span>
+
+    <span class="nx">tokenSecurity</span>  <span class="o">=</span> <span class="p">{},</span>
+    <span class="nx">activeStates</span>   <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-1&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-2&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-3&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-4&#39;</span><span class="p">,</span> <span class="s1">&#39;locked&#39;</span><span class="p">],</span>
+    <span class="nx">invitedStates</span>  <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;invited&#39;</span><span class="p">,</span> <span class="s1">&#39;invited-pending&#39;</span><span class="p">],</span>
+    <span class="nx">User</span><span class="p">,</span>
+    <span class="nx">Users</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">validatePasswordLength</span><span class="p">(</span><span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">validator</span><span class="p">.</span><span class="nx">isLength</span><span class="p">(</span><span class="nx">password</span><span class="p">,</span> <span class="mi">8</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">generatePasswordHash</span><span class="p">(</span><span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Generate a new salt</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">bcryptGenSalt</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">salt</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Hash the provided password with bcrypt</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">bcryptHash</span><span class="p">(</span><span class="nx">password</span><span class="p">,</span> <span class="nx">salt</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+<span class="nx">User</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">tableName</span><span class="o">:</span> <span class="s1">&#39;users&#39;</span><span class="p">,</span>
+
+    <span class="nx">emitChange</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">emitChange</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">events</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;user&#39;</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="nx">event</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">initialize</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">initialize</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">initialize</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;created&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onCreated</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;added&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>active is the default state, so if status isn't provided, this will be an active user</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">model</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">activeStates</span><span class="p">,</span> <span class="nx">model</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)))</span> <span class="p">{</span>
+                <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;activated&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;updated&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onUpdated</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">statusChanging</span> <span class="o">=</span> <span class="nx">model</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="nx">model</span><span class="p">.</span><span class="nx">updated</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">);</span>
+            <span class="nx">model</span><span class="p">.</span><span class="nx">isActive</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">activeStates</span><span class="p">,</span> <span class="nx">model</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">));</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">statusChanging</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">isActive</span> <span class="o">?</span> <span class="s1">&#39;activated&#39;</span> <span class="o">:</span> <span class="s1">&#39;deactivated&#39;</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">model</span><span class="p">.</span><span class="nx">isActive</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;activated.edited&#39;</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">}</span>
+
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;edited&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;destroyed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">onDestroyed</span><span class="p">(</span><span class="nx">model</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">activeStates</span><span class="p">,</span> <span class="nx">model</span><span class="p">.</span><span class="nx">previous</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)))</span> <span class="p">{</span>
+                <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;deactivated&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">model</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">(</span><span class="s1">&#39;deleted&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">saving</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">saving</span><span class="p">(</span><span class="nx">newPage</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false*/</span>
+
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+        <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">saving</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">hasChanged</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Generating a slug requires a db call to look for conflicting slugs</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">generateSlug</span><span class="p">(</span><span class="nx">User</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">),</span>
+                <span class="p">{</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="nx">transacting</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">transacting</span><span class="p">,</span> <span class="nx">shortSlug</span><span class="o">:</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;slug&#39;</span><span class="p">)})</span>
+                <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">slug</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">self</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">slug</span><span class="o">:</span> <span class="nx">slug</span><span class="p">});</span>
+                <span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>For the user model ONLY it is possible to disable validations.
+This is used to bypass validation during the credential check, and must never be done with user-provided data
+Should be removed when #3691 is done</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">validate</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">validate</span><span class="p">()</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="nx">arguments</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">opts</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">has</span><span class="p">(</span><span class="nx">opts</span><span class="p">,</span> <span class="s1">&#39;validate&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">validate</span> <span class="o">===</span> <span class="kc">false</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">validation</span><span class="p">.</span><span class="nx">validateSchema</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">tableName</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">());</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Get the user from the options object</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">contextUser</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">contextUser</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Default to context user</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Other wise use the internal override</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">internal</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>This is the user object, so try using this user's id</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;missing context&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="nx">toJSON</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+        <span class="kd">var</span> <span class="nx">attrs</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>remove password hash for security reasons</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">delete</span> <span class="nx">attrs</span><span class="p">.</span><span class="nx">password</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span> <span class="o">||</span> <span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">||</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">internal</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">delete</span> <span class="nx">attrs</span><span class="p">.</span><span class="nx">email</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">attrs</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">format</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">format</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">website</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+            <span class="o">!</span><span class="nx">validator</span><span class="p">.</span><span class="nx">isURL</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">website</span><span class="p">,</span> <span class="p">{</span>
+            <span class="nx">require_protocol</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+            <span class="nx">protocols</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;http&#39;</span><span class="p">,</span> <span class="s1">&#39;https&#39;</span><span class="p">]}))</span> <span class="p">{</span>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">website</span> <span class="o">=</span> <span class="s1">&#39;http://&#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">website</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">format</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">posts</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">posts</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">hasMany</span><span class="p">(</span><span class="s1">&#39;Posts&#39;</span><span class="p">,</span> <span class="s1">&#39;created_by&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">roles</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">roles</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">belongsToMany</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">permissions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permissions</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">belongsToMany</span><span class="p">(</span><span class="s1">&#39;Permission&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">hasRole</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">hasRole</span><span class="p">(</span><span class="nx">roleName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">roles</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nx">roles</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="kd">function</span> <span class="nx">getRole</span><span class="p">(</span><span class="nx">role</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">role</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="nx">roleName</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+    <span class="nx">enforcedFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">enforcedFilters</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">isPublicContext</span><span class="p">()</span> <span class="o">?</span> <span class="s1">&#39;status:[&#39;</span> <span class="o">+</span> <span class="nx">activeStates</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="p">},</span>
+    <span class="nx">defaultFilters</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">defaultFilters</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">isPublicContext</span><span class="p">()</span> <span class="o">?</span> <span class="kc">null</span> <span class="o">:</span> <span class="s1">&#39;status:[&#39;</span> <span class="o">+</span> <span class="nx">activeStates</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;]&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="p">{</span>
+    <span class="nx">orderDefaultOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">orderDefaultOptions</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="nx">last_login</span><span class="o">:</span> <span class="s1">&#39;DESC&#39;</span><span class="p">,</span>
+            <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;ASC&#39;</span><span class="p">,</span>
+            <span class="nx">created_at</span><span class="o">:</span> <span class="s1">&#39;DESC&#39;</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary">
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">deprecated</div>
+    <div class="dox_tag_detail">
+      <span>in favour of filter</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">processOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">processOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">status</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>This is the only place that 'options.where' is set now</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">where</span> <span class="o">=</span> <span class="p">{</span><span class="nx">statements</span><span class="o">:</span> <span class="p">[]};</span>
+
+        <span class="kd">var</span> <span class="nx">allStates</span> <span class="o">=</span> <span class="nx">activeStates</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">invitedStates</span><span class="p">),</span>
+            <span class="nx">value</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Filter on the status.  A status of 'all' translates to no filter since we want all statuses</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">!==</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>make sure that status is valid</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="nx">allStates</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">status</span><span class="p">)</span> <span class="o">&gt;</span> <span class="o">-</span><span class="mi">1</span> <span class="o">?</span> <span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">:</span> <span class="s1">&#39;active&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">activeStates</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;invited&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">invitedStates</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">allStates</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">value</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">status</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">options</span><span class="p">.</span><span class="nx">where</span><span class="p">.</span><span class="nx">statements</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">prop</span><span class="o">:</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="nx">op</span><span class="o">:</span> <span class="s1">&#39;IN&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">value</span><span class="p">});</span>
+        <span class="k">delete</span> <span class="nx">options</span><span class="p">.</span><span class="nx">status</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Returns an array of keys permitted in a method's <code>options</code> hash, depending on the current method.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">methodName</span>
+      <span class="dox_type">String</span>
+      <span>The name of the method to check valid options for.</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Array</span>
+      <span>Keys allowed in the <code>options</code> hash of the model's method.</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">permittedOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permittedOptions</span><span class="p">(</span><span class="nx">methodName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">permittedOptions</span><span class="p">(),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>whitelists for the <code>options</code> hash argument on methods, by method name.
+these are the only options that can be passed to Bookshelf / Knex.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">validOptions</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">findOne</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;withRelated&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">],</span>
+                <span class="nx">setup</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                <span class="nx">edit</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;withRelated&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">],</span>
+                <span class="nx">findPage</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="s1">&#39;limit&#39;</span><span class="p">,</span> <span class="s1">&#39;columns&#39;</span><span class="p">,</span> <span class="s1">&#39;filter&#39;</span><span class="p">,</span> <span class="s1">&#39;order&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">]</span>
+            <span class="p">};</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">validOptions</span><span class="p">[</span><span class="nx">methodName</span><span class="p">])</span> <span class="p">{</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">validOptions</span><span class="p">[</span><span class="nx">methodName</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="find%20one">
+  <h3>
+    <a href="#find%20one" name="find%20one" class="pilcrow">&#182;</a>
+    Find One
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">extends</div>
+    <div class="dox_tag_detail">
+      <span>ghostBookshelf.Model.findOne to include roles
+<strong>See:</strong> <a href="base.js.html#Find%20One">ghostBookshelf.Model.findOne</a></span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">findOne</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">findOne</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">query</span><span class="p">,</span>
+            <span class="nx">status</span><span class="p">,</span>
+            <span class="nx">optInc</span><span class="p">,</span>
+            <span class="nx">lookupRole</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">role</span><span class="p">;</span>
+
+        <span class="k">delete</span> <span class="nx">data</span><span class="p">.</span><span class="nx">role</span><span class="p">;</span>
+
+        <span class="nx">data</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">defaults</span><span class="p">(</span><span class="nx">data</span> <span class="o">||</span> <span class="p">{},</span> <span class="p">{</span>
+            <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;active&#39;</span>
+        <span class="p">});</span>
+
+        <span class="nx">status</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">status</span><span class="p">;</span>
+        <span class="k">delete</span> <span class="nx">data</span><span class="p">.</span><span class="nx">status</span><span class="p">;</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+        <span class="nx">optInc</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">;</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">);</span>
+        <span class="nx">data</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterData</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>Support finding by role</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">lookupRole</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]);</span>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">include</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]);</span>
+
+            <span class="nx">query</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">forge</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">});</span>
+
+            <span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;join&#39;</span><span class="p">,</span> <span class="s1">&#39;roles_users&#39;</span><span class="p">,</span> <span class="s1">&#39;users.id&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;roles_users.id&#39;</span><span class="p">);</span>
+            <span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;join&#39;</span><span class="p">,</span> <span class="s1">&#39;roles&#39;</span><span class="p">,</span> <span class="s1">&#39;roles_users.role_id&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;roles.id&#39;</span><span class="p">);</span>
+            <span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="s1">&#39;roles.name&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="nx">lookupRole</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>We pass include to forge so that toJSON has access</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">query</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">forge</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;whereIn&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="nx">activeStates</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;invited&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;whereIn&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="nx">invitedStates</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">status</span> <span class="o">!==</span> <span class="s1">&#39;all&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">query</span><span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">status</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">status</span><span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;findOne&#39;</span><span class="p">);</span>
+        <span class="k">delete</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">;</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">include</span> <span class="o">=</span> <span class="nx">optInc</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">query</span><span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="edit">
+  <h3>
+    <a href="#edit" name="edit" class="pilcrow">&#182;</a>
+    Edit
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">extends</div>
+    <div class="dox_tag_detail">
+      <span>ghostBookshelf.Model.edit to handle returning the full object
+<strong>See:</strong> <a href="base.js.html#edit">ghostBookshelf.Model.edit</a></span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">edit</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">edit</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">roleId</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">roles</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">roles</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span>
+                <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Only one role per user is supported at the moment.&#39;</span><span class="p">)</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">edit</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">data</span><span class="p">.</span><span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">user</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="nx">roleId</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span> <span class="o">||</span> <span class="nx">data</span><span class="p">.</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">().</span><span class="nx">fetch</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>return if the role is already assigned</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">roles</span><span class="p">.</span><span class="nx">models</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span> <span class="o">===</span> <span class="nx">roleId</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">).</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">roleId</span><span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">roleToAssign</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">roleToAssign</span> <span class="o">&amp;&amp;</span> <span class="nx">roleToAssign</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;Owner&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span>
+                        <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;This method does not support assigning the owner role&#39;</span><span class="p">)</span>
+                    <span class="p">);</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-23" id="section-23">&#182;</a>
+</div>
+<p>assign all other roles</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">().</span><span class="nx">updatePivot</span><span class="p">({</span><span class="nx">role_id</span><span class="o">:</span> <span class="nx">roleId</span><span class="p">});</span>
+                <span class="p">}</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">()</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">},</span> <span class="nx">options</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="add">
+  <h2>
+    <a href="#add" name="add" class="pilcrow">&#182;</a>
+    Add
+  </h2>
+</div>
+
+
+<p>Naive user add
+Hashes the password provided before saving to the database.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">data</span>
+      <span class="dox_type">object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">object</span>
+    </div>
+    <div class="dox_tag_title">extends</div>
+    <div class="dox_tag_detail">
+      <span>ghostBookshelf.Model.add to manage all aspects of user signup
+<strong>See:</strong> <a href="base.js.html#Add">ghostBookshelf.Model.add</a></span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">add</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">userData</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterData</span><span class="p">(</span><span class="nx">data</span><span class="p">),</span>
+            <span class="nx">roles</span><span class="p">;</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;add&#39;</span><span class="p">);</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25">&#182;</a>
+</div>
+<p>check for too many roles</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">roles</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">roles</span><span class="p">.</span><span class="nx">length</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Only one role per user is supported at the moment.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">validatePasswordLength</span><span class="p">(</span><span class="nx">userData</span><span class="p">.</span><span class="nx">password</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your password must be at least 8 characters long.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="kd">function</span> <span class="nx">getAuthorRole</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">).</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Author&#39;</span><span class="p">},</span> <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;transacting&#39;</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">authorRole</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">[</span><span class="nx">authorRole</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)];</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">roles</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">roles</span> <span class="o">||</span> <span class="nx">getAuthorRole</span><span class="p">();</span>
+        <span class="k">delete</span> <span class="nx">data</span><span class="p">.</span><span class="nx">roles</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">generatePasswordHash</span><span class="p">(</span><span class="nx">userData</span><span class="p">.</span><span class="nx">password</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">hash</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26">&#182;</a>
+</div>
+<p>Assign the hashed password</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">userData</span><span class="p">.</span><span class="nx">password</span> <span class="o">=</span> <span class="nx">hash</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-27" id="section-27">&#182;</a>
+</div>
+<p>LookupGravatar</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">gravatarLookup</span><span class="p">(</span><span class="nx">userData</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">userData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-28" id="section-28">&#182;</a>
+</div>
+<p>Save the user with the hashed password</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">add</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">userData</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">addedUser</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-29" id="section-29">&#182;</a>
+</div>
+<p>Assign the userData to our created user so we can pass it back</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">userData</span> <span class="o">=</span> <span class="nx">addedUser</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-30" id="section-30">&#182;</a>
+</div>
+<p>if we are given a "role" object, only pass in the role ID in place of the full object</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">roles</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">roles</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">roles</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">roles</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">mapper</span><span class="p">(</span><span class="nx">role</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">role</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">role</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="nx">role</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">role</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">role</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+                    <span class="p">}</span>
+                <span class="p">});</span>
+
+                <span class="k">return</span> <span class="nx">addedUser</span><span class="p">.</span><span class="nx">roles</span><span class="p">().</span><span class="nx">attach</span><span class="p">(</span><span class="nx">roles</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-31" id="section-31">&#182;</a>
+</div>
+<p>find and return the added user</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">},</span> <span class="nx">options</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">setup</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">setup</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">userData</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterData</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">validatePasswordLength</span><span class="p">(</span><span class="nx">userData</span><span class="p">.</span><span class="nx">password</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your password must be at least 8 characters long.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;setup&#39;</span><span class="p">);</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">union</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">withRelated</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">include</span><span class="p">);</span>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">shortSlug</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">generatePasswordHash</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">password</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">hash</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32">&#182;</a>
+</div>
+<p>Assign the hashed password</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">userData</span><span class="p">.</span><span class="nx">password</span> <span class="o">=</span> <span class="nx">hash</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">gravatarLookup</span><span class="p">(</span><span class="nx">userData</span><span class="p">),</span>
+                                <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">generateSlug</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">User</span><span class="p">,</span> <span class="nx">userData</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">options</span><span class="p">));</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">userData</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+            <span class="nx">userData</span><span class="p">.</span><span class="nx">slug</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">edit</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">userData</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">permissible</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permissible</span><span class="p">(</span><span class="nx">userModelOrId</span><span class="p">,</span> <span class="nx">action</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">loadedPermissions</span><span class="p">,</span> <span class="nx">hasUserPermission</span><span class="p">,</span> <span class="nx">hasAppPermission</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">userModel</span> <span class="o">=</span> <span class="nx">userModelOrId</span><span class="p">,</span>
+            <span class="nx">origArgs</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-33" id="section-33">&#182;</a>
+</div>
+<p>If we passed in a model without its related roles, we need to fetch it again</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">userModelOrId</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">userModelOrId</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">)))</span> <span class="p">{</span>
+            <span class="nx">userModelOrId</span> <span class="o">=</span> <span class="nx">userModelOrId</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+        <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-34" id="section-34">&#182;</a>
+</div>
+<p>If we passed in an id instead of a model get the model first</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="nx">userModelOrId</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">userModelOrId</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-35" id="section-35">&#182;</a>
+</div>
+<p>Grab the original args without the first one</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">origArgs</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-36" id="section-36">&#182;</a>
+</div>
+<p>Get the actual user model</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">userModelOrId</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">},</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">foundUserModel</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-37" id="section-37">&#182;</a>
+</div>
+<p>Build up the original args but substitute with actual model</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="kd">var</span> <span class="nx">newArgs</span> <span class="o">=</span> <span class="p">[</span><span class="nx">foundUserModel</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">origArgs</span><span class="p">);</span>
+
+                <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">permissible</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">newArgs</span><span class="p">);</span>
+            <span class="p">},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">action</span> <span class="o">===</span> <span class="s1">&#39;edit&#39;</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-38" id="section-38">&#182;</a>
+</div>
+<p>Owner can only be editted by owner</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">hasRole</span><span class="p">(</span><span class="s1">&#39;Owner&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">});</span>
+            <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-39" id="section-39">&#182;</a>
+</div>
+<p>Users with the role 'Editor' and 'Author' have complex permissions when the action === 'edit'
+We now have all the info we need to construct the permissions</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Author&#39;</span><span class="p">}))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-40" id="section-40">&#182;</a>
+</div>
+<p>If this is the same user that requests the operation allow it.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">hasUserPermission</span> <span class="o">||</span> <span class="nx">context</span><span class="p">.</span><span class="nx">user</span> <span class="o">===</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Editor&#39;</span><span class="p">}))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-41" id="section-41">&#182;</a>
+</div>
+<p>If this is the same user that requests the operation allow it.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">user</span> <span class="o">===</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-42" id="section-42">&#182;</a>
+</div>
+<p>Alternatively, if the user we are trying to edit is an Author, allow it</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">hasUserPermission</span> <span class="o">||</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">hasRole</span><span class="p">(</span><span class="s1">&#39;Author&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">action</span> <span class="o">===</span> <span class="s1">&#39;destroy&#39;</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-43" id="section-43">&#182;</a>
+</div>
+<p>Owner cannot be deleted EVER</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">hasRole</span><span class="p">(</span><span class="s1">&#39;Owner&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to perform this action&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-44" id="section-44">&#182;</a>
+</div>
+<p>Users with the role 'Editor' have complex permissions when the action === 'destroy'</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Editor&#39;</span><span class="p">}))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-45" id="section-45">&#182;</a>
+</div>
+<p>If this is the same user that requests the operation allow it.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">context</span><span class="p">.</span><span class="nx">user</span> <span class="o">===</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-46" id="section-46">&#182;</a>
+</div>
+<p>Alternatively, if the user we are trying to edit is an Author, allow it</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">hasUserPermission</span> <span class="o">||</span> <span class="nx">userModel</span><span class="p">.</span><span class="nx">hasRole</span><span class="p">(</span><span class="s1">&#39;Author&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">hasUserPermission</span> <span class="o">&amp;&amp;</span> <span class="nx">hasAppPermission</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to perform this action&#39;</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">setWarning</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">setWarning</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">status</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">),</span>
+            <span class="nx">regexp</span> <span class="o">=</span> <span class="sr">/warn-(\d+)/i</span><span class="p">,</span>
+            <span class="nx">level</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;active&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">user</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-1&#39;</span><span class="p">);</span>
+            <span class="nx">level</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">level</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">status</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">regexp</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">level</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">user</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;locked&#39;</span><span class="p">);</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">user</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;warn-&#39;</span> <span class="o">+</span> <span class="nx">level</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">(</span><span class="nx">options</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="mi">5</span> <span class="o">-</span> <span class="nx">level</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-47" id="section-47">&#182;</a>
+</div>
+<p>Finds the user by email, and checks the password</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">check</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">check</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">s</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">getByEmail</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">email</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;There is no user with that email address.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;invited&#39;</span> <span class="o">||</span> <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;invited-pending&#39;</span> <span class="o">||</span>
+                    <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;inactive&#39;</span>
+                <span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;The user with that email address is inactive.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="s1">&#39;locked&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">bcryptCompare</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">password</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">matched</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">matched</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">setWarning</span><span class="p">(</span><span class="nx">user</span><span class="p">,</span> <span class="p">{</span><span class="nx">validate</span><span class="o">:</span> <span class="kc">false</span><span class="p">})).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">remaining</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">s</span> <span class="o">=</span> <span class="p">(</span><span class="nx">remaining</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="o">?</span> <span class="s1">&#39;s&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+                            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnauthorizedError</span><span class="p">(</span><span class="s1">&#39;Your password is incorrect. &lt;br /&gt;&#39;</span> <span class="o">+</span>
+                                <span class="nx">remaining</span> <span class="o">+</span> <span class="s1">&#39; attempt&#39;</span> <span class="o">+</span> <span class="nx">s</span> <span class="o">+</span> <span class="s1">&#39; remaining!&#39;</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-48" id="section-48">&#182;</a>
+</div>
+<p>Use comma structure, not .catch, because we don't want to catch incorrect passwords</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                        <span class="p">},</span> <span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-49" id="section-49">&#182;</a>
+</div>
+<p>If we get a validation or other error during this save, catch it and log it, but don't
+cause a login error because of it. The user validation is not important here.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                                <span class="nx">error</span><span class="p">,</span>
+                                <span class="s1">&#39;Error thrown from user update during login&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;Visit and save your profile after logging in to check for problems.&#39;</span>
+                            <span class="p">);</span>
+                            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">UnauthorizedError</span><span class="p">(</span><span class="s1">&#39;Your password is incorrect.&#39;</span><span class="p">));</span>
+                        <span class="p">});</span>
+                    <span class="p">}</span>
+
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;active&#39;</span><span class="p">,</span> <span class="nx">last_login</span><span class="o">:</span> <span class="k">new</span> <span class="nb">Date</span><span class="p">()}).</span><span class="nx">save</span><span class="p">({</span><span class="nx">validate</span><span class="o">:</span> <span class="kc">false</span><span class="p">}))</span>
+                        <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-50" id="section-50">&#182;</a>
+</div>
+<p>If we get a validation or other error during this save, catch it and log it, but don't
+cause a login error because of it. The user validation is not important here.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                                <span class="nx">error</span><span class="p">,</span>
+                                <span class="s1">&#39;Error thrown from user update during login&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;Visit and save your profile after logging in to check for problems.&#39;</span>
+                            <span class="p">);</span>
+                            <span class="k">return</span> <span class="nx">user</span><span class="p">;</span>
+                        <span class="p">});</span>
+                <span class="p">},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Your account is locked. Please reset your password &#39;</span> <span class="o">+</span>
+                <span class="s1">&#39;to log in again by clicking the &quot;Forgotten password?&quot; link!&#39;</span><span class="p">));</span>
+        <span class="p">},</span> <span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">===</span> <span class="s1">&#39;NotFound&#39;</span> <span class="o">||</span> <span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">===</span> <span class="s1">&#39;EmptyResponse&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;There is no user with that email address.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-51" id="section-51">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Naive change password method</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options
+</span>
+      <span class="dox_type">Object</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">changePassword</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">changePassword</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">newPassword</span> <span class="o">=</span> <span class="nx">object</span><span class="p">.</span><span class="nx">newPassword</span><span class="p">,</span>
+            <span class="nx">ne2Password</span> <span class="o">=</span> <span class="nx">object</span><span class="p">.</span><span class="nx">ne2Password</span><span class="p">,</span>
+            <span class="nx">userId</span> <span class="o">=</span> <span class="nx">object</span><span class="p">.</span><span class="nx">user_id</span><span class="p">,</span>
+            <span class="nx">oldPassword</span> <span class="o">=</span> <span class="nx">object</span><span class="p">.</span><span class="nx">oldPassword</span><span class="p">,</span>
+            <span class="nx">user</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">newPassword</span> <span class="o">!==</span> <span class="nx">ne2Password</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your new passwords do not match&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">userId</span> <span class="o">===</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">oldPassword</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Password is required for this operation&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">validatePasswordLength</span><span class="p">(</span><span class="nx">newPassword</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your password must be at least 8 characters long.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">forge</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">userId</span><span class="p">}).</span><span class="nx">fetch</span><span class="p">({</span><span class="nx">require</span><span class="o">:</span> <span class="kc">true</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">_user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">user</span> <span class="o">=</span> <span class="nx">_user</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">userId</span> <span class="o">===</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">bcryptCompare</span><span class="p">(</span><span class="nx">oldPassword</span><span class="p">,</span> <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-52" id="section-52">&#182;</a>
+</div>
+<p>if user is admin, password isn't compared</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">matched</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">matched</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your password is incorrect&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">generatePasswordHash</span><span class="p">(</span><span class="nx">newPassword</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">hash</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">save</span><span class="p">({</span><span class="nx">password</span><span class="o">:</span> <span class="nx">hash</span><span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">generateResetToken</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">generateResetToken</span><span class="p">(</span><span class="nx">email</span><span class="p">,</span> <span class="nx">expires</span><span class="p">,</span> <span class="nx">dbHash</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">getByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">foundUser</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">foundUser</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;There is no user with that email address.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="kd">var</span> <span class="nx">hash</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createHash</span><span class="p">(</span><span class="s1">&#39;sha256&#39;</span><span class="p">),</span>
+                <span class="nx">text</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-53" id="section-53">&#182;</a>
+</div>
+<p>Token:
+BASE64(TIMESTAMP + email + HASH(TIMESTAMP + email + oldPasswordHash + dbHash ))</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">hash</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nb">String</span><span class="p">(</span><span class="nx">expires</span><span class="p">));</span>
+            <span class="nx">hash</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">email</span><span class="p">.</span><span class="nx">toLocaleLowerCase</span><span class="p">());</span>
+            <span class="nx">hash</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">foundUser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">));</span>
+            <span class="nx">hash</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nb">String</span><span class="p">(</span><span class="nx">dbHash</span><span class="p">));</span>
+
+            <span class="nx">text</span> <span class="o">+=</span> <span class="p">[</span><span class="nx">expires</span><span class="p">,</span> <span class="nx">email</span><span class="p">,</span> <span class="nx">hash</span><span class="p">.</span><span class="nx">digest</span><span class="p">(</span><span class="s1">&#39;base64&#39;</span><span class="p">)].</span><span class="nx">join</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">);</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">text</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;base64&#39;</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">validateToken</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">validateToken</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="nx">dbHash</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jslint bitwise:true*/</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-54" id="section-54">&#182;</a>
+</div>
+<p>TODO: Is there a chance the use of ascii here will cause problems if oldPassword has weird characters?</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">var</span> <span class="nx">tokenText</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Buffer</span><span class="p">(</span><span class="nx">token</span><span class="p">,</span> <span class="s1">&#39;base64&#39;</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">),</span>
+            <span class="nx">parts</span><span class="p">,</span>
+            <span class="nx">expires</span><span class="p">,</span>
+            <span class="nx">email</span><span class="p">;</span>
+
+        <span class="nx">parts</span> <span class="o">=</span> <span class="nx">tokenText</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;|&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-55" id="section-55">&#182;</a>
+</div>
+<p>Check if invalid structure</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">parts</span> <span class="o">||</span> <span class="nx">parts</span><span class="p">.</span><span class="nx">length</span> <span class="o">!==</span> <span class="mi">3</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Invalid token structure&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="nx">expires</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="nx">email</span> <span class="o">=</span> <span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isNaN</span><span class="p">(</span><span class="nx">expires</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Invalid token expiration&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-56" id="section-56">&#182;</a>
+</div>
+<p>Check if token is expired to prevent replay attacks</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">expires</span> <span class="o">&lt;</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">())</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Expired token&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-57" id="section-57">&#182;</a>
+</div>
+<p>to prevent brute force attempts to reset the password the combination of email+expires is only allowed for
+10 attempts</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">tokenSecurity</span><span class="p">[</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nx">expires</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">tokenSecurity</span><span class="p">[</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nx">expires</span><span class="p">].</span><span class="nx">count</span> <span class="o">&gt;=</span> <span class="mi">10</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Token locked&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">generateResetToken</span><span class="p">(</span><span class="nx">email</span><span class="p">,</span> <span class="nx">expires</span><span class="p">,</span> <span class="nx">dbHash</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">generatedToken</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-58" id="section-58">&#182;</a>
+</div>
+<p>Check for matching tokens with timing independent comparison</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">var</span> <span class="nx">diff</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="nx">i</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-59" id="section-59">&#182;</a>
+</div>
+<p>check if the token length is correct</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">token</span><span class="p">.</span><span class="nx">length</span> <span class="o">!==</span> <span class="nx">generatedToken</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">diff</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">for</span> <span class="p">(</span><span class="nx">i</span> <span class="o">=</span> <span class="nx">token</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="nx">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="o">=</span> <span class="nx">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">diff</span> <span class="o">|=</span> <span class="nx">token</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="o">^</span> <span class="nx">generatedToken</span><span class="p">.</span><span class="nx">charCodeAt</span><span class="p">(</span><span class="nx">i</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">diff</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">email</span><span class="p">;</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-60" id="section-60">&#182;</a>
+</div>
+<p>increase the count for email+expires for each failed attempt</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">tokenSecurity</span><span class="p">[</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nx">expires</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">count</span><span class="o">:</span> <span class="nx">tokenSecurity</span><span class="p">[</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nx">expires</span><span class="p">]</span> <span class="o">?</span> <span class="nx">tokenSecurity</span><span class="p">[</span><span class="nx">email</span> <span class="o">+</span> <span class="s1">&#39;+&#39;</span> <span class="o">+</span> <span class="nx">expires</span><span class="p">].</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">1</span>
+            <span class="p">};</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Invalid token&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">resetPassword</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">resetPassword</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">token</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">token</span><span class="p">,</span>
+            <span class="nx">newPassword</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">newPassword</span><span class="p">,</span>
+            <span class="nx">ne2Password</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">ne2Password</span><span class="p">,</span>
+            <span class="nx">dbHash</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">dbHash</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">newPassword</span> <span class="o">!==</span> <span class="nx">ne2Password</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your new passwords do not match&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">validatePasswordLength</span><span class="p">(</span><span class="nx">newPassword</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Your password must be at least 8 characters long.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-61" id="section-61">&#182;</a>
+</div>
+<p>Validate the token; returns the email address from token</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">validateToken</span><span class="p">(</span><span class="nx">utils</span><span class="p">.</span><span class="nx">decodeBase64URLsafe</span><span class="p">(</span><span class="nx">token</span><span class="p">),</span> <span class="nx">dbHash</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-62" id="section-62">&#182;</a>
+</div>
+<p>Fetch the user by email, and hash the password at the same time.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">getByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">),</span>
+                <span class="nx">generatePasswordHash</span><span class="p">(</span><span class="nx">newPassword</span><span class="p">)</span>
+            <span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;User not found&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-63" id="section-63">&#182;</a>
+</div>
+<p>Update the user with the new password hash</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">var</span> <span class="nx">foundUser</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="nx">passwordHash</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+            <span class="k">return</span> <span class="nx">foundUser</span><span class="p">.</span><span class="nx">save</span><span class="p">({</span><span class="nx">password</span><span class="o">:</span> <span class="nx">passwordHash</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;active&#39;</span><span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">transferOwnership</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">transferOwnership</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">ownerRole</span><span class="p">,</span>
+            <span class="nx">contextUser</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">).</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">}),</span>
+                            <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">},</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]}))</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">ownerRole</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+            <span class="nx">contextUser</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-64" id="section-64">&#182;</a>
+</div>
+<p>check if user has the owner role</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">var</span> <span class="nx">currentRoles</span> <span class="o">=</span> <span class="nx">contextUser</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">roles</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">currentRoles</span><span class="p">,</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">ownerRole</span><span class="p">.</span><span class="nx">id</span><span class="p">}))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Only owners are able to transfer the owner role.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">).</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Administrator&#39;</span><span class="p">}),</span>
+                                <span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">object</span><span class="p">.</span><span class="nx">id</span><span class="p">},</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]}));</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">adminRole</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="nx">user</span> <span class="o">=</span> <span class="nx">results</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="nx">currentRoles</span> <span class="o">=</span> <span class="nx">user</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">roles</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">currentRoles</span><span class="p">,</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">adminRole</span><span class="p">.</span><span class="nx">id</span><span class="p">}))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">ValidationError</span><span class="p">(</span><span class="s1">&#39;Only administrators can be assigned the owner role.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-65" id="section-65">&#182;</a>
+</div>
+<p>convert owner to admin</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">contextUser</span><span class="p">.</span><span class="nx">roles</span><span class="p">().</span><span class="nx">updatePivot</span><span class="p">({</span><span class="nx">role_id</span><span class="o">:</span> <span class="nx">adminRole</span><span class="p">.</span><span class="nx">id</span><span class="p">}),</span>
+                                <span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">().</span><span class="nx">updatePivot</span><span class="p">({</span><span class="nx">role_id</span><span class="o">:</span> <span class="nx">ownerRole</span><span class="p">.</span><span class="nx">id</span><span class="p">}),</span>
+                                <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Users</span><span class="p">.</span><span class="nx">forge</span><span class="p">()</span>
+                <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;whereIn&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="p">[</span><span class="nx">contextUser</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">results</span><span class="p">[</span><span class="mi">2</span><span class="p">]])</span>
+                <span class="p">.</span><span class="nx">fetch</span><span class="p">({</span><span class="nx">withRelated</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]});</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">users</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">include</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">];</span>
+            <span class="k">return</span> <span class="nx">users</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">gravatarLookup</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">gravatarLookup</span><span class="p">(</span><span class="nx">userData</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">gravatarUrl</span> <span class="o">=</span> <span class="s1">&#39;//www.gravatar.com/avatar/&#39;</span> <span class="o">+</span>
+                <span class="nx">crypto</span><span class="p">.</span><span class="nx">createHash</span><span class="p">(</span><span class="s1">&#39;md5&#39;</span><span class="p">).</span><span class="nx">update</span><span class="p">(</span><span class="nx">userData</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">().</span><span class="nx">trim</span><span class="p">()).</span><span class="nx">digest</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">)</span> <span class="o">+</span>
+                <span class="s1">&#39;?s=250&#39;</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span> <span class="nx">gravatarRequest</span><span class="p">(</span><span class="nx">resolve</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">isPrivacyDisabled</span><span class="p">(</span><span class="s1">&#39;useGravatar&#39;</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">userData</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">request</span><span class="p">({</span><span class="nx">url</span><span class="o">:</span> <span class="s1">&#39;http:&#39;</span> <span class="o">+</span> <span class="nx">gravatarUrl</span> <span class="o">+</span> <span class="s1">&#39;&amp;d=404&amp;r=x&#39;</span><span class="p">,</span> <span class="nx">timeout</span><span class="o">:</span> <span class="mi">2000</span><span class="p">},</span> <span class="kd">function</span> <span class="nx">handler</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-66" id="section-66">&#182;</a>
+</div>
+<p>just resolve with no image url</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">userData</span><span class="p">);</span>
+                <span class="p">}</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">statusCode</span> <span class="o">!==</span> <span class="mi">404</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">gravatarUrl</span> <span class="o">+=</span> <span class="s1">&#39;&amp;d=mm&amp;r=x&#39;</span><span class="p">;</span>
+                    <span class="nx">userData</span><span class="p">.</span><span class="nx">image</span> <span class="o">=</span> <span class="nx">gravatarUrl</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="nx">resolve</span><span class="p">(</span><span class="nx">userData</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-67" id="section-67">&#182;</a>
+</div>
+<p>Get the user by email address, enforces case insensitivity rejects if the user is not found
+When multi-user support is added, email addresses must be deduplicated with case insensitivity, so that
+<a href='mailto:joe@bloggs.com'>joe@bloggs.com</a> and <a href='mailto:JOE@BLOGGS.COM'>JOE@BLOGGS.COM</a> cannot be created as two separate users.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">getByEmail</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">getByEmail</span><span class="p">(</span><span class="nx">email</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-68" id="section-68">&#182;</a>
+</div>
+<p>We fetch all users and process them in JS as there is no easy way to make this query across all DBs
+Although they all support <code>lower()</code>, sqlite can't case transform unicode characters
+This is somewhat mute, as validator.isEmail() also doesn't support unicode, but this is much easier / more
+likely to be fixed in the near future.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">options</span><span class="p">.</span><span class="nx">require</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">Users</span><span class="p">.</span><span class="nx">forge</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">users</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">userWithEmail</span> <span class="o">=</span> <span class="nx">users</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="kd">function</span> <span class="nx">findUser</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">user</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">).</span><span class="nx">toLowerCase</span><span class="p">()</span> <span class="o">===</span> <span class="nx">email</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">();</span>
+            <span class="p">});</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">userWithEmail</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">userWithEmail</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">Users</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">model</span><span class="o">:</span> <span class="nx">User</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">User</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">,</span> <span class="nx">User</span><span class="p">),</span>
+    <span class="nx">Users</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;Users&#39;</span><span class="p">,</span> <span class="nx">Users</span><span class="p">)</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

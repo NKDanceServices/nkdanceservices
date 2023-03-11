@@ -1,0 +1,120 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+{{#post}}
+
+<header class="noo-page-heading heading-bg-image">
+	<div class="container-boxed max">
+		<div class="page-heading-info ">
+			<h1 class="page-title">Services</h1>
+	  	</div>
+		<!-- Start breadcrumbs -->
+			{{> "breadcrumbs"}}
+		<!-- End breadcrumbs -->
+	</div> 
+</header>
+
+<div class="main-content container-boxed max offset">
+	<div class="row">
+		<div class="noo-main col-md-12"> 
+			<div class="posts-loop masonry grid">
+				<div class="masonry-container">
+					<article class="masonry-item col-sm-6 col-md-6">
+						<div class="loop-item-featured">
+							<a href="/dance-classes/">
+							 {{#if image}} <img width="600" height="450" src="{{image}}" /> {{else}} <img width="600" height="450" src="{{asset "images/services/s1.png"}}"/> {{/if}}
+							</a>
+						</div>
+						<div class="loop-item-content">
+							<div class="loop-item-content-summary">
+								<h2 class="loop-item-title">
+									<a href="/dance-classes/" title="">Dance Classes</a>
+								</h2>
+								<div class="loop-item-excerpt">
+									<p>
+										Afrobeat dance Choreography - learn choreography for some popular Afrobeat songs $15 per class....
+									</p>
+								</div>
+							</div>
+							<div class="loop-item-action">
+								<a class="btn btn-default btn-block text-uppercase" href="/dance-classes/">Learn More</a>
+							</div>
+						</div>
+					</article>
+					<article class="masonry-item col-sm-6 col-md-6">
+						<div class="loop-item-featured">
+							<a href="/choreography/">
+								{{#if image}} <img width="600" height="450" src="{{image}}" /> {{else}} <img width="600" height="450" src="{{asset "images/services/s2.png"}}"/> {{/if}}
+							</a>
+						</div>
+						<div class="loop-item-content">
+							<div class="loop-item-content-summary">
+								<h2 class="loop-item-title">
+									<a href="/choreography/" title="">Choreography</a>
+								</h2>
+								<div class="loop-item-excerpt">
+									<p>
+										Looking for an African Choreographer for a project? Event? Or to teach you and your friends?....
+									</p>
+								</div>
+							</div>
+							<div class="loop-item-action">
+								<a class="btn btn-default btn-block text-uppercase" href="/choreography/">Learn More</a>
+							</div>
+						</div>
+					</article>
+					<article class="masonry-item col-sm-6 col-md-6">
+						<div class="loop-item-featured">
+							<a href="/wedding-services/">
+								{{#if image}} <img width="600" height="450" src="{{image}}" /> {{else}} <img width="600" height="450" src="{{asset "images/services/s3.png"}}"/> {{/if}}
+							</a>
+						</div>
+						<div class="loop-item-content">
+							<div class="loop-item-content-summary">
+								<h2 class="loop-item-title">
+									<a href="/wedding-services/" title="Wedding Services">Wedding Services</a>
+								</h2>
+								<div class="loop-item-excerpt">
+									<p>
+										African dance classes for your wedding party.  We teach the bride how to do traditional dancing....
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="loop-item-action">
+							<a class="btn btn-default btn-block text-uppercase" href="/wedding-services/">Learn More</a>
+						</div>
+					</article>
+					<article class="masonry-item col-sm-6 col-md-6">
+						<div class="loop-item-featured">
+							<a href="/private-events/">
+								{{#if image}} <img width="600" height="450" src="{{image}}" /> {{else}} <img width="600" height="450" src="{{asset "images/temp-medium.png"}}" alt="class_10"/> {{/if}}
+							</a>
+						</div>
+						<div class="loop-item-content">
+							<div class="loop-item-content-summary">
+								<h2 class="loop-item-title">
+									<a href="/private-events/" title="">Private Events</a>
+								</h2>
+								<div class="loop-item-excerpt">
+									<p>
+									How can we help?<br/>
+									Get in touch now!
+									</p>
+								</div>
+							</div>
+						</div>
+						<div class="loop-item-action">
+							<a class="btn btn-default btn-block text-uppercase" href="/private-events/">Learn More</a>
+						</div>
+					</article>
+				</div>
+			</div>
+		</div>
+	</div>
+</div> 
+{{/post}}

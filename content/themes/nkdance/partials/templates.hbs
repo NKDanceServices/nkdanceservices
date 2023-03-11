@@ -1,0 +1,106 @@
+<script type="text/template" class="post_collection">
+    <div class="noo-main col-md-9 post-area standard-blog">
+            <% _.each(data.posts, function(post, index){ %>
+        <article class="hentry">
+            <div class="row">
+                <div class="content-featured col-sm-6">
+                    <a class="content-thumb" href="<%- post.url %>" title="">
+                        <% if (post.image) { %>
+                            <img width="600" height="450" src="<%- post.image %>" /> 
+                        <% } else { %>
+                            <img width="600" height="450" src="{{asset "images/temp.png"}}" alt="blog_thumb"/> 
+                        <% } %>
+                    </a>
+                </div>
+                <div class="content-wrap col-sm-6">
+                    <span class="content-category">
+                         <% _.each(post.tags, function(tag, idx) { %>
+                            <%- tag.name %>
+                        <% }) %>
+                    </span>
+                    <h3 class="content-title">
+                        <a href="<%- post.url %>" title="<%- post.title %>"><%- post.title %></a>
+                    </h3>
+                    <div class="content-excerpt">
+                        <%= (post.html).slice(0, 150) %>
+                    </div>
+                    <p class="content-meta">
+                        <span>
+                            <i class="fa fa-user"></i>
+                            <a href="#" title=""><%- post.author.name %></a>
+                        </span>
+                        <span>
+                            <time class="entry-date">
+                                <i class="fa fa-calendar"></i><%- new Date(post.published_at).toDateString() %>
+                            </time>
+                        </span>
+                        <span>
+                            <i class="fa fa-comments-o"></i>
+                            <a href="<%- post.url %>#disqus_thread" class="meta-comments">
+                                 1 Comment
+                            </a>
+                        </span>
+                    </p>
+                    <a href="<%- post.url %>" class="read-more">
+                        <i class="fa fa-chevron-circle-right"></i>Read More
+                    </a>
+                </div>
+            </div>
+        </article>
+    <% }); %>
+    <div class="pagination list-center">
+        <% if(!_.isNull(data.meta.pagination.prev)) { %><a class="next page-numbers" href="<%- data.meta.pagination.prev %>">Previous</a><% } %>
+        <span class='page-numbers current'><%- data.meta.pagination.page %></span>
+        <% if(!_.isNull(data.meta.pagination.next)) {%><a class="next page-numbers" href="<%- data.meta.pagination.next %>">Next</a><% } %>
+    </div>
+    </div>  
+</script>
+
+<script type="text/template" class="sidebar_categories">
+    <div class="widget widget_categories">
+        <h4 class="widget-title">
+            <span>post</span> categories
+        </h4>
+        <ul>
+            <% _.each(data.tags, function(tag, index){ %>
+                <li class="cat-item"><a href="/tag/<%- tag.slug %>"><%- tag.name %></a> (<%- tag.count.posts %>)</li>
+            <% }) %>
+        </ul>
+    </div>
+    <div class="widget widget_tag_cloud">
+        <h4 class="widget-title">
+            <span>Post</span> Tags
+        </h4>
+        <div class="tagcloud">
+            <% _.each(data.tags, function(tag, index){ %>
+                <a href="/tag/<%- tag.slug %>"><%- tag.name %></a>
+            <% }) %>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" class="sidebar_latest_post">
+    <div class="noo-sidebar col-md-3">
+        <div class="noo-sidebar-wrap">
+            <div class="widget widget_latest_posts">
+                <h4 class="widget-title">
+                    <span>Latest</span> Posts
+                </h4>
+                <ul>
+                    <% _.each(data.posts, function(post, idx){ %>
+                        <li class="clearfix">
+                            <% if(post.image) { %>
+                                <img width="70" height="70" src="<%- post.image %>" /> 
+                            <% } else { %>
+                                <img width="70" height="70" src="{{asset "images/temp-small.png"}}" alt="blog_thumb"/> 
+                            <% } %> 
+                            <h5><a href="<%- post.url %>"><%- post.title %></a></h5>
+                        </li>
+                        <% if(idx === 2){ return } %>
+                    <% }) %>
+                </ul>
+            </div>
+            
+        </div>
+    </div>
+</script>

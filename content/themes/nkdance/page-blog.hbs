@@ -1,0 +1,25 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+{{#post}}
+<header class="noo-page-heading">
+	<div class="container-boxed max">
+		<div class="page-heading-info ">
+			<h1 class="page-title">{{title}}</h1>
+	  	</div>
+		<!-- Start breadcrumbs -->
+		{{> "breadcrumbs"}}
+		<!-- End breadcrumbs -->
+	</div>
+</header>
+
+<div class="main-content container-boxed max offset">
+	<div class="row">
+		<div id="blog_body"></div>
+	</div> 
+</div>
+{{/post}}

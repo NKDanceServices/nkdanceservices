@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>mail.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/mail.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#mail%20api">Mail API</a>
+      </div>
+      <div class="heading h2">
+        <a href="#mail%20api%20methods">Mail API Methods</a>
+      </div>
+      <div class="heading h3">
+        <a href="#send">Send</a>
+      </div>
+      <div class="heading h3">
+        <a href="#format%20response">Format Response</a>
+      </div>
+      <div class="heading h3">
+        <a href="#send%20mail">Send Mail</a>
+      </div>
+      <div class="heading h3">
+        <a href="#sendtest">SendTest</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h3">
+        <a href="#generate%20content">Generate content</a>
+      </div>
+      <div class="heading h3">
+        <a href="#send%20mail">Send mail</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="mail%20api">
+  <h1>
+    <a href="#mail%20api" name="mail%20api" class="pilcrow">&#182;</a>
+    Mail API
+  </h1>
+</div>
+
+
+<p>API for sending Mail</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">).</span><span class="nx">runInContext</span><span class="p">(),</span>
+    <span class="nx">Promise</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">mailer</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../mail&#39;</span><span class="p">),</span>
+    <span class="nx">Models</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">templatesDir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">__dirname</span><span class="p">,</span> <span class="s1">&#39;..&#39;</span><span class="p">,</span> <span class="s1">&#39;mail&#39;</span><span class="p">,</span> <span class="s1">&#39;templates&#39;</span><span class="p">),</span>
+    <span class="nx">htmlToText</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;html-to-text&#39;</span><span class="p">),</span>
+
+    <span class="nx">readFile</span>     <span class="o">=</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">readFile</span><span class="p">),</span>
+    <span class="nx">docName</span>      <span class="o">=</span> <span class="s1">&#39;mail&#39;</span><span class="p">,</span>
+    <span class="nx">mail</span><span class="p">;</span>
+
+<span class="nx">_</span><span class="p">.</span><span class="nx">templateSettings</span><span class="p">.</span><span class="nx">interpolate</span> <span class="o">=</span> <span class="sr">/{{([\s\S]+?)}}/g</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Send mail helper</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="kd">function</span> <span class="nx">sendMail</span><span class="p">(</span><span class="nx">object</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">mailer</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">mail</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">message</span><span class="p">).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">EmailError</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="mail%20api%20methods">
+  <h2>
+    <a href="#mail%20api%20methods" name="mail%20api%20methods" class="pilcrow">&#182;</a>
+    Mail API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">typedef</div>
+    <div class="dox_tag_detail">
+      <span>Mail</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">mail
+</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">mail</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="send">
+  <h3>
+    <a href="#send" name="send" class="pilcrow">&#182;</a>
+    Send
+  </h3>
+</div>
+
+
+<p>Send an email</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">Mail</span>
+      <span>details of the email to send</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise
+</span>
+      <span>{Promise}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">send</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="format%20response">
+  <h3>
+    <a href="#format%20response" name="format%20response" class="pilcrow">&#182;</a>
+    Format Response
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Mail</span>
+      <span>mail</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+        <span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">delete</span> <span class="nx">object</span><span class="p">.</span><span class="nx">mail</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">options</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Sendmail returns extra details we don't need and that don't convert to JSON</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">delete</span> <span class="nx">object</span><span class="p">.</span><span class="nx">mail</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">message</span><span class="p">.</span><span class="nx">transport</span><span class="p">;</span>
+            <span class="nx">object</span><span class="p">.</span><span class="nx">mail</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">status</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">message</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">message</span>
+            <span class="p">};</span>
+
+            <span class="k">return</span> <span class="nx">object</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="send%20mail">
+  <h3>
+    <a href="#send%20mail" name="send%20mail" class="pilcrow">&#182;</a>
+    Send Mail
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+        <span class="kd">function</span> <span class="nx">send</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">sendMail</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;send&#39;</span><span class="p">),</span>
+                <span class="nx">send</span><span class="p">,</span>
+                <span class="nx">formatResponse</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="sendtest">
+  <h3>
+    <a href="#sendtest" name="sendtest" class="pilcrow">&#182;</a>
+    SendTest
+  </h3>
+</div>
+
+
+<p>Send a test email</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">public</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+      <span>required property 'to' which contains the recipient address</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise
+</span>
+      <span>{Promise}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">sendTest</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+        <span class="kd">function</span> <span class="nx">modelQuery</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Models</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="generate%20content">
+  <h3>
+    <a href="#generate%20content" name="generate%20content" class="pilcrow">&#182;</a>
+    Generate content
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+        <span class="kd">function</span> <span class="nx">generateContent</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">mail</span><span class="p">.</span><span class="nx">generateContent</span><span class="p">({</span><span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;test&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">content</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">mail</span><span class="o">:</span> <span class="p">[{</span>
+                        <span class="nx">message</span><span class="o">:</span> <span class="p">{</span>
+                            <span class="nx">to</span><span class="o">:</span> <span class="nx">result</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;email&#39;</span><span class="p">),</span>
+                            <span class="nx">subject</span><span class="o">:</span> <span class="s1">&#39;Test Ghost Email&#39;</span><span class="p">,</span>
+                            <span class="nx">html</span><span class="o">:</span> <span class="nx">content</span><span class="p">.</span><span class="nx">html</span><span class="p">,</span>
+                            <span class="nx">text</span><span class="o">:</span> <span class="nx">content</span><span class="p">.</span><span class="nx">text</span>
+                        <span class="p">}</span>
+                    <span class="p">}]</span>
+                <span class="p">};</span>
+
+                <span class="k">return</span> <span class="nx">payload</span><span class="p">;</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="send%20mail">
+  <h3>
+    <a href="#send%20mail" name="send%20mail" class="pilcrow">&#182;</a>
+    Send mail
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+        <span class="kd">function</span> <span class="nx">send</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">sendMail</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">modelQuery</span><span class="p">,</span>
+            <span class="nx">generateContent</span><span class="p">,</span>
+            <span class="nx">send</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary">
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+      <span>{
+             data: JSON object representing the data that will go into the email
+             template: which email template to load (files are stored in /core/server/mail/templates/)
+         }</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">*
+</span>
+      <span>{*}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">generateContent</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">defaults</span><span class="p">,</span>
+            <span class="nx">data</span><span class="p">;</span>
+
+        <span class="nx">defaults</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">siteUrl</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">forceAdminSSL</span> <span class="o">?</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">urlSSL</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span>
+        <span class="p">};</span>
+
+        <span class="nx">data</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">defaults</span><span class="p">(</span><span class="nx">defaults</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>read the proper email body template</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">readFile</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">templatesDir</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.html&#39;</span><span class="p">),</span> <span class="s1">&#39;utf8&#39;</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">content</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">compiled</span><span class="p">,</span>
+                <span class="nx">htmlContent</span><span class="p">,</span>
+                <span class="nx">textContent</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>insert user-specific data into the email</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">compiled</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">template</span><span class="p">(</span><span class="nx">content</span><span class="p">);</span>
+            <span class="nx">htmlContent</span> <span class="o">=</span> <span class="nx">compiled</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>generate a plain-text version of the same email</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">textContent</span> <span class="o">=</span> <span class="nx">htmlToText</span><span class="p">.</span><span class="nx">fromString</span><span class="p">(</span><span class="nx">htmlContent</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="nx">html</span><span class="o">:</span> <span class="nx">htmlContent</span><span class="p">,</span>
+                <span class="nx">text</span><span class="o">:</span> <span class="nx">textContent</span>
+            <span class="p">};</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">mail</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

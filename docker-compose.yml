@@ -1,0 +1,21 @@
+mariadb:
+  image: bitnami/mariadb
+  environment:
+    - MARIADB_PASSWORD=nkdanceservices@123
+    - MARIADB_DATABASE=nkdanceservices
+  expose:
+    - "3306"
+  ports:
+    - "3306:3306"
+  volumes:
+    - /home/alexebube/backup:/bitnami/mariadb/data
+nkdanceservices:
+  build: .
+  expose:
+    - "80"
+  ports:
+    - "80:80"
+  links:
+    - mariadb:mariadb
+  volumes:
+    - /home/alexebube/app_content:/home/app/nkdanceservices/content/images

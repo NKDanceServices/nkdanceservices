@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>role.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/models/role.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>role.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">ghostBookshelf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./base&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+
+    <span class="nx">Role</span><span class="p">,</span>
+    <span class="nx">Roles</span><span class="p">;</span>
+
+<span class="nx">Role</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">tableName</span><span class="o">:</span> <span class="s1">&#39;roles&#39;</span><span class="p">,</span>
+
+    <span class="nx">users</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">users</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">belongsToMany</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">permissions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permissions</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">belongsToMany</span><span class="p">(</span><span class="s1">&#39;Permission&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">},</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Returns an array of keys permitted in a method's <code>options</code> hash, depending on the current method.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">methodName</span>
+      <span class="dox_type">String</span>
+      <span>The name of the method to check valid options for.</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Array</span>
+      <span>Keys allowed in the <code>options</code> hash of the model's method.</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">permittedOptions</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permittedOptions</span><span class="p">(</span><span class="nx">methodName</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">options</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">permittedOptions</span><span class="p">(),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>whitelists for the <code>options</code> hash argument on methods, by method name.
+these are the only options that can be passed to Bookshelf / Knex.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">validOptions</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">findOne</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;withRelated&#39;</span><span class="p">]</span>
+            <span class="p">};</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">validOptions</span><span class="p">[</span><span class="nx">methodName</span><span class="p">])</span> <span class="p">{</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">validOptions</span><span class="p">[</span><span class="nx">methodName</span><span class="p">]);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+    <span class="p">},</span>
+
+    <span class="nx">permissible</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">permissible</span><span class="p">(</span><span class="nx">roleModelOrId</span><span class="p">,</span> <span class="nx">action</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">loadedPermissions</span><span class="p">,</span> <span class="nx">hasUserPermission</span><span class="p">,</span> <span class="nx">hasAppPermission</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">checkAgainst</span> <span class="o">=</span> <span class="p">[],</span>
+            <span class="nx">origArgs</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>If we passed in an id instead of a model, get the model
+then check the permissions</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNumber</span><span class="p">(</span><span class="nx">roleModelOrId</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">roleModelOrId</span><span class="p">))</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Grab the original args without the first one</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">origArgs</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Get the actual role model</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">roleModelOrId</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">foundRoleModel</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Build up the original args but substitute with actual model</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="kd">var</span> <span class="nx">newArgs</span> <span class="o">=</span> <span class="p">[</span><span class="nx">foundRoleModel</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">origArgs</span><span class="p">);</span>
+
+                <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">permissible</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">newArgs</span><span class="p">);</span>
+            <span class="p">},</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">action</span> <span class="o">===</span> <span class="s1">&#39;assign&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">}))</span> <span class="p">{</span>
+                <span class="nx">checkAgainst</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Owner&#39;</span><span class="p">,</span> <span class="s1">&#39;Administrator&#39;</span><span class="p">,</span> <span class="s1">&#39;Editor&#39;</span><span class="p">,</span> <span class="s1">&#39;Author&#39;</span><span class="p">];</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Administrator&#39;</span><span class="p">}))</span> <span class="p">{</span>
+                <span class="nx">checkAgainst</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Administrator&#39;</span><span class="p">,</span> <span class="s1">&#39;Editor&#39;</span><span class="p">,</span> <span class="s1">&#39;Author&#39;</span><span class="p">];</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">any</span><span class="p">(</span><span class="nx">loadedPermissions</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">roles</span><span class="p">,</span> <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Editor&#39;</span><span class="p">}))</span> <span class="p">{</span>
+                <span class="nx">checkAgainst</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Author&#39;</span><span class="p">];</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Role in the list of permissible roles</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">hasUserPermission</span> <span class="o">=</span> <span class="nx">roleModelOrId</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">checkAgainst</span><span class="p">,</span> <span class="nx">roleModelOrId</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">hasUserPermission</span> <span class="o">&amp;&amp;</span> <span class="nx">hasAppPermission</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You do not have permission to perform this action&#39;</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">Roles</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+    <span class="nx">model</span><span class="o">:</span> <span class="nx">Role</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">Role</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">model</span><span class="p">(</span><span class="s1">&#39;Role&#39;</span><span class="p">,</span> <span class="nx">Role</span><span class="p">),</span>
+    <span class="nx">Roles</span><span class="o">:</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">collection</span><span class="p">(</span><span class="s1">&#39;Roles&#39;</span><span class="p">,</span> <span class="nx">Roles</span><span class="p">)</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

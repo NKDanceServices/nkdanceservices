@@ -1,0 +1,45 @@
+<script type="text/template" class="bloghome">
+    <div class="container-boxed max">
+        <div class="row our-blog">
+            <div class="col-md-12 ">
+                <div class="noo-recent-news">
+                    <h3 class="custom-title-home-center">
+                        <span class="nth-word-first">NK</span> Blog
+                    </h3>
+                    <div class="noo-rn-content">
+                        <div class="row">
+                            <% _.each(data.posts, function(post, index){ %>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="item-wrap">
+                                        <div class="item-featured">
+                                            <a href="<%- post.url %>" title="">
+                                                <% if (post.image) { %>
+                                                    <img width="600" height="300" src="<%- post.image %>" /> 
+                                                <% } else { %>
+                                                    <img width="600" height="300" src="{{asset "images/temp.png"}}" alt="blog_thumb"/> 
+                                                <% } %>
+                                            </a>
+                                            <span class="icon"><i class="fa fa-file-image-o"></i></span>
+                                        </div>
+                                        <div class="item-content">
+                                            <h4 class="item-title">
+                                                <a href="<%- post.url %>" title=""><%- post.title %></a>
+                                            </h4>
+                                            <div class="item-date"><span><%- new Date(post.published_at).toDateString() %></span></div>
+                                            <div class="item-excerpt">
+                                                <%= (post.html).slice(0, 150) %>
+                                            </div>
+                                            <a class="read-more" href="<%- post.url %>" title="Read more">
+                                                <i class="fa fa-chevron-circle-right">&nbsp;</i> Read more
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>

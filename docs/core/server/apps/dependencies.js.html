@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>dependencies.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/apps/dependencies.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>dependencies.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">path</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">spawn</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">spawn</span><span class="p">,</span>
+    <span class="nx">win32</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">platform</span> <span class="o">===</span> <span class="s1">&#39;win32&#39;</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">AppDependencies</span><span class="p">(</span><span class="nx">appPath</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">appPath</span> <span class="o">=</span> <span class="nx">appPath</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">AppDependencies</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">install</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">installAppDependencies</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">spawnOpts</span><span class="p">,</span>
+        <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">appPath</span><span class="p">,</span> <span class="s1">&#39;package.json&#39;</span><span class="p">),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>File doesn't exist - nothing to do, resolve right away?</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">resolve</span><span class="p">();</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Run npm install in the app directory</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">spawnOpts</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">cwd</span><span class="o">:</span> <span class="nx">self</span><span class="p">.</span><span class="nx">appPath</span>
+                <span class="p">};</span>
+
+                <span class="nx">self</span><span class="p">.</span><span class="nx">spawnCommand</span><span class="p">(</span><span class="s1">&#39;npm&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;install&#39;</span><span class="p">,</span> <span class="s1">&#39;--production&#39;</span><span class="p">],</span> <span class="nx">spawnOpts</span><span class="p">)</span>
+                    <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span>
+                    <span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;exit&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+                        <span class="p">}</span>
+
+                        <span class="nx">resolve</span><span class="p">();</span>
+                    <span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Normalize a command across OS and spawn it; taken from yeoman/generator</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">AppDependencies</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">spawnCommand</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">command</span><span class="p">,</span> <span class="nx">args</span><span class="p">,</span> <span class="nx">opt</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">winCommand</span> <span class="o">=</span> <span class="nx">win32</span> <span class="o">?</span> <span class="s1">&#39;cmd&#39;</span> <span class="o">:</span> <span class="nx">command</span><span class="p">,</span>
+        <span class="nx">winArgs</span> <span class="o">=</span> <span class="nx">win32</span> <span class="o">?</span> <span class="p">[</span><span class="s1">&#39;/c&#39;</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">command</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span> <span class="o">:</span> <span class="nx">args</span><span class="p">;</span>
+
+    <span class="nx">opt</span> <span class="o">=</span> <span class="nx">opt</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="k">return</span> <span class="nx">spawn</span><span class="p">(</span><span class="nx">winCommand</span><span class="p">,</span> <span class="nx">winArgs</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">defaults</span><span class="p">({</span><span class="nx">stdio</span><span class="o">:</span> <span class="s1">&#39;inherit&#39;</span><span class="p">},</span> <span class="nx">opt</span><span class="p">));</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">AppDependencies</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

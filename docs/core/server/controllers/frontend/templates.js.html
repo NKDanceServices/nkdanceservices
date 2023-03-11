@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>templates.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/controllers/frontend/templates.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#templates">Templates</a>
+      </div>
+      <div class="heading h2">
+        <a href="#get%20channel%20template%20hierarchy">Get Channel Template Hierarchy</a>
+      </div>
+      <div class="heading h2">
+        <a href="#get%20single%20template%20hierarchy">Get Single Template Hierarchy</a>
+      </div>
+      <div class="heading h2">
+        <a href="#pick%20template">Pick Template</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="templates">
+  <h1>
+    <a href="#templates" name="templates" class="pilcrow">&#182;</a>
+    Templates
+  </h1>
+</div>
+
+
+<p>Figure out which template should be used to render a request
+based on the templates which are allowed, and what is available in the theme</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../config&#39;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">getActiveThemePaths</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">availableThemes</span><span class="p">[</span><span class="nx">activeTheme</span><span class="p">];</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="get%20channel%20template%20hierarchy">
+  <h2>
+    <a href="#get%20channel%20template%20hierarchy" name="get%20channel%20template%20hierarchy" class="pilcrow">&#182;</a>
+    Get Channel Template Hierarchy
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p>Fetch the ordered list of templates that can be used to render this request.
+'index' is the default / fallback
+For channels with slugs: [:channelName-:slug, :channelName, index]
+For channels without slugs: [:channelName, index]
+Channels can also have a front page template which is used if this is the first page of the channel, e.g. 'home.hbs'</p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">channelOpts</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">String[]
+</span>
+      <span>{String[]}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">getChannelTemplateHierarchy</span><span class="p">(</span><span class="nx">channelOpts</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">templateList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">channelOpts</span><span class="p">.</span><span class="nx">name</span> <span class="o">&amp;&amp;</span> <span class="nx">channelOpts</span><span class="p">.</span><span class="nx">name</span> <span class="o">!==</span> <span class="s1">&#39;index&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">templateList</span><span class="p">.</span><span class="nx">unshift</span><span class="p">(</span><span class="nx">channelOpts</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">channelOpts</span><span class="p">.</span><span class="nx">slugTemplate</span> <span class="o">&amp;&amp;</span> <span class="nx">channelOpts</span><span class="p">.</span><span class="nx">slugParam</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">templateList</span><span class="p">.</span><span class="nx">unshift</span><span class="p">(</span><span class="nx">channelOpts</span><span class="p">.</span><span class="nx">name</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">channelOpts</span><span class="p">.</span><span class="nx">slugParam</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">channelOpts</span><span class="p">.</span><span class="nx">frontPageTemplate</span> <span class="o">&amp;&amp;</span> <span class="nx">channelOpts</span><span class="p">.</span><span class="nx">postOptions</span><span class="p">.</span><span class="nx">page</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">templateList</span><span class="p">.</span><span class="nx">unshift</span><span class="p">(</span><span class="nx">channelOpts</span><span class="p">.</span><span class="nx">frontPageTemplate</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">templateList</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="get%20single%20template%20hierarchy">
+  <h2>
+    <a href="#get%20single%20template%20hierarchy" name="get%20single%20template%20hierarchy" class="pilcrow">&#182;</a>
+    Get Single Template Hierarchy
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p>Fetch the ordered list of templates that can be used to render this request.
+'post' is the default / fallback
+For posts: [post-:slug, post]
+For pages: [page-:slug, page, post]</p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">single</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">String[]
+</span>
+      <span>{String[]}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">getSingleTemplateHierarchy</span><span class="p">(</span><span class="nx">single</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">templateList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;post&#39;</span><span class="p">],</span>
+        <span class="nx">type</span> <span class="o">=</span> <span class="s1">&#39;post&#39;</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">single</span><span class="p">.</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">templateList</span><span class="p">.</span><span class="nx">unshift</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">);</span>
+        <span class="nx">type</span> <span class="o">=</span> <span class="s1">&#39;page&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nx">templateList</span><span class="p">.</span><span class="nx">unshift</span><span class="p">(</span><span class="nx">type</span> <span class="o">+</span> <span class="s1">&#39;-&#39;</span> <span class="o">+</span> <span class="nx">single</span><span class="p">.</span><span class="nx">slug</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="nx">templateList</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="pick%20template">
+  <h2>
+    <a href="#pick%20template" name="pick%20template" class="pilcrow">&#182;</a>
+    Pick Template
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p>Taking the ordered list of allowed templates for this request
+Cycle through and find the first one which has a match in the theme</p>
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">themePaths</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">templateList
+</span>
+      <span class="dox_type">Array</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">pickTemplate</span><span class="p">(</span><span class="nx">themePaths</span><span class="p">,</span> <span class="nx">templateList</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">template</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">templateList</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">template</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">themePaths</span><span class="p">.</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="nx">template</span> <span class="o">+</span> <span class="s1">&#39;.hbs&#39;</span><span class="p">);</span>
+    <span class="p">});</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">template</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">template</span> <span class="o">=</span> <span class="nx">templateList</span><span class="p">[</span><span class="nx">templateList</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">template</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getTemplateForSingle</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">,</span> <span class="nx">single</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">pickTemplate</span><span class="p">(</span><span class="nx">getActiveThemePaths</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">),</span> <span class="nx">getSingleTemplateHierarchy</span><span class="p">(</span><span class="nx">single</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getTemplateForChannel</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">,</span> <span class="nx">channelOpts</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">pickTemplate</span><span class="p">(</span><span class="nx">getActiveThemePaths</span><span class="p">(</span><span class="nx">activeTheme</span><span class="p">),</span> <span class="nx">getChannelTemplateHierarchy</span><span class="p">(</span><span class="nx">channelOpts</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">getActiveThemePaths</span><span class="o">:</span> <span class="nx">getActiveThemePaths</span><span class="p">,</span>
+    <span class="nx">channel</span><span class="o">:</span> <span class="nx">getTemplateForChannel</span><span class="p">,</span>
+    <span class="nx">single</span><span class="o">:</span> <span class="nx">getTemplateForSingle</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

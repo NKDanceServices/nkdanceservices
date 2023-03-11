@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>image.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../../doc-style.css" />
+  <script src="../../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../../", thisFile = "core/server/data/importer/handlers/image.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../../doc-script.js"></script>
+  <script src="../../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>image.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../config&#39;</span><span class="p">),</span>
+    <span class="nx">storage</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../../storage&#39;</span><span class="p">),</span>
+
+    <span class="nx">ImageHandler</span><span class="p">;</span>
+
+<span class="nx">ImageHandler</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;images&#39;</span><span class="p">,</span>
+    <span class="nx">extensions</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">uploads</span><span class="p">.</span><span class="nx">extensions</span><span class="p">,</span>
+    <span class="nx">types</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">uploads</span><span class="p">.</span><span class="nx">contentTypes</span><span class="p">,</span>
+    <span class="nx">directories</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">],</span>
+
+    <span class="nx">loadFile</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="nx">baseDir</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">store</span> <span class="o">=</span> <span class="nx">storage</span><span class="p">.</span><span class="nx">getStorage</span><span class="p">(),</span>
+            <span class="nx">baseDirRegex</span> <span class="o">=</span> <span class="nx">baseDir</span> <span class="o">?</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^&#39;</span> <span class="o">+</span> <span class="nx">baseDir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">:</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">),</span>
+            <span class="nx">imageFolderRegexes</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">imagesRelPath</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">),</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">dir</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^&#39;</span> <span class="o">+</span> <span class="nx">dir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>normalize the directory structure</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">files</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">file</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">noBaseDir</span> <span class="o">=</span> <span class="nx">file</span><span class="p">.</span><span class="nx">name</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">baseDirRegex</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+                <span class="nx">noGhostDirs</span> <span class="o">=</span> <span class="nx">noBaseDir</span><span class="p">;</span>
+
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">imageFolderRegexes</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">regex</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">noGhostDirs</span> <span class="o">=</span> <span class="nx">noGhostDirs</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">regex</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="nx">file</span><span class="p">.</span><span class="nx">originalPath</span> <span class="o">=</span> <span class="nx">noBaseDir</span><span class="p">;</span>
+            <span class="nx">file</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">noGhostDirs</span><span class="p">;</span>
+            <span class="nx">file</span><span class="p">.</span><span class="nx">targetDir</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">imagesPath</span><span class="p">,</span> <span class="nx">path</span><span class="p">.</span><span class="nx">dirname</span><span class="p">(</span><span class="nx">noGhostDirs</span><span class="p">));</span>
+            <span class="k">return</span> <span class="nx">file</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">files</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">image</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">store</span><span class="p">.</span><span class="nx">getUniqueFileName</span><span class="p">(</span><span class="nx">store</span><span class="p">,</span> <span class="nx">image</span><span class="p">,</span> <span class="nx">image</span><span class="p">.</span><span class="nx">targetDir</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">targetFilename</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">image</span><span class="p">.</span><span class="nx">newPath</span> <span class="o">=</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">subdir</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span>
+                    <span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">imagesRelPath</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="nx">path</span><span class="p">.</span><span class="nx">relative</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">imagesPath</span><span class="p">,</span> <span class="nx">targetFilename</span><span class="p">))</span>
+                        <span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;\\&#39;</span> <span class="o">+</span> <span class="nx">path</span><span class="p">.</span><span class="nx">sep</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">),</span> <span class="s1">&#39;/&#39;</span><span class="p">);</span>
+                <span class="k">return</span> <span class="nx">image</span><span class="p">;</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ImageHandler</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

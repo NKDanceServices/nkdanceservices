@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ghost_head.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/ghost_head.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#ghost%20head%20helper">Ghost Head Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="ghost%20head%20helper">
+  <h1>
+    <a href="#ghost%20head%20helper" name="ghost%20head%20helper" class="pilcrow">&#182;</a>
+    Ghost Head Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{ghost_head}}</code></p>
+
+<p>Outputs scripts and other assets at the top of a Ghost theme</p>
+
+<p>We use the name ghost_head to match the helper for consistency:
+jscs:disable requireCamelCaseOrUpperCaseIdentifiers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">hbs</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">moment</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;moment&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+
+    <span class="nx">config</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">filters</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../filters&#39;</span><span class="p">),</span>
+
+    <span class="nx">api</span>                 <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">assetHelper</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./asset&#39;</span><span class="p">),</span>
+    <span class="nx">urlHelper</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./url&#39;</span><span class="p">),</span>
+    <span class="nx">meta_description</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./meta_description&#39;</span><span class="p">),</span>
+    <span class="nx">meta_title</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./meta_title&#39;</span><span class="p">),</span>
+    <span class="nx">excerpt</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./excerpt&#39;</span><span class="p">),</span>
+    <span class="nx">tagsHelper</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tags&#39;</span><span class="p">),</span>
+    <span class="nx">imageHelper</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./image&#39;</span><span class="p">),</span>
+    <span class="nx">labs</span>                <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/labs&#39;</span><span class="p">),</span>
+
+    <span class="nx">blog</span><span class="p">,</span>
+    <span class="nx">ghost_head</span><span class="p">;</span>
+
+<span class="kd">function</span> <span class="nx">getClient</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">labs</span><span class="p">.</span><span class="nx">isSet</span><span class="p">(</span><span class="s1">&#39;publicAPI&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">clients</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">slug</span><span class="o">:</span> <span class="s1">&#39;ghost-frontend&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">client</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">client</span> <span class="o">=</span> <span class="nx">client</span><span class="p">.</span><span class="nx">clients</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">client</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;enabled&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span>
+                    <span class="nx">id</span><span class="o">:</span> <span class="nx">client</span><span class="p">.</span><span class="nx">slug</span><span class="p">,</span>
+                    <span class="nx">secret</span><span class="o">:</span> <span class="nx">client</span><span class="p">.</span><span class="nx">secret</span>
+                <span class="p">};</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="p">{};</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">{};</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">writeMetaTag</span><span class="p">(</span><span class="nx">property</span><span class="p">,</span> <span class="nx">content</span><span class="p">,</span> <span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">type</span> <span class="o">=</span> <span class="nx">type</span> <span class="o">||</span> <span class="nx">property</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;twitter&#39;</span> <span class="o">?</span> <span class="s1">&#39;name&#39;</span> <span class="o">:</span> <span class="s1">&#39;property&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="s1">&#39;&lt;meta &#39;</span> <span class="o">+</span> <span class="nx">type</span> <span class="o">+</span> <span class="s1">&#39;=&quot;&#39;</span> <span class="o">+</span> <span class="nx">property</span> <span class="o">+</span> <span class="s1">&#39;&quot; content=&quot;&#39;</span> <span class="o">+</span> <span class="nx">content</span> <span class="o">+</span> <span class="s1">&#39;&quot; /&gt;&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getImage</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">contextObject</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;home&#39;</span> <span class="o">||</span> <span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;author&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">contextObject</span><span class="p">.</span><span class="nx">image</span> <span class="o">=</span> <span class="nx">contextObject</span><span class="p">.</span><span class="nx">cover</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nx">props</span><span class="p">.</span><span class="nx">image</span> <span class="o">=</span> <span class="nx">imageHelper</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">contextObject</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">absolute</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;post&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">contextObject</span><span class="p">.</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">props</span><span class="p">.</span><span class="nx">author_image</span> <span class="o">=</span> <span class="nx">imageHelper</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">contextObject</span><span class="p">.</span><span class="nx">author</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">absolute</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getPaginationUrls</span><span class="p">(</span><span class="nx">pagination</span><span class="p">,</span> <span class="nx">relativeUrl</span><span class="p">,</span> <span class="nx">secure</span><span class="p">,</span> <span class="nx">head</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">trimmedUrl</span><span class="p">,</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">prev</span><span class="p">,</span>
+        <span class="nx">trimmedUrlpattern</span> <span class="o">=</span> <span class="sr">/.+(?=\/page\/\d*\/)/</span><span class="p">,</span>
+        <span class="nx">tagOrAuthorPattern</span> <span class="o">=</span> <span class="sr">/\/(tag)|(author)\//</span><span class="p">;</span>
+
+    <span class="nx">trimmedUrl</span> <span class="o">=</span> <span class="nx">relativeUrl</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">trimmedUrlpattern</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">prev</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">prev</span> <span class="o">=</span> <span class="p">(</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">prev</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">?</span> <span class="s1">&#39;/page/&#39;</span> <span class="o">+</span> <span class="nx">pagination</span><span class="p">.</span><span class="nx">prev</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">:</span> <span class="s1">&#39;/&#39;</span><span class="p">);</span>
+        <span class="nx">prev</span> <span class="o">=</span> <span class="p">(</span><span class="nx">trimmedUrl</span><span class="p">)</span> <span class="o">?</span> <span class="nx">trimmedUrl</span> <span class="o">+</span> <span class="nx">prev</span> <span class="o">:</span> <span class="nx">prev</span><span class="p">;</span>
+        <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;link rel=&quot;prev&quot; href=&quot;&#39;</span> <span class="o">+</span>
+                <span class="nx">config</span><span class="p">.</span><span class="nx">urlFor</span><span class="p">({</span><span class="nx">relativeUrl</span><span class="o">:</span> <span class="nx">prev</span><span class="p">,</span> <span class="nx">secure</span><span class="o">:</span> <span class="nx">secure</span><span class="p">},</span> <span class="kc">true</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot; /&gt;&#39;</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">pagination</span><span class="p">.</span><span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">next</span> <span class="o">=</span> <span class="s1">&#39;/page/&#39;</span> <span class="o">+</span> <span class="nx">pagination</span><span class="p">.</span><span class="nx">next</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">trimmedUrl</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">next</span> <span class="o">=</span> <span class="nx">trimmedUrl</span> <span class="o">+</span> <span class="nx">next</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">tagOrAuthorPattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">next</span> <span class="o">=</span> <span class="nx">relativeUrl</span><span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="nx">next</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;link rel=&quot;next&quot; href=&quot;&#39;</span> <span class="o">+</span>
+                <span class="nx">config</span><span class="p">.</span><span class="nx">urlFor</span><span class="p">({</span><span class="nx">relativeUrl</span><span class="o">:</span> <span class="nx">next</span><span class="p">,</span> <span class="nx">secure</span><span class="o">:</span> <span class="nx">secure</span><span class="p">},</span> <span class="kc">true</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot; /&gt;&#39;</span>
+        <span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">head</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">addContextMetaData</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">metaData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>escaped data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaTitle</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">metaData</span><span class="p">.</span><span class="nx">metaTitle</span><span class="p">);</span>
+    <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span> <span class="o">=</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span> <span class="o">?</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span><span class="p">)</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;author&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">authorUrl</span> <span class="o">=</span>  <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">blog</span><span class="p">.</span><span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39;/author/&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">slug</span><span class="p">);</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">ogType</span> <span class="o">=</span> <span class="s1">&#39;profile&#39;</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;post&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">publishedDate</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">published_at</span><span class="p">).</span><span class="nx">toISOString</span><span class="p">();</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">modifiedDate</span> <span class="o">=</span> <span class="nx">moment</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">updated_at</span><span class="p">).</span><span class="nx">toISOString</span><span class="p">();</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">authorUrl</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">blog</span><span class="p">.</span><span class="nx">url</span> <span class="o">+</span> <span class="s1">&#39;/author/&#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">slug</span><span class="p">);</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">ogType</span> <span class="o">=</span> <span class="s1">&#39;article&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">metaData</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">initMetaData</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">metaData</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+        <span class="nx">canonicalUrl</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">canonicalUrl</span><span class="p">,</span>
+        <span class="nx">metaDescription</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">meta_description</span> <span class="o">||</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">metaTitle</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">meta_title</span><span class="p">,</span>
+        <span class="nx">coverImage</span><span class="o">:</span>  <span class="nx">results</span><span class="p">.</span><span class="nx">image</span><span class="p">,</span>
+        <span class="nx">authorImage</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">author_image</span><span class="p">,</span>
+        <span class="nx">publishedDate</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">modifiedDate</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">tags</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">card</span><span class="o">:</span> <span class="s1">&#39;summary&#39;</span><span class="p">,</span>
+        <span class="nx">authorUrl</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">ogType</span><span class="o">:</span> <span class="s1">&#39;website&#39;</span><span class="p">,</span>
+        <span class="nx">keywords</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">blog</span><span class="o">:</span> <span class="nx">blog</span><span class="p">,</span>
+        <span class="nx">title</span><span class="o">:</span> <span class="nx">blog</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+        <span class="nx">clientId</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+        <span class="nx">clientSecret</span><span class="o">:</span> <span class="nx">results</span><span class="p">.</span><span class="nx">client</span><span class="p">.</span><span class="nx">secret</span>
+    <span class="p">};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;post&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span> <span class="o">=</span> <span class="nx">excerpt</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">words</span><span class="o">:</span> <span class="s1">&#39;40&#39;</span><span class="p">}}).</span><span class="nx">string</span> <span class="o">+</span> <span class="s1">&#39;...&#39;</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;tag&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">tag</span><span class="p">.</span><span class="nx">description</span> <span class="o">?</span> <span class="nx">data</span><span class="p">.</span><span class="nx">tag</span><span class="p">.</span><span class="nx">description</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">addContextMetaData</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">data</span><span class="p">,</span> <span class="nx">metaData</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getStructuredData</span><span class="p">(</span><span class="nx">metaData</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">structuredData</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">metaData</span><span class="p">.</span><span class="nx">card</span> <span class="o">=</span> <span class="s1">&#39;summary_large_image&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="nx">structuredData</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;og:site_name&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+        <span class="s1">&#39;og:type&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">ogType</span><span class="p">,</span>
+        <span class="s1">&#39;og:title&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaTitle</span><span class="p">,</span>
+        <span class="s1">&#39;og:description&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span><span class="p">,</span>
+        <span class="s1">&#39;og:url&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">canonicalUrl</span><span class="p">,</span>
+        <span class="s1">&#39;og:image&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span><span class="p">,</span>
+        <span class="s1">&#39;article:published_time&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">publishedDate</span><span class="p">,</span>
+        <span class="s1">&#39;article:modified_time&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">modifiedDate</span><span class="p">,</span>
+        <span class="s1">&#39;article:tag&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">tags</span><span class="p">,</span>
+        <span class="s1">&#39;twitter:card&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">card</span><span class="p">,</span>
+        <span class="s1">&#39;twitter:title&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaTitle</span><span class="p">,</span>
+        <span class="s1">&#39;twitter:description&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span><span class="p">,</span>
+        <span class="s1">&#39;twitter:url&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">canonicalUrl</span><span class="p">,</span>
+        <span class="s1">&#39;twitter:image:src&#39;</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">structuredData</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Creates the final schema object with values that are not null</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">trimSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">schemaObject</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">schema</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">value</span><span class="p">,</span> <span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">value</span> <span class="o">!==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="nx">value</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">schemaObject</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nx">schemaObject</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getPostSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;@context&#39;</span><span class="o">:</span> <span class="s1">&#39;http://schema.org&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;@type&#39;</span><span class="o">:</span> <span class="s1">&#39;Article&#39;</span><span class="p">,</span>
+        <span class="nx">publisher</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+        <span class="nx">author</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s1">&#39;@type&#39;</span><span class="o">:</span> <span class="s1">&#39;Person&#39;</span><span class="p">,</span>
+            <span class="nx">name</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+            <span class="nx">image</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">authorImage</span><span class="p">,</span>
+            <span class="nx">url</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">authorUrl</span><span class="p">,</span>
+            <span class="nx">sameAs</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">website</span> <span class="o">||</span> <span class="kc">null</span><span class="p">,</span>
+            <span class="nx">description</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">bio</span> <span class="o">||</span> <span class="kc">null</span>
+        <span class="p">},</span>
+        <span class="nx">headline</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaTitle</span><span class="p">,</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+        <span class="nx">datePublished</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">publishedDate</span><span class="p">,</span>
+        <span class="nx">dateModified</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">modifiedDate</span><span class="p">,</span>
+        <span class="nx">image</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span><span class="p">,</span>
+        <span class="nx">keywords</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">keywords</span><span class="p">,</span>
+        <span class="nx">description</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span>
+    <span class="p">};</span>
+    <span class="k">return</span> <span class="nx">trimSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getTagSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;@context&#39;</span><span class="o">:</span> <span class="s1">&#39;http://schema.org&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;@type&#39;</span><span class="o">:</span> <span class="s1">&#39;Series&#39;</span><span class="p">,</span>
+        <span class="nx">publisher</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+        <span class="nx">image</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span><span class="p">,</span>
+        <span class="nx">name</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">tag</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+        <span class="nx">description</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">trimSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getAuthorSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;@context&#39;</span><span class="o">:</span> <span class="s1">&#39;http://schema.org&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;@type&#39;</span><span class="o">:</span> <span class="s1">&#39;Person&#39;</span><span class="p">,</span>
+        <span class="nx">sameAs</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">website</span> <span class="o">||</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">publisher</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+        <span class="nx">name</span><span class="o">:</span> <span class="nx">data</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">authorUrl</span><span class="p">,</span>
+        <span class="nx">image</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span><span class="p">,</span>
+        <span class="nx">description</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">trimSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getHomeSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">schema</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;@context&#39;</span><span class="o">:</span> <span class="s1">&#39;http://schema.org&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;@type&#39;</span><span class="o">:</span> <span class="s1">&#39;Website&#39;</span><span class="p">,</span>
+        <span class="nx">publisher</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">title</span><span class="p">,</span>
+        <span class="nx">url</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+        <span class="nx">image</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">coverImage</span><span class="p">,</span>
+        <span class="nx">description</span><span class="o">:</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">metaDescription</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">trimSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">chooseSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;post&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">getPostSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;home&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">getHomeSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;tag&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">getTagSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="s1">&#39;author&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">getAuthorSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">finaliseStructuredData</span><span class="p">(</span><span class="nx">structuredData</span><span class="p">,</span> <span class="nx">tags</span><span class="p">,</span> <span class="nx">head</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">structuredData</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">content</span><span class="p">,</span> <span class="nx">property</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">property</span> <span class="o">===</span> <span class="s1">&#39;article:tag&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">tags</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">tag</span> <span class="o">!==</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">tag</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">tag</span><span class="p">.</span><span class="nx">trim</span><span class="p">());</span>
+                    <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">writeMetaTag</span><span class="p">(</span><span class="nx">property</span><span class="p">,</span> <span class="nx">tag</span><span class="p">));</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+            <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">content</span> <span class="o">!==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="nx">content</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">writeMetaTag</span><span class="p">(</span><span class="nx">property</span><span class="p">,</span> <span class="nx">content</span><span class="p">));</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="nx">head</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">finaliseSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">,</span> <span class="nx">head</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;script type=&quot;application/ld+json&quot;&gt;\n&#39;</span> <span class="o">+</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">schema</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;    &#39;</span><span class="p">)</span> <span class="o">+</span>
+            <span class="s1">&#39;\n    &lt;/script&gt;\n&#39;</span>
+    <span class="p">);</span>
+    <span class="k">return</span> <span class="nx">head</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">getAjaxHelper</span><span class="p">(</span><span class="nx">clientId</span><span class="p">,</span> <span class="nx">clientSecret</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="s1">&#39;&lt;script type=&quot;text/javascript&quot; src=&quot;&#39;</span> <span class="o">+</span>
+        <span class="nx">assetHelper</span><span class="p">(</span><span class="s1">&#39;shared/ghost-url.js&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">minifyInProduction</span><span class="o">:</span> <span class="kc">true</span><span class="p">}})</span> <span class="o">+</span> <span class="s1">&#39;&quot;&gt;&lt;/script&gt;\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;&lt;script type=&quot;text/javascript&quot;&gt;\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;ghost.init({\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;\tclientId: &quot;&#39;</span> <span class="o">+</span> <span class="nx">clientId</span> <span class="o">+</span> <span class="s1">&#39;&quot;,\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;\tclientSecret: &quot;&#39;</span> <span class="o">+</span> <span class="nx">clientSecret</span> <span class="o">+</span> <span class="s1">&#39;&quot;\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;});\n&#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;&lt;/script&gt;&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">ghost_head</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>if error page do nothing</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">code</span> <span class="o">&gt;=</span> <span class="mi">400</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>create a shortcut for theme config</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">blog</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">;</span>
+
+    <span class="cm">/*jshint unused:false*/</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+        <span class="nx">useStructuredData</span> <span class="o">=</span> <span class="o">!</span><span class="nx">config</span><span class="p">.</span><span class="nx">isPrivacyDisabled</span><span class="p">(</span><span class="s1">&#39;useStructuredData&#39;</span><span class="p">),</span>
+        <span class="nx">head</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="nx">safeVersion</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">safeVersion</span><span class="p">,</span>
+        <span class="nx">props</span> <span class="o">=</span> <span class="p">{},</span>
+        <span class="nx">structuredData</span><span class="p">,</span>
+        <span class="nx">schema</span><span class="p">,</span>
+        <span class="nx">title</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">blog</span><span class="p">.</span><span class="nx">title</span><span class="p">),</span>
+        <span class="nx">context</span> <span class="o">=</span> <span class="nx">self</span><span class="p">.</span><span class="nx">context</span> <span class="o">?</span> <span class="nx">self</span><span class="p">.</span><span class="nx">context</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+        <span class="nx">contextObject</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">cloneDeep</span><span class="p">(</span><span class="nx">self</span><span class="p">[</span><span class="nx">context</span><span class="p">]</span> <span class="o">||</span> <span class="nx">blog</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Store Async calls in an object of named promises</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">props</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">urlHelper</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">absolute</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+    <span class="nx">props</span><span class="p">.</span><span class="nx">canonicalUrl</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">urlJoin</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">getBaseUrl</span><span class="p">(</span><span class="kc">false</span><span class="p">),</span>
+        <span class="nx">urlHelper</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">absolute</span><span class="o">:</span> <span class="kc">false</span><span class="p">}}));</span>
+    <span class="nx">props</span><span class="p">.</span><span class="nx">meta_description</span> <span class="o">=</span> <span class="nx">meta_description</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="nx">props</span><span class="p">.</span><span class="nx">meta_title</span> <span class="o">=</span> <span class="nx">meta_title</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="nx">props</span><span class="p">.</span><span class="nx">client</span> <span class="o">=</span> <span class="nx">getClient</span><span class="p">();</span>
+    <span class="nx">getImage</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">contextObject</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Resolves promises then push pushes meta data into ghost_head</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">props</span><span class="p">(</span><span class="nx">props</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">metaData</span> <span class="o">=</span> <span class="nx">initMetaData</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">self</span><span class="p">,</span> <span class="nx">results</span><span class="p">),</span>
+                <span class="nx">tags</span> <span class="o">=</span> <span class="nx">tagsHelper</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">post</span><span class="p">,</span> <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">autolink</span><span class="o">:</span> <span class="s1">&#39;false&#39;</span><span class="p">}}).</span><span class="nx">string</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>If there are tags - build the keywords metaData string</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">tags</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!==</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">metaData</span><span class="p">.</span><span class="nx">keywords</span> <span class="o">=</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">tagsHelper</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">post</span><span class="p">,</span>
+                    <span class="p">{</span><span class="nx">hash</span><span class="o">:</span> <span class="p">{</span><span class="nx">autolink</span><span class="o">:</span> <span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="nx">separator</span><span class="o">:</span> <span class="s1">&#39;, &#39;</span><span class="p">}}</span>
+                <span class="p">).</span><span class="nx">string</span><span class="p">);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>head is our main array that holds our meta data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;link rel=&quot;canonical&quot; href=&quot;&#39;</span> <span class="o">+</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">canonicalUrl</span> <span class="o">+</span> <span class="s1">&#39;&quot; /&gt;&#39;</span><span class="p">);</span>
+            <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;meta name=&quot;referrer&quot; content=&quot;origin&quot; /&gt;&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Generate context driven pagination urls</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">pagination</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">getPaginationUrls</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">pagination</span><span class="p">,</span> <span class="nx">self</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">,</span> <span class="nx">self</span><span class="p">.</span><span class="nx">secure</span><span class="p">,</span> <span class="nx">head</span><span class="p">);</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>Test to see if we are on a post page and that Structured data has not been disabled in config.js</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">!==</span> <span class="s1">&#39;paged&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">context</span> <span class="o">!==</span> <span class="s1">&#39;page&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">useStructuredData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>Create context driven OpenGraph and Twitter meta data</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">structuredData</span> <span class="o">=</span> <span class="nx">getStructuredData</span><span class="p">(</span><span class="nx">metaData</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>Create context driven JSONLD object</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">schema</span> <span class="o">=</span> <span class="nx">chooseSchema</span><span class="p">(</span><span class="nx">metaData</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">self</span><span class="p">);</span>
+                <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Formats structured data and pushes to head array</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">finaliseStructuredData</span><span class="p">(</span><span class="nx">structuredData</span><span class="p">,</span> <span class="nx">tags</span><span class="p">,</span> <span class="nx">head</span><span class="p">);</span>
+                <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>Formats schema script/JSONLD data and pushes to head array</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">finaliseSchema</span><span class="p">(</span><span class="nx">schema</span><span class="p">,</span> <span class="nx">head</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">metaData</span><span class="p">.</span><span class="nx">clientId</span> <span class="o">&amp;&amp;</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">clientSecret</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">getAjaxHelper</span><span class="p">(</span><span class="nx">metaData</span><span class="p">.</span><span class="nx">clientId</span><span class="p">,</span> <span class="nx">metaData</span><span class="p">.</span><span class="nx">clientSecret</span><span class="p">));</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+        <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;meta name=&quot;generator&quot; content=&quot;Ghost &#39;</span> <span class="o">+</span> <span class="nx">safeVersion</span> <span class="o">+</span> <span class="s1">&#39;&quot; /&gt;&#39;</span><span class="p">);</span>
+        <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;&lt;link rel=&quot;alternate&quot; type=&quot;application/rss+xml&quot; title=&quot;&#39;</span> <span class="o">+</span>
+            <span class="nx">title</span>  <span class="o">+</span> <span class="s1">&#39;&quot; href=&quot;&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">urlFor</span><span class="p">(</span><span class="s1">&#39;rss&#39;</span><span class="p">,</span> <span class="p">{</span><span class="nx">secure</span><span class="o">:</span> <span class="nx">self</span><span class="p">.</span><span class="nx">secure</span><span class="p">},</span>
+            <span class="kc">true</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot; /&gt;&#39;</span><span class="p">);</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;ghost_head&#39;</span><span class="p">});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">head</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">response</span><span class="p">.</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">filters</span><span class="p">.</span><span class="nx">doFilter</span><span class="p">(</span><span class="s1">&#39;ghost_head&#39;</span><span class="p">,</span> <span class="nx">head</span><span class="p">);</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">head</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">headString</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">head</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">item</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="nx">memo</span> <span class="o">+</span> <span class="s1">&#39;\n    &#39;</span> <span class="o">+</span> <span class="nx">item</span><span class="p">;</span> <span class="p">},</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">(</span><span class="nx">headString</span><span class="p">.</span><span class="nx">trim</span><span class="p">());</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">ghost_head</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

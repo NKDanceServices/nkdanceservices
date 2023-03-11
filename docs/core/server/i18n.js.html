@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>i18n.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../doc-style.css" />
+  <script src="../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../", thisFile = "core/server/i18n.js", defaultSidebar = true;
+  </script>
+  <script src="../../doc-script.js"></script>
+  <script src="../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>i18n.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="cm">/* global Intl */</span>
+
+<span class="kd">var</span> <span class="nx">supportedLocales</span>    <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;en&#39;</span><span class="p">],</span>
+    <span class="nx">_</span>                   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>                  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">chalk</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;chalk&#39;</span><span class="p">),</span>
+    <span class="nx">MessageFormat</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;intl-messageformat&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./errors&#39;</span><span class="p">),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>TODO: fetch this dynamically based on overall blog settings (<code>key = "defaultLang"</code> in the <code>settings</code> table</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">currentLocale</span>       <span class="o">=</span> <span class="s1">&#39;en&#39;</span><span class="p">,</span>
+    <span class="nx">blos</span><span class="p">,</span>
+    <span class="nx">I18n</span><span class="p">;</span>
+
+<span class="nx">I18n</span> <span class="o">=</span> <span class="p">{</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Helper method to find and compile the given data context with a proper string resource.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">path</span>
+      <span class="dox_type">string</span>
+      <span>Path with in the JSON language file to desired string (ie: "errors.init.jsNotBuilt")</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">context</span>
+      <span class="dox_type">json</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">string
+</span>
+      <span>{string}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">t</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">t</span><span class="p">(</span><span class="nx">path</span><span class="p">,</span> <span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">string</span> <span class="o">=</span> <span class="nx">I18n</span><span class="p">.</span><span class="nx">findString</span><span class="p">(</span><span class="nx">path</span><span class="p">),</span>
+            <span class="nx">msg</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>If the path returns an array (as in the case with anything that has multiple paragraphs such as emails), then
+loop through them and return an array of translated/formatted strings. Otherwise, just return the normal
+translated/formatted string.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">string</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">msg</span> <span class="o">=</span> <span class="p">[];</span>
+            <span class="nx">string</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">s</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">m</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MessageFormat</span><span class="p">(</span><span class="nx">s</span><span class="p">,</span> <span class="nx">currentLocale</span><span class="p">);</span>
+
+                <span class="nx">msg</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">m</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="nx">context</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">msg</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MessageFormat</span><span class="p">(</span><span class="nx">string</span><span class="p">,</span> <span class="nx">currentLocale</span><span class="p">);</span>
+            <span class="nx">msg</span> <span class="o">=</span> <span class="nx">msg</span><span class="p">.</span><span class="nx">format</span><span class="p">(</span><span class="nx">context</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">msg</span><span class="p">;</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Parse JSON file for matching locale, returns string giving path.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">msgPath</span>
+      <span class="dox_type">string</span>
+      <span>Path with in the JSON language file to desired string (ie: "errors.init.jsNotBuilt")</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">string
+</span>
+      <span>{string}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">findString</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">findString</span><span class="p">(</span><span class="nx">msgPath</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">matchingString</span><span class="p">,</span> <span class="nx">path</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>no path? no string</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">msgPath</span><span class="p">)</span> <span class="o">||</span> <span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">msgPath</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">chalk</span><span class="p">.</span><span class="nx">yellow</span><span class="p">(</span><span class="s1">&#39;i18n:t() - received an empty path.&#39;</span><span class="p">);</span>
+            <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">matchingString</span> <span class="o">=</span> <span class="nx">blos</span><span class="p">;</span>
+
+        <span class="nx">path</span> <span class="o">=</span> <span class="nx">msgPath</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">);</span>
+        <span class="nx">path</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>reassign matching object, or set to an empty string if there is no match</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">matchingString</span> <span class="o">=</span> <span class="nx">matchingString</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">||</span> <span class="kc">null</span><span class="p">;</span>
+        <span class="p">});</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isNull</span><span class="p">(</span><span class="nx">matchingString</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="s1">&#39;Unable to find matching path [&#39;</span> <span class="o">+</span> <span class="nx">msgPath</span> <span class="o">+</span> <span class="s1">&#39;] in locale file.&#39;</span><span class="p">);</span>
+            <span class="nx">matchingString</span> <span class="o">=</span> <span class="s1">&#39;i18n error: path &quot;&#39;</span> <span class="o">+</span> <span class="nx">msgPath</span> <span class="o">+</span> <span class="s1">&#39;&quot; was not found.&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">matchingString</span><span class="p">;</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Setup i18n support:
+ - Load proper language file in to memory
+ - Polyfill node.js if it does not have Intl support or support for a particular locale</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">init</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>read file for current locale and keep its content in memory</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">blos</span> <span class="o">=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">readFileSync</span><span class="p">(</span><span class="nx">__dirname</span> <span class="o">+</span> <span class="s1">&#39;/translations/&#39;</span> <span class="o">+</span> <span class="nx">currentLocale</span> <span class="o">+</span> <span class="s1">&#39;.json&#39;</span><span class="p">);</span>
+        <span class="nx">blos</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">blos</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">global</span><span class="p">.</span><span class="nx">Intl</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Determine if the built-in <code>Intl</code> has the locale data we need.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">var</span> <span class="nx">hasBuiltInLocaleData</span><span class="p">,</span>
+                <span class="nx">IntlPolyfill</span><span class="p">;</span>
+
+            <span class="nx">hasBuiltInLocaleData</span> <span class="o">=</span> <span class="nx">supportedLocales</span><span class="p">.</span><span class="nx">every</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">locale</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Intl</span><span class="p">.</span><span class="nx">NumberFormat</span><span class="p">.</span><span class="nx">supportedLocalesOf</span><span class="p">(</span><span class="nx">locale</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">===</span> <span class="nx">locale</span> <span class="o">&amp;&amp;</span>
+                    <span class="nx">Intl</span><span class="p">.</span><span class="nx">DateTimeFormat</span><span class="p">.</span><span class="nx">supportedLocalesOf</span><span class="p">(</span><span class="nx">locale</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">===</span> <span class="nx">locale</span><span class="p">;</span>
+            <span class="p">});</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">hasBuiltInLocaleData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p><code>Intl</code> exists, but it doesn't have the data we need, so load the
+polyfill and replace the constructors with need with the polyfill's.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">IntlPolyfill</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;intl&#39;</span><span class="p">);</span>
+                <span class="nx">Intl</span><span class="p">.</span><span class="nx">NumberFormat</span>   <span class="o">=</span> <span class="nx">IntlPolyfill</span><span class="p">.</span><span class="nx">NumberFormat</span><span class="p">;</span>
+                <span class="nx">Intl</span><span class="p">.</span><span class="nx">DateTimeFormat</span> <span class="o">=</span> <span class="nx">IntlPolyfill</span><span class="p">.</span><span class="nx">DateTimeFormat</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>No <code>Intl</code>, so use and load the polyfill.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">global</span><span class="p">.</span><span class="nx">Intl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;intl&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">I18n</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

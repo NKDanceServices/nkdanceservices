@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>validate-themes.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/utils/validate-themes.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>validate-themes.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Dependencies</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">readThemes</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./read-themes&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Validate themes:</p>
+  </div>
+  <div class="body"><ol>
+<li>Check if theme has package.json</li>
+</ol>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="kd">function</span> <span class="nx">validateThemes</span><span class="p">(</span><span class="nx">dir</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">result</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">warnings</span><span class="o">:</span> <span class="p">[],</span>
+        <span class="nx">errors</span><span class="o">:</span> <span class="p">[]</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">readThemes</span><span class="p">(</span><span class="nx">dir</span><span class="p">)</span>
+        <span class="p">.</span><span class="nx">tap</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">themes</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">themes</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">theme</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">hasPackageJson</span><span class="p">,</span> <span class="nx">warning</span><span class="p">;</span>
+
+                <span class="nx">hasPackageJson</span> <span class="o">=</span> <span class="nx">theme</span><span class="p">[</span><span class="s1">&#39;package.json&#39;</span><span class="p">]</span> <span class="o">!==</span> <span class="kc">undefined</span><span class="p">;</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">hasPackageJson</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">warning</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Found a theme with no package.json file&#39;</span><span class="p">,</span>
+                        <span class="nx">context</span><span class="o">:</span> <span class="s1">&#39;Theme name: &#39;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">,</span>
+                        <span class="nx">help</span><span class="o">:</span> <span class="s1">&#39;This will be required in future. Please see http://docs.ghost.org/themes/&#39;</span>
+                    <span class="p">};</span>
+
+                    <span class="nx">result</span><span class="p">.</span><span class="nx">warnings</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">warning</span><span class="p">);</span>
+                <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>if package.json is <code>null</code>, it means that it exists
+but JSON.parse failed (invalid json syntax)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">hasPackageJson</span> <span class="o">&amp;&amp;</span> <span class="nx">theme</span><span class="p">[</span><span class="s1">&#39;package.json&#39;</span><span class="p">]</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">warning</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Found a malformed package.json&#39;</span><span class="p">,</span>
+                        <span class="nx">context</span><span class="o">:</span> <span class="s1">&#39;Theme name: &#39;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">,</span>
+                        <span class="nx">help</span><span class="o">:</span> <span class="s1">&#39;Valid package.json will be required in future. Please see http://docs.ghost.org/themes/&#39;</span>
+                    <span class="p">};</span>
+
+                    <span class="nx">result</span><span class="p">.</span><span class="nx">warnings</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">warning</span><span class="p">);</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+        <span class="p">})</span>
+        <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">hasNotifications</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">warnings</span><span class="p">.</span><span class="nx">length</span> <span class="o">||</span> <span class="nx">result</span><span class="p">.</span><span class="nx">errors</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">hasNotifications</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">});</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Expose <code>validateThemes</code></p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">validateThemes</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

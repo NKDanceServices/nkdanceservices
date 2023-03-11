@@ -1,0 +1,37 @@
+{{!< default}}
+
+<!-- Start Header -->
+<header class="noo-header">
+    {{> "header"}}
+</header>
+<!-- End Header -->
+            
+{{! The tag above means - insert everything in this file into the {body} of the default.hbs template }}
+
+<div class="main-content container-fullwidth">
+    <div class="row">
+        <div class="col-md-12">
+            
+            <!-- Start slider Message -->
+            {{> "slider"}}
+            <!-- End slider Message -->
+
+            <!-- Start Welcome Message -->
+            {{> "welcome"}}
+            <!-- End Welcome Message -->
+
+            <!-- Start Our Class Section -->
+            {{> "ourclass"}}
+            <!-- End Our Class Section -->
+
+            <!-- Start videos Section -->
+            {{> "videos"}}
+            <!-- End videos Section -->
+
+            <!-- Start bloghome Section -->
+            <div id="blog_home"></div>
+            <!-- End bloghome Section -->
+            
+        </div>
+    </div> 
+</div>

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/errors/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#errors">Errors</a>
+      </div>
+      <div class="heading h2">
+        <a href="#reject%20error">Reject Error</a>
+      </div>
+      <div class="heading h3">
+        <a href="#format%20http%20errors">Format HTTP Errors</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="errors">
+  <h1>
+    <a href="#errors" name="errors" class="pilcrow">&#182;</a>
+    Errors
+  </h1>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="cm">/*jslint regexp: true */</span>
+<span class="kd">var</span> <span class="nx">_</span>                          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">chalk</span>                      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;chalk&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>                       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>                    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">hbs</span>                        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">NotFoundError</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./not-found-error&#39;</span><span class="p">),</span>
+    <span class="nx">BadRequestError</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./bad-request-error&#39;</span><span class="p">),</span>
+    <span class="nx">InternalServerError</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./internal-server-error&#39;</span><span class="p">),</span>
+    <span class="nx">NoPermissionError</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./no-permission-error&#39;</span><span class="p">),</span>
+    <span class="nx">MethodNotAllowedError</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./method-not-allowed-error&#39;</span><span class="p">),</span>
+    <span class="nx">RequestEntityTooLargeError</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./request-too-large-error&#39;</span><span class="p">),</span>
+    <span class="nx">UnauthorizedError</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./unauthorized-error&#39;</span><span class="p">),</span>
+    <span class="nx">ValidationError</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./validation-error&#39;</span><span class="p">),</span>
+    <span class="nx">UnsupportedMediaTypeError</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./unsupported-media-type-error&#39;</span><span class="p">),</span>
+    <span class="nx">EmailError</span>                 <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./email-error&#39;</span><span class="p">),</span>
+    <span class="nx">DataImportError</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./data-import-error&#39;</span><span class="p">),</span>
+    <span class="nx">TooManyRequestsError</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./too-many-requests-error&#39;</span><span class="p">),</span>
+    <span class="nx">config</span><span class="p">,</span>
+    <span class="nx">errors</span><span class="p">,</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Paths for views</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">userErrorTemplateExists</span>   <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Shim right now to deal with circular dependencies.
+@TODO(hswolff): remove circular dependency and lazy require.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">getConfigModule</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">config</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">config</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Basic error handling helpers</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">errors</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">updateActiveTheme</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">activeTheme</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">userErrorTemplateExists</span> <span class="o">=</span> <span class="nx">getConfigModule</span><span class="p">().</span><span class="nx">paths</span><span class="p">.</span><span class="nx">availableThemes</span><span class="p">[</span><span class="nx">activeTheme</span><span class="p">].</span><span class="nx">hasOwnProperty</span><span class="p">(</span><span class="s1">&#39;error.hbs&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">throwError</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">err</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;An error occurred&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">err</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">throw</span> <span class="nx">err</span><span class="p">;</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="reject%20error">
+  <h2>
+    <a href="#reject%20error" name="reject%20error" class="pilcrow">&#182;</a>
+    Reject Error
+  </h2>
+</div>
+
+
+<p>Used to pass through promise errors when we want to handle them at a later time</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">rejectError</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">logInfo</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">component</span><span class="p">,</span> <span class="nx">info</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">((</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;development&#39;</span> <span class="o">||</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;staging&#39;</span> <span class="o">||</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;production&#39;</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">console</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">cyan</span><span class="p">(</span><span class="nx">component</span> <span class="o">+</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="nx">info</span><span class="p">));</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="nx">logWarn</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">warn</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">((</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;development&#39;</span> <span class="o">||</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;staging&#39;</span> <span class="o">||</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;production&#39;</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">warn</span> <span class="o">=</span> <span class="nx">warn</span> <span class="o">||</span> <span class="s1">&#39;no message supplied&#39;</span><span class="p">;</span>
+            <span class="kd">var</span> <span class="nx">msgs</span> <span class="o">=</span> <span class="p">[</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">yellow</span><span class="p">(</span><span class="s1">&#39;\nWarning:&#39;</span><span class="p">,</span> <span class="nx">warn</span><span class="p">),</span> <span class="s1">&#39;\n&#39;</span><span class="p">];</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">white</span><span class="p">(</span><span class="nx">context</span><span class="p">),</span> <span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">green</span><span class="p">(</span><span class="nx">help</span><span class="p">));</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>add a new line</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+
+            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">console</span><span class="p">,</span> <span class="nx">msgs</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="nx">logError</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">origArgs</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+            <span class="nx">stack</span><span class="p">,</span>
+            <span class="nx">msgs</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">err</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">newArgs</span> <span class="o">=</span> <span class="p">[</span><span class="nx">e</span><span class="p">].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">origArgs</span><span class="p">);</span>
+                <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">self</span><span class="p">,</span> <span class="nx">newArgs</span><span class="p">);</span>
+            <span class="p">});</span>
+            <span class="k">return</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="nx">stack</span> <span class="o">=</span> <span class="nx">err</span> <span class="o">?</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">err</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">err</span> <span class="o">=</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">err</span> <span class="o">=</span> <span class="s1">&#39;An unknown error occurred.&#39;</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Overwrite error to provide information that this is probably a permission problem
+TODO: <a href='https://github.com/TryGhost/Ghost/issues/3687'>https://github.com/TryGhost/Ghost/issues/3687</a></p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;SQLITE_READONLY&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">context</span> <span class="o">=</span> <span class="s1">&#39;Your database is in read only mode. Visitors can read your blog, but you can\&#39;t log in or add posts.&#39;</span><span class="p">;</span>
+            <span class="nx">help</span> <span class="o">=</span> <span class="s1">&#39;Check your database file and make sure that file owner and permissions are correct.&#39;</span><span class="p">;</span>
+        <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>TODO: Logging framework hookup
+Eventually we'll have better logging which will know about envs</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">((</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;development&#39;</span> <span class="o">||</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;staging&#39;</span> <span class="o">||</span>
+            <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">===</span> <span class="s1">&#39;production&#39;</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">msgs</span> <span class="o">=</span> <span class="p">[</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">red</span><span class="p">(</span><span class="s1">&#39;\nERROR:&#39;</span><span class="p">,</span> <span class="nx">err</span><span class="p">),</span> <span class="s1">&#39;\n&#39;</span><span class="p">];</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">context</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">white</span><span class="p">(</span><span class="nx">context</span><span class="p">),</span> <span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">chalk</span><span class="p">.</span><span class="nx">green</span><span class="p">(</span><span class="nx">help</span><span class="p">));</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>add a new line</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">stack</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">msgs</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">stack</span><span class="p">,</span> <span class="s1">&#39;\n&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">console</span><span class="p">,</span> <span class="nx">msgs</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="nx">logErrorAndExit</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Exit with 0 to prevent npm errors as we have our own</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">logAndThrowError</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">);</span>
+
+        <span class="k">this</span><span class="p">.</span><span class="nx">throwError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">logAndRejectError</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">logErrorWithRedirect</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">,</span> <span class="nx">redirectTo</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false*/</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="nx">self</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">msg</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">help</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isFunction</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="nx">redirectTo</span><span class="p">);</span>
+            <span class="p">}</span>
+        <span class="p">};</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="format%20http%20errors">
+  <h3>
+    <a href="#format%20http%20errors" name="format%20http%20errors" class="pilcrow">&#182;</a>
+    Format HTTP Errors
+  </h3>
+</div>
+
+
+<p>Converts the error response from the API into a format which can be returned over HTTP</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">API</div>
+    <div class="dox_tag_detail">
+      <span class="dox_type">private</span>
+    </div>
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">error</span>
+      <span class="dox_type">Array</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">errors:Array</span>
+      <span class="dox_type">statusCode:number
+</span>
+      <span>{{errors:Array,statusCode:number}}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">formatHttpErrors</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">formatHttpErrors</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">statusCode</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+            <span class="nx">errors</span> <span class="o">=</span> <span class="p">[];</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">error</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">error</span> <span class="o">=</span> <span class="p">[].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">each</span><span class="p">(</span><span class="nx">errorItem</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">errorContent</span> <span class="o">=</span> <span class="p">{};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>TODO: add logic to set the correct status code</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">statusCode</span> <span class="o">=</span> <span class="nx">errorItem</span><span class="p">.</span><span class="nx">code</span> <span class="o">||</span> <span class="mi">500</span><span class="p">;</span>
+
+            <span class="nx">errorContent</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">errorItem</span><span class="p">)</span> <span class="o">?</span> <span class="nx">errorItem</span> <span class="o">:</span>
+                <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">errorItem</span><span class="p">)</span> <span class="o">?</span> <span class="nx">errorItem</span><span class="p">.</span><span class="nx">message</span> <span class="o">:</span> <span class="s1">&#39;Unknown API Error&#39;</span><span class="p">);</span>
+            <span class="nx">errorContent</span><span class="p">.</span><span class="nx">errorType</span> <span class="o">=</span> <span class="nx">errorItem</span><span class="p">.</span><span class="nx">errorType</span> <span class="o">||</span> <span class="s1">&#39;InternalServerError&#39;</span><span class="p">;</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">errorContent</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="nx">errors</span><span class="o">:</span> <span class="nx">errors</span><span class="p">,</span> <span class="nx">statusCode</span><span class="o">:</span> <span class="nx">statusCode</span><span class="p">};</span>
+    <span class="p">},</span>
+
+    <span class="nx">formatAndRejectAPIError</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">permsMessage</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span>
+                <span class="k">new</span> <span class="k">this</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="nx">permsMessage</span> <span class="o">||</span> <span class="s1">&#39;You do not have permission to perform this action&#39;</span><span class="p">)</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">error</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="k">new</span> <span class="k">this</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">errorType</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<p>handle database errors</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">errno</span> <span class="o">||</span> <span class="nx">error</span><span class="p">.</span><span class="nx">detail</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">error</span><span class="p">.</span><span class="nx">db_error_code</span> <span class="o">=</span> <span class="nx">error</span><span class="p">.</span><span class="nx">code</span><span class="p">;</span>
+            <span class="nx">error</span><span class="p">.</span><span class="nx">errorType</span> <span class="o">=</span> <span class="s1">&#39;DatabaseError&#39;</span><span class="p">;</span>
+            <span class="nx">error</span><span class="p">.</span><span class="nx">code</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">rejectError</span><span class="p">(</span><span class="k">new</span> <span class="k">this</span><span class="p">.</span><span class="nx">InternalServerError</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span>
+    <span class="p">},</span>
+
+    <span class="nx">handleAPIError</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">errorHandler</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false */</span>
+        <span class="kd">var</span> <span class="nx">httpErrors</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">formatHttpErrors</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>Send a properly formatted HTTP response containing the errors</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">httpErrors</span><span class="p">.</span><span class="nx">statusCode</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">errors</span><span class="o">:</span> <span class="nx">httpErrors</span><span class="p">.</span><span class="nx">errors</span><span class="p">});</span>
+    <span class="p">},</span>
+
+    <span class="nx">renderErrorPage</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">code</span><span class="p">,</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false*/</span>
+        <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+            <span class="nx">defaultErrorTemplatePath</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">getConfigModule</span><span class="p">().</span><span class="nx">paths</span><span class="p">.</span><span class="nx">adminViews</span><span class="p">,</span> <span class="s1">&#39;user-error.hbs&#39;</span><span class="p">);</span>
+
+        <span class="kd">function</span> <span class="nx">parseStack</span><span class="p">(</span><span class="nx">stack</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">stack</span><span class="p">))</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">stack</span><span class="p">;</span>
+            <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<p>TODO: split out line numbers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="kd">var</span> <span class="nx">stackRegex</span> <span class="o">=</span> <span class="sr">/\s*at\s*(\w+)?\s*\(([^\)]+)\)\s*/i</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="nx">stack</span>
+                    <span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="sr">/[\r\n]+/</span><span class="p">)</span>
+                    <span class="p">.</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">line</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="kd">var</span> <span class="nx">parts</span> <span class="o">=</span> <span class="nx">line</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="nx">stackRegex</span><span class="p">);</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">parts</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="p">{</span>
+                            <span class="kd">function</span><span class="o">:</span> <span class="nx">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                            <span class="nx">at</span><span class="o">:</span> <span class="nx">parts</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+                        <span class="p">};</span>
+                    <span class="p">})</span>
+                    <span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">line</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="o">!!</span><span class="nx">line</span><span class="p">;</span>
+                    <span class="p">})</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>Render the error!</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">renderErrorInt</span><span class="p">(</span><span class="nx">errorView</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">stack</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">code</span> <span class="o">!==</span> <span class="mi">404</span> <span class="o">&amp;&amp;</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span> <span class="o">!==</span> <span class="s1">&#39;production&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">stack</span> <span class="o">=</span> <span class="nx">parseStack</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">stack</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">code</span><span class="p">).</span><span class="nx">render</span><span class="p">((</span><span class="nx">errorView</span> <span class="o">||</span> <span class="s1">&#39;error&#39;</span><span class="p">),</span> <span class="p">{</span>
+                <span class="nx">message</span><span class="o">:</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">err</span><span class="p">,</span>
+                <span class="nx">code</span><span class="o">:</span> <span class="nx">code</span><span class="p">,</span>
+                <span class="nx">stack</span><span class="o">:</span> <span class="nx">stack</span>
+            <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">templateErr</span><span class="p">,</span> <span class="nx">html</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">templateErr</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">code</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="nx">html</span><span class="p">);</span>
+                <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>There was an error trying to render the error page, output the error</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="nx">self</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">templateErr</span><span class="p">,</span> <span class="s1">&#39;Error whilst rendering error page&#39;</span><span class="p">,</span> <span class="s1">&#39;Error template has an error&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>And then try to explain things to the user...
+Cheat and output the error using handlebars escapeExpression</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">500</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span>
+                    <span class="s1">&#39;&lt;h1&gt;Oops, seems there is an error in the error template.&lt;/h1&gt;&#39;</span> <span class="o">+</span>
+                    <span class="s1">&#39;&lt;p&gt;Encountered the error: &lt;/p&gt;&#39;</span> <span class="o">+</span>
+                    <span class="s1">&#39;&lt;pre&gt;&#39;</span> <span class="o">+</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">templateErr</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">templateErr</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&lt;/pre&gt;&#39;</span> <span class="o">+</span>
+                    <span class="s1">&#39;&lt;br &gt;&lt;p&gt;whilst trying to render an error page for the error: &lt;/p&gt;&#39;</span> <span class="o">+</span>
+                    <span class="nx">code</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="s1">&#39;&lt;pre&gt;&#39;</span>  <span class="o">+</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">Utils</span><span class="p">.</span><span class="nx">escapeExpression</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">err</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&lt;/pre&gt;&#39;</span>
+                <span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">code</span> <span class="o">&gt;=</span> <span class="mi">500</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="s1">&#39;Rendering Error Page&#39;</span><span class="p">,</span> <span class="s1">&#39;Ghost caught a processing error in the middleware layer.&#39;</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>Are we admin? If so, don't worry about the user template</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">((</span><span class="nx">res</span><span class="p">.</span><span class="nx">isAdmin</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="o">||</span> <span class="nx">userErrorTemplateExists</span> <span class="o">===</span> <span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">renderErrorInt</span><span class="p">();</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>We're not admin and the template doesn't exist. Render the default.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">renderErrorInt</span><span class="p">(</span><span class="nx">defaultErrorTemplatePath</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">error404</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;Page not found&#39;</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21">&#182;</a>
+</div>
+<p>do not cache 404 error</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="s1">&#39;Cache-Control&#39;</span><span class="o">:</span> <span class="s1">&#39;no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0&#39;</span><span class="p">});</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">&#39;GET&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">this</span><span class="p">.</span><span class="nx">renderErrorPage</span><span class="p">(</span><span class="mi">404</span><span class="p">,</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="mi">404</span><span class="p">).</span><span class="nx">send</span><span class="p">(</span><span class="nx">message</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+
+    <span class="nx">error500</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>500 errors should never be cached</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">set</span><span class="p">({</span><span class="s1">&#39;Cache-Control&#39;</span><span class="o">:</span> <span class="s1">&#39;no-cache, private, no-store, must-revalidate, max-stale=0, post-check=0, pre-check=0&#39;</span><span class="p">});</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="mi">404</span> <span class="o">||</span> <span class="nx">err</span><span class="p">.</span><span class="nx">code</span> <span class="o">===</span> <span class="mi">404</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">error404</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">method</span> <span class="o">===</span> <span class="s1">&#39;GET&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">err</span> <span class="o">||</span> <span class="o">!</span><span class="p">(</span><span class="nx">err</span> <span class="k">instanceof</span> <span class="nb">Error</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">next</span><span class="p">();</span>
+            <span class="p">}</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">renderErrorPage</span><span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">status</span> <span class="o">||</span> <span class="nx">err</span><span class="p">.</span><span class="nx">code</span> <span class="o">||</span> <span class="mi">500</span><span class="p">,</span> <span class="nx">err</span><span class="p">,</span> <span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">statusCode</span> <span class="o">=</span> <span class="mi">500</span><span class="p">,</span>
+                <span class="nx">returnErrors</span> <span class="o">=</span> <span class="p">[];</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">err</span><span class="p">))</span> <span class="p">{</span>
+                <span class="nx">err</span> <span class="o">=</span> <span class="p">[].</span><span class="nx">concat</span><span class="p">(</span><span class="nx">err</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">errorItem</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">errorContent</span> <span class="o">=</span> <span class="p">{};</span>
+
+                <span class="nx">statusCode</span> <span class="o">=</span> <span class="nx">errorItem</span><span class="p">.</span><span class="nx">code</span> <span class="o">||</span> <span class="mi">500</span><span class="p">;</span>
+
+                <span class="nx">errorContent</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isString</span><span class="p">(</span><span class="nx">errorItem</span><span class="p">)</span> <span class="o">?</span> <span class="nx">errorItem</span> <span class="o">:</span>
+                    <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">errorItem</span><span class="p">)</span> <span class="o">?</span> <span class="nx">errorItem</span><span class="p">.</span><span class="nx">message</span> <span class="o">:</span> <span class="s1">&#39;Unknown Error&#39;</span><span class="p">);</span>
+                <span class="nx">errorContent</span><span class="p">.</span><span class="nx">errorType</span> <span class="o">=</span> <span class="nx">errorItem</span><span class="p">.</span><span class="nx">errorType</span> <span class="o">||</span> <span class="s1">&#39;InternalServerError&#39;</span><span class="p">;</span>
+                <span class="nx">returnErrors</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">errorContent</span><span class="p">);</span>
+            <span class="p">});</span>
+
+            <span class="nx">res</span><span class="p">.</span><span class="nx">status</span><span class="p">(</span><span class="nx">statusCode</span><span class="p">).</span><span class="nx">json</span><span class="p">({</span><span class="nx">errors</span><span class="o">:</span> <span class="nx">returnErrors</span><span class="p">});</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-23" id="section-23">&#182;</a>
+</div>
+<p>Ensure our 'this' context for methods and preserve method arity by
+using Function#bind for expressjs</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">_</span><span class="p">.</span><span class="nx">each</span><span class="p">([</span>
+    <span class="s1">&#39;logWarn&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;logInfo&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;rejectError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;throwError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;logError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;logAndThrowError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;logAndRejectError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;logErrorAndExit&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;logErrorWithRedirect&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;handleAPIError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;formatAndRejectAPIError&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;formatHttpErrors&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;renderErrorPage&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;error404&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;error500&#39;</span>
+<span class="p">],</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">funcName</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">errors</span><span class="p">[</span><span class="nx">funcName</span><span class="p">]</span> <span class="o">=</span> <span class="nx">errors</span><span class="p">[</span><span class="nx">funcName</span><span class="p">].</span><span class="nx">bind</span><span class="p">(</span><span class="nx">errors</span><span class="p">);</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span>                            <span class="o">=</span> <span class="nx">errors</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">NotFoundError</span>              <span class="o">=</span> <span class="nx">NotFoundError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">BadRequestError</span>            <span class="o">=</span> <span class="nx">BadRequestError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">InternalServerError</span>        <span class="o">=</span> <span class="nx">InternalServerError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">NoPermissionError</span>          <span class="o">=</span> <span class="nx">NoPermissionError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">UnauthorizedError</span>          <span class="o">=</span> <span class="nx">UnauthorizedError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">ValidationError</span>            <span class="o">=</span> <span class="nx">ValidationError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">RequestEntityTooLargeError</span> <span class="o">=</span> <span class="nx">RequestEntityTooLargeError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">UnsupportedMediaTypeError</span>  <span class="o">=</span> <span class="nx">UnsupportedMediaTypeError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">EmailError</span>                 <span class="o">=</span> <span class="nx">EmailError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">DataImportError</span>            <span class="o">=</span> <span class="nx">DataImportError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">MethodNotAllowedError</span>      <span class="o">=</span> <span class="nx">MethodNotAllowedError</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">TooManyRequestsError</span>       <span class="o">=</span> <span class="nx">TooManyRequestsError</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

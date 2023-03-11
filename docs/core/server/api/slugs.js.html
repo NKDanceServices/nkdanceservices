@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>slugs.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/slugs.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#slug%20api">Slug API</a>
+      </div>
+      <div class="heading h2">
+        <a href="#slugs%20api%20methods">Slugs API Methods</a>
+      </div>
+      <div class="heading h2">
+        <a href="#generate%20slug">Generate Slug</a>
+      </div>
+      <div class="heading h3">
+        <a href="#check%20allowed%20types">Check allowed types</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="slug%20api">
+  <h1>
+    <a href="#slug%20api" name="slug%20api" class="pilcrow">&#182;</a>
+    Slug API
+  </h1>
+</div>
+
+
+<p>RESTful API for the Slug resource</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">dataProvider</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>       <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">docName</span>      <span class="o">=</span> <span class="s1">&#39;slugs&#39;</span><span class="p">,</span>
+
+    <span class="nx">slugs</span><span class="p">,</span>
+    <span class="nx">allowedTypes</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="slugs%20api%20methods">
+  <h2>
+    <a href="#slugs%20api%20methods" name="slugs%20api%20methods" class="pilcrow">&#182;</a>
+    Slugs API Methods
+  </h2>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">slugs</span> <span class="o">=</span> <span class="p">{</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="generate%20slug">
+  <h2>
+    <a href="#generate%20slug" name="generate%20slug" class="pilcrow">&#182;</a>
+    Generate Slug
+  </h2>
+</div>
+
+
+<p>Create a unique slug for the given type and its name</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">type(required)</span>
+      <span class="dox_type">name(required)</span>
+      <span class="dox_type">context</span>
+      <span class="dox_type">transacting</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise(String)</span>
+      <span>Unique string</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">generate</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">opts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;type&#39;</span><span class="p">],</span>
+            <span class="nx">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p><code>allowedTypes</code> is used to define allowed slug types and map them against its model class counterpart</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">allowedTypes</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">post</span><span class="o">:</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Post</span><span class="p">,</span>
+            <span class="nx">tag</span><span class="o">:</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Tag</span><span class="p">,</span>
+            <span class="nx">user</span><span class="o">:</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">,</span>
+            <span class="nx">app</span><span class="o">:</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">App</span>
+        <span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="check%20allowed%20types">
+  <h3>
+    <a href="#check%20allowed%20types" name="check%20allowed%20types" class="pilcrow">&#182;</a>
+    Check allowed types
+  </h3>
+</div>
+
+
+<p>check if options.type contains an allowed type</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">checkAllowedTypes</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">allowedTypes</span><span class="p">[</span><span class="nx">options</span><span class="p">.</span><span class="nx">type</span><span class="p">]</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;Unknown slug type \&#39;&#39;</span> <span class="o">+</span> <span class="nx">options</span><span class="p">.</span><span class="nx">type</span> <span class="o">+</span> <span class="s1">&#39;\&#39;.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">modelQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Base</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">generateSlug</span><span class="p">(</span><span class="nx">allowedTypes</span><span class="p">[</span><span class="nx">options</span><span class="p">.</span><span class="nx">type</span><span class="p">],</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="p">{</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">opts</span><span class="p">,</span> <span class="nx">attrs</span><span class="o">:</span> <span class="nx">attrs</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;generate&#39;</span><span class="p">),</span>
+            <span class="nx">checkAllowedTypes</span><span class="p">,</span>
+            <span class="nx">modelQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">slug</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">slug</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">InternalServerError</span><span class="p">(</span><span class="s1">&#39;Could not generate slug.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="p">{</span><span class="nx">slugs</span><span class="o">:</span> <span class="p">[{</span><span class="nx">slug</span><span class="o">:</span> <span class="nx">slug</span><span class="p">}]};</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">slugs</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

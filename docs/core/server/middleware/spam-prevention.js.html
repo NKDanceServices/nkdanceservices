@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>spam-prevention.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/middleware/spam-prevention.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#spamprevention%20middleware">SpamPrevention Middleware</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="spamprevention%20middleware">
+  <h1>
+    <a href="#spamprevention%20middleware" name="spamprevention%20middleware" class="pilcrow">&#182;</a>
+    SpamPrevention Middleware
+  </h1>
+</div>
+
+
+<p>Usage: spamPrevention
+After:
+Before:
+App: Admin|Blog|API</p>
+
+<p>Helpers to handle spam detection on signin, forgot password, and protected pages.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">loginSecurity</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="nx">forgottenSecurity</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="nx">protectedSecurity</span> <span class="o">=</span> <span class="p">[],</span>
+    <span class="nx">spamPrevention</span><span class="p">;</span>
+
+<span class="nx">spamPrevention</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="cm">/*jslint unparam:true*/</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>limit signin requests to ten failed requests per IP per hour</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">signin</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">signin</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">currentTime</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">hrtime</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nx">remoteAddress</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">remoteAddress</span><span class="p">,</span>
+            <span class="nx">deniedRateLimit</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">ipCount</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;Too many attempts.&#39;</span><span class="p">,</span>
+            <span class="nx">rateSigninPeriod</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rateSigninPeriod</span> <span class="o">||</span> <span class="mi">3600</span><span class="p">,</span>
+            <span class="nx">rateSigninAttempts</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rateSigninAttempts</span> <span class="o">||</span> <span class="mi">10</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">grant_type</span> <span class="o">===</span> <span class="s1">&#39;password&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">loginSecurity</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">ip</span><span class="o">:</span> <span class="nx">remoteAddress</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="nx">currentTime</span><span class="p">,</span> <span class="nx">email</span><span class="o">:</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">username</span><span class="p">});</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">grant_type</span> <span class="o">===</span> <span class="s1">&#39;refresh_token&#39;</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;No username.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>filter entries that are older than rateSigninPeriod</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">loginSecurity</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">loginSecurity</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">logTime</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nx">logTime</span><span class="p">.</span><span class="nx">time</span> <span class="o">+</span> <span class="nx">rateSigninPeriod</span> <span class="o">&gt;</span> <span class="nx">currentTime</span><span class="p">);</span>
+        <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>check number of tries per IP address</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">ipCount</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">chain</span><span class="p">(</span><span class="nx">loginSecurity</span><span class="p">).</span><span class="nx">countBy</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">).</span><span class="nx">value</span><span class="p">();</span>
+        <span class="nx">deniedRateLimit</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ipCount</span><span class="p">[</span><span class="nx">remoteAddress</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nx">rateSigninAttempts</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">deniedRateLimit</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                <span class="s1">&#39;Only &#39;</span> <span class="o">+</span> <span class="nx">rateSigninAttempts</span> <span class="o">+</span> <span class="s1">&#39; tries per IP address every &#39;</span> <span class="o">+</span> <span class="nx">rateSigninPeriod</span> <span class="o">+</span> <span class="s1">&#39; seconds.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Too many login attempts.&#39;</span>
+            <span class="p">);</span>
+            <span class="nx">message</span> <span class="o">+=</span> <span class="nx">rateSigninPeriod</span> <span class="o">===</span> <span class="mi">3600</span> <span class="o">?</span> <span class="s1">&#39; Please wait 1 hour.&#39;</span> <span class="o">:</span> <span class="s1">&#39; Please try again later&#39;</span><span class="p">;</span>
+            <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">TooManyRequestsError</span><span class="p">(</span><span class="nx">message</span><span class="p">));</span>
+        <span class="p">}</span>
+        <span class="nx">next</span><span class="p">();</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>limit forgotten password requests to five requests per IP per hour for different email addresses
+limit forgotten password requests to five requests per email address</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">forgotten</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">forgotten</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">currentTime</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">hrtime</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nx">remoteAddress</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">remoteAddress</span><span class="p">,</span>
+            <span class="nx">rateForgottenPeriod</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rateForgottenPeriod</span> <span class="o">||</span> <span class="mi">3600</span><span class="p">,</span>
+            <span class="nx">rateForgottenAttempts</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rateForgottenAttempts</span> <span class="o">||</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="nx">email</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">passwordreset</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">email</span><span class="p">,</span>
+            <span class="nx">ipCount</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">deniedRateLimit</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">deniedEmailRateLimit</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;Too many attempts.&#39;</span><span class="p">,</span>
+            <span class="nx">index</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">findIndex</span><span class="p">(</span><span class="nx">forgottenSecurity</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">findIndex</span><span class="p">(</span><span class="nx">logTime</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">(</span><span class="nx">logTime</span><span class="p">.</span><span class="nx">ip</span> <span class="o">===</span> <span class="nx">remoteAddress</span> <span class="o">&amp;&amp;</span> <span class="nx">logTime</span><span class="p">.</span><span class="nx">email</span> <span class="o">===</span> <span class="nx">email</span><span class="p">);</span>
+            <span class="p">});</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">index</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">forgottenSecurity</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">count</span> <span class="o">=</span> <span class="nx">forgottenSecurity</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nx">forgottenSecurity</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">ip</span><span class="o">:</span> <span class="nx">remoteAddress</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="nx">currentTime</span><span class="p">,</span> <span class="nx">email</span><span class="o">:</span> <span class="nx">email</span><span class="p">,</span> <span class="nx">count</span><span class="o">:</span> <span class="mi">0</span><span class="p">});</span>
+            <span class="p">}</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;No email.&#39;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>filter entries that are older than rateForgottenPeriod</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">forgottenSecurity</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">forgottenSecurity</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">logTime</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nx">logTime</span><span class="p">.</span><span class="nx">time</span> <span class="o">+</span> <span class="nx">rateForgottenPeriod</span> <span class="o">&gt;</span> <span class="nx">currentTime</span><span class="p">);</span>
+        <span class="p">});</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>check number of tries with different email addresses per IP</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">ipCount</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">chain</span><span class="p">(</span><span class="nx">forgottenSecurity</span><span class="p">).</span><span class="nx">countBy</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">).</span><span class="nx">value</span><span class="p">();</span>
+        <span class="nx">deniedRateLimit</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ipCount</span><span class="p">[</span><span class="nx">remoteAddress</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nx">rateForgottenAttempts</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">index</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">deniedEmailRateLimit</span> <span class="o">=</span> <span class="p">(</span><span class="nx">forgottenSecurity</span><span class="p">[</span><span class="nx">index</span><span class="p">].</span><span class="nx">count</span> <span class="o">&gt;</span> <span class="nx">rateForgottenAttempts</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">deniedEmailRateLimit</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                <span class="s1">&#39;Only &#39;</span> <span class="o">+</span> <span class="nx">rateForgottenAttempts</span> <span class="o">+</span> <span class="s1">&#39; forgotten password attempts per email every &#39;</span> <span class="o">+</span>
+                <span class="nx">rateForgottenPeriod</span> <span class="o">+</span> <span class="s1">&#39; seconds.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Forgotten password reset attempt failed&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">deniedRateLimit</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                <span class="s1">&#39;Only &#39;</span> <span class="o">+</span> <span class="nx">rateForgottenAttempts</span> <span class="o">+</span> <span class="s1">&#39; tries per IP address every &#39;</span> <span class="o">+</span> <span class="nx">rateForgottenPeriod</span> <span class="o">+</span> <span class="s1">&#39; seconds.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Forgotten password reset attempt failed&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">deniedEmailRateLimit</span> <span class="o">||</span> <span class="nx">deniedRateLimit</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">message</span> <span class="o">+=</span> <span class="nx">rateForgottenPeriod</span> <span class="o">===</span> <span class="mi">3600</span> <span class="o">?</span> <span class="s1">&#39; Please wait 1 hour.&#39;</span> <span class="o">:</span> <span class="s1">&#39; Please try again later&#39;</span><span class="p">;</span>
+            <span class="k">return</span> <span class="nx">next</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">TooManyRequestsError</span><span class="p">(</span><span class="nx">message</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="nx">next</span><span class="p">();</span>
+    <span class="p">},</span>
+
+    <span class="kr">protected</span><span class="o">:</span> <span class="kd">function</span> <span class="kr">protected</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">currentTime</span> <span class="o">=</span> <span class="nx">process</span><span class="p">.</span><span class="nx">hrtime</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nx">remoteAddress</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">connection</span><span class="p">.</span><span class="nx">remoteAddress</span><span class="p">,</span>
+            <span class="nx">rateProtectedPeriod</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rateProtectedPeriod</span> <span class="o">||</span> <span class="mi">3600</span><span class="p">,</span>
+            <span class="nx">rateProtectedAttempts</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">rateProtectedAttempts</span> <span class="o">||</span> <span class="mi">10</span><span class="p">,</span>
+            <span class="nx">ipCount</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;Too many attempts.&#39;</span><span class="p">,</span>
+            <span class="nx">deniedRateLimit</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+            <span class="nx">password</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">.</span><span class="nx">password</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">protectedSecurity</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">ip</span><span class="o">:</span> <span class="nx">remoteAddress</span><span class="p">,</span> <span class="nx">time</span><span class="o">:</span> <span class="nx">currentTime</span><span class="p">});</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="nx">res</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;No password entered&#39;</span>
+            <span class="p">};</span>
+            <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>filter entries that are older than rateProtectedPeriod</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">protectedSecurity</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">protectedSecurity</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">logTime</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nx">logTime</span><span class="p">.</span><span class="nx">time</span> <span class="o">+</span> <span class="nx">rateProtectedPeriod</span> <span class="o">&gt;</span> <span class="nx">currentTime</span><span class="p">);</span>
+        <span class="p">});</span>
+
+        <span class="nx">ipCount</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">chain</span><span class="p">(</span><span class="nx">protectedSecurity</span><span class="p">).</span><span class="nx">countBy</span><span class="p">(</span><span class="s1">&#39;ip&#39;</span><span class="p">).</span><span class="nx">value</span><span class="p">();</span>
+        <span class="nx">deniedRateLimit</span> <span class="o">=</span> <span class="p">(</span><span class="nx">ipCount</span><span class="p">[</span><span class="nx">remoteAddress</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nx">rateProtectedAttempts</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">deniedRateLimit</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span>
+                <span class="s1">&#39;Only &#39;</span> <span class="o">+</span> <span class="nx">rateProtectedAttempts</span> <span class="o">+</span> <span class="s1">&#39; tries per IP address every &#39;</span> <span class="o">+</span> <span class="nx">rateProtectedPeriod</span> <span class="o">+</span> <span class="s1">&#39; seconds.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;Too many login attempts.&#39;</span>
+            <span class="p">);</span>
+            <span class="nx">message</span> <span class="o">+=</span> <span class="nx">rateProtectedPeriod</span> <span class="o">===</span> <span class="mi">3600</span> <span class="o">?</span> <span class="s1">&#39; Please wait 1 hour.&#39;</span> <span class="o">:</span> <span class="s1">&#39; Please try again later&#39;</span><span class="p">;</span>
+            <span class="nx">res</span><span class="p">.</span><span class="nx">error</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">message</span><span class="o">:</span> <span class="nx">message</span>
+            <span class="p">};</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="nx">next</span><span class="p">();</span>
+    <span class="p">},</span>
+
+    <span class="nx">resetCounter</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">resetCounter</span><span class="p">(</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">loginSecurity</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">loginSecurity</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">logTime</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nx">logTime</span><span class="p">.</span><span class="nx">email</span> <span class="o">!==</span> <span class="nx">email</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">spamPrevention</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

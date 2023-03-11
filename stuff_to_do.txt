@@ -1,0 +1,31 @@
+TODO
+----
+
+- fix page analytics (meta tags)
+- Install ssl/https in domain
+
+- get new relic for website and docker
+- Add web analytics
+- backup database and setup periodic db backups
+
+
+DONE
+----
+- add discus *
+- connect domain to server *
+- fix on images links *
+- Make slider images *
+- Make NK Dance image placeholder *
+- Make giant image for hero space *
+- get contact page and contact form working with email domain *
+- delete unused images and files *
+- Create video section *
+- fix social media on post *
+- get latest tweets *
+- fix social media links on footer *
+- cleanup slider images *
+- Get images and image placeholders for services *
+- fix services page and write-up *
+- Create privacy policy and terms of services page *
+- Corect the private events link *
+- update link in welcome section *

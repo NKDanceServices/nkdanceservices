@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>plural.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/plural.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#plural%20helper">Plural Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="plural%20helper">
+  <h1>
+    <a href="#plural%20helper" name="plural%20helper" class="pilcrow">&#182;</a>
+    Plural Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{plural 0 empty='No posts' singular='% post' plural='% posts'}}</code></p>
+
+<p>pluralises strings depending on item count</p>
+
+<p>The 1st argument is the numeric variable which the helper operates on
+The 2nd argument is the string that will be output if the variable's value is 0
+The 3rd argument is the string that will be output if the variable's value is 1
+The 4th argument is the string that will be output if the variable's value is 2+</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">hbs</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">plural</span><span class="p">;</span>
+
+<span class="nx">plural</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">empty</span><span class="p">)</span> <span class="o">||</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">singular</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">isUndefined</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">plural</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="s1">&#39;All values must be defined for empty, singular and plural&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">empty</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">,</span> <span class="nx">context</span><span class="p">));</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">singular</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">,</span> <span class="nx">context</span><span class="p">));</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">context</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">hash</span><span class="p">.</span><span class="nx">plural</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">,</span> <span class="nx">context</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">plural</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>token.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/models/base/token.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#destroybyuser">destroyByUser</a>
+      </div>
+      <div class="heading h3">
+        <a href="#destroybytoken">destroyByToken</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>token.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">ghostBookshelf</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./index&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../errors&#39;</span><span class="p">),</span>
+
+    <span class="nx">Basetoken</span><span class="p">;</span>
+
+<span class="nx">Basetoken</span> <span class="o">=</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Model</span><span class="p">.</span><span class="nx">extend</span><span class="p">({</span>
+
+    <span class="nx">user</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">user</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">belongsTo</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+    <span class="nx">client</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">client</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">belongsTo</span><span class="p">(</span><span class="s1">&#39;Client&#39;</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>override for base function since we don't have
+a created_by field for sessions</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">creating</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">creating</span><span class="p">(</span><span class="nx">newObj</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false*/</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>override for base function since we don't have
+a updated_by field for sessions</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">saving</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">saving</span><span class="p">(</span><span class="nx">newObj</span><span class="p">,</span> <span class="nx">attr</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jshint unused:false*/</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Remove any properties which don't belong on the model</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">this</span><span class="p">.</span><span class="nx">attributes</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">permittedAttributes</span><span class="p">());</span>
+    <span class="p">}</span>
+
+<span class="p">},</span> <span class="p">{</span>
+    <span class="nx">destroyAllExpired</span><span class="o">:</span>  <span class="kd">function</span> <span class="nx">destroyAllExpired</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;destroyAll&#39;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">forge</span><span class="p">([],</span> <span class="p">{</span><span class="nx">model</span><span class="o">:</span> <span class="k">this</span><span class="p">})</span>
+            <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="s1">&#39;expires&#39;</span><span class="p">,</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">,</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">())</span>
+            <span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span>
+            <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">collection</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">collection</span><span class="p">.</span><span class="nx">invokeThen</span><span class="p">(</span><span class="s1">&#39;destroy&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+            <span class="p">});</span>
+    <span class="p">},</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="destroybyuser">
+  <h3>
+    <a href="#destroybyuser" name="destroybyuser" class="pilcrow">&#182;</a>
+    destroyByUser
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>{[type]} options has context and id. Context is the user doing the destroy, id is the user to destroy</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">destroyByUser</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">destroyByUser</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">userId</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">;</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;destroyByUser&#39;</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">userId</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">forge</span><span class="p">([],</span> <span class="p">{</span><span class="nx">model</span><span class="o">:</span> <span class="k">this</span><span class="p">})</span>
+                <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="nx">userId</span><span class="p">)</span>
+                <span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span>
+                <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">collection</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">collection</span><span class="p">.</span><span class="nx">invokeThen</span><span class="p">(</span><span class="s1">&#39;destroy&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+                <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;No user found&#39;</span><span class="p">));</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="destroybytoken">
+  <h3>
+    <a href="#destroybytoken" name="destroybytoken" class="pilcrow">&#182;</a>
+    destroyByToken
+  </h3>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span>{[type]} options has token where token is the token to destroy</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">destroyByToken</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">destroyByToken</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">token</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">token</span><span class="p">;</span>
+
+        <span class="nx">options</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">filterOptions</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="s1">&#39;destroyByUser&#39;</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">token</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">ghostBookshelf</span><span class="p">.</span><span class="nx">Collection</span><span class="p">.</span><span class="nx">forge</span><span class="p">([],</span> <span class="p">{</span><span class="nx">model</span><span class="o">:</span> <span class="k">this</span><span class="p">})</span>
+                <span class="p">.</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="nx">token</span><span class="p">)</span>
+                <span class="p">.</span><span class="nx">fetch</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span>
+                <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">collection</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">collection</span><span class="p">.</span><span class="nx">invokeThen</span><span class="p">(</span><span class="s1">&#39;destroy&#39;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+                <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;Token not found&#39;</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Basetoken</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/mail/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#mail">Mail</a>
+      </div>
+      <div class="heading h2">
+        <a href="#email%20transport%20setup">Email transport setup</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="mail">
+  <h1>
+    <a href="#mail" name="mail" class="pilcrow">&#182;</a>
+    Mail
+  </h1>
+</div>
+
+
+<p>Handles sending email for Ghost</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">nodemailer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;nodemailer&#39;</span><span class="p">),</span>
+    <span class="nx">validator</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;validator&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">GhostMailer</span><span class="p">(</span><span class="nx">opts</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">opts</span> <span class="o">=</span> <span class="nx">opts</span> <span class="o">||</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="nx">opts</span><span class="p">.</span><span class="nx">transport</span> <span class="o">||</span> <span class="kc">null</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="email%20transport%20setup">
+  <h2>
+    <a href="#email%20transport%20setup" name="email%20transport%20setup" class="pilcrow">&#182;</a>
+    Email transport setup
+  </h2>
+</div>
+
+
+<p><em>This promise should always resolve to avoid halting Ghost::init</em>.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostMailer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+    <span class="nx">self</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">mail</span> <span class="o">&amp;&amp;</span> <span class="nx">config</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">transport</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">();</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="nx">self</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="s1">&#39;direct&#39;</span><span class="p">);</span>
+    <span class="nx">self</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">usingDirect</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="nx">GhostMailer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">createTransport</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">transport</span> <span class="o">=</span> <span class="nx">nodemailer</span><span class="p">.</span><span class="nx">createTransport</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">transport</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">clone</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">options</span><span class="p">)</span> <span class="o">||</span> <span class="p">{});</span>
+<span class="p">};</span>
+
+<span class="nx">GhostMailer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">from</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">from</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">mail</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">from</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">mail</span><span class="p">.</span><span class="nx">fromaddress</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>If we don't have a from address at all</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">from</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Default to ghost@[blog.url]</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">from</span> <span class="o">=</span> <span class="s1">&#39;ghost@&#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">getDomain</span><span class="p">();</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>If we do have a from address, and it's just an email</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">validator</span><span class="p">.</span><span class="nx">isEmail</span><span class="p">(</span><span class="nx">from</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">.</span><span class="nx">title</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="s1">&#39;Ghost at &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">getDomain</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="nx">from</span> <span class="o">=</span> <span class="s1">&#39;&quot;&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">.</span><span class="nx">title</span> <span class="o">+</span> <span class="s1">&#39;&quot; &lt;&#39;</span> <span class="o">+</span> <span class="nx">from</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">from</span><span class="p">;</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Moved it to its own module</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostMailer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">getDomain</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">domain</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^https?://([^/:?#]+)(?:[/:?#]|$)&#39;</span><span class="p">,</span> <span class="s1">&#39;i&#39;</span><span class="p">));</span>
+    <span class="k">return</span> <span class="nx">domain</span> <span class="o">&amp;&amp;</span> <span class="nx">domain</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Sends an email message enforcing <code>to</code> (blog owner) and <code>from</code> fields
+This assumes that api.settings.read('email') was already done on the API level</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">GhostMailer</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">send</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">,</span>
+        <span class="nx">to</span><span class="p">,</span>
+        <span class="nx">sendMail</span><span class="p">;</span>
+
+    <span class="nx">message</span> <span class="o">=</span> <span class="nx">message</span> <span class="o">||</span> <span class="p">{};</span>
+    <span class="nx">to</span> <span class="o">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">to</span> <span class="o">||</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">transport</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Error: No email transport configured.&#39;</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">message</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">subject</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">html</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">to</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Error: Incomplete message data.&#39;</span><span class="p">));</span>
+    <span class="p">}</span>
+    <span class="nx">sendMail</span> <span class="o">=</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">transport</span><span class="p">.</span><span class="nx">sendMail</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">transport</span><span class="p">));</span>
+
+    <span class="nx">message</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">from</span><span class="o">:</span> <span class="nx">self</span><span class="p">.</span><span class="nx">from</span><span class="p">(),</span>
+        <span class="nx">to</span><span class="o">:</span> <span class="nx">to</span><span class="p">,</span>
+        <span class="nx">generateTextFromHTML</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+        <span class="nx">encoding</span><span class="o">:</span> <span class="s1">&#39;base64&#39;</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">sendMail</span><span class="p">(</span><span class="nx">message</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">response</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">self</span><span class="p">.</span><span class="nx">transport</span><span class="p">.</span><span class="nx">transportType</span> <span class="o">!==</span> <span class="s1">&#39;DIRECT&#39;</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">resolve</span><span class="p">(</span><span class="nx">response</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="nx">response</span><span class="p">.</span><span class="nx">statusHandler</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">&#39;failed&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">reason</span> <span class="o">=</span> <span class="s1">&#39;Error: Failed to send email&#39;</span><span class="p">;</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">error</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">errno</span> <span class="o">===</span> <span class="s1">&#39;ENOTFOUND&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">reason</span> <span class="o">+=</span> <span class="s1">&#39; - no mail server found at &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">.</span><span class="nx">domain</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="nx">reason</span> <span class="o">+=</span> <span class="s1">&#39;.&#39;</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">reason</span><span class="p">));</span>
+            <span class="p">});</span>
+
+            <span class="nx">response</span><span class="p">.</span><span class="nx">statusHandler</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">&#39;requeue&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">var</span> <span class="nx">errorMessage</span> <span class="o">=</span> <span class="s1">&#39;Error: Message could not be sent&#39;</span><span class="p">;</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">error</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">errorMessage</span> <span class="o">+=</span> <span class="s1">&#39;\nMore info: &#39;</span> <span class="o">+</span> <span class="nx">data</span><span class="p">.</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="nx">errorMessage</span><span class="p">));</span>
+            <span class="p">});</span>
+
+            <span class="nx">response</span><span class="p">.</span><span class="nx">statusHandler</span><span class="p">.</span><span class="nx">once</span><span class="p">(</span><span class="s1">&#39;sent&#39;</span><span class="p">,</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">resolve</span><span class="p">(</span><span class="s1">&#39;Message sent. Double check inbox and spam folder!&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">GhostMailer</span><span class="p">();</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

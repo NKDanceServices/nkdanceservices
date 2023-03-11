@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>proxy.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/apps/proxy.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>proxy.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">api</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">helpers</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../helpers&#39;</span><span class="p">),</span>
+    <span class="nx">filters</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../filters&#39;</span><span class="p">),</span>
+    <span class="nx">generateProxyFunctions</span><span class="p">;</span>
+
+<span class="nx">generateProxyFunctions</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">permissions</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">getPermission</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">perm</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">permissions</span><span class="p">[</span><span class="nx">perm</span><span class="p">];</span>
+        <span class="p">},</span>
+        <span class="nx">getPermissionToMethod</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">perm</span><span class="p">,</span> <span class="nx">method</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">perms</span> <span class="o">=</span> <span class="nx">getPermission</span><span class="p">(</span><span class="nx">perm</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">perms</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">find</span><span class="p">(</span><span class="nx">perms</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">name</span> <span class="o">===</span> <span class="nx">method</span><span class="p">;</span>
+            <span class="p">});</span>
+        <span class="p">},</span>
+        <span class="nx">runIfPermissionToMethod</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">perm</span><span class="p">,</span> <span class="nx">method</span><span class="p">,</span> <span class="nx">wrappedFunc</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">args</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">permValue</span> <span class="o">=</span> <span class="nx">getPermissionToMethod</span><span class="p">(</span><span class="nx">perm</span><span class="p">,</span> <span class="nx">method</span><span class="p">);</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">permValue</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;The App &quot;&#39;</span> <span class="o">+</span> <span class="nx">name</span> <span class="o">+</span> <span class="s1">&#39;&quot; attempted to perform an action or access a resource (&#39;</span> <span class="o">+</span> <span class="nx">perm</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="nx">method</span> <span class="o">+</span> <span class="s1">&#39;) without permission.&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">wrappedFunc</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">args</span><span class="p">);</span>
+        <span class="p">},</span>
+        <span class="nx">checkRegisterPermissions</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">perm</span><span class="p">,</span> <span class="nx">registerMethod</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">wrap</span><span class="p">(</span><span class="nx">registerMethod</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">origRegister</span><span class="p">,</span> <span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">runIfPermissionToMethod</span><span class="p">(</span><span class="nx">perm</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">origRegister</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">arguments</span><span class="p">).</span><span class="nx">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">));</span>
+            <span class="p">});</span>
+        <span class="p">},</span>
+        <span class="nx">passThruAppContextToApi</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">perm</span><span class="p">,</span> <span class="nx">apiMethods</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">appContext</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="nx">app</span><span class="o">:</span> <span class="nx">name</span>
+                <span class="p">};</span>
+
+            <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">reduce</span><span class="p">(</span><span class="nx">apiMethods</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">memo</span><span class="p">,</span> <span class="nx">apiMethod</span><span class="p">,</span> <span class="nx">methodName</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">memo</span><span class="p">[</span><span class="nx">methodName</span><span class="p">]</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">args</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">toArray</span><span class="p">(</span><span class="nx">arguments</span><span class="p">),</span>
+                        <span class="nx">options</span> <span class="o">=</span> <span class="nx">args</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">isObject</span><span class="p">(</span><span class="nx">options</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">clone</span><span class="p">(</span><span class="nx">appContext</span><span class="p">);</span>
+                    <span class="p">}</span>
+                    <span class="k">return</span> <span class="nx">apiMethod</span><span class="p">.</span><span class="nx">apply</span><span class="p">({},</span> <span class="nx">args</span><span class="p">);</span>
+                <span class="p">};</span>
+
+                <span class="k">return</span> <span class="nx">memo</span><span class="p">;</span>
+            <span class="p">},</span> <span class="p">{});</span>
+        <span class="p">},</span>
+        <span class="nx">proxy</span><span class="p">;</span>
+
+    <span class="nx">proxy</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">filters</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">register</span><span class="o">:</span> <span class="nx">checkRegisterPermissions</span><span class="p">(</span><span class="s1">&#39;filters&#39;</span><span class="p">,</span> <span class="nx">filters</span><span class="p">.</span><span class="nx">registerFilter</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">filters</span><span class="p">)),</span>
+            <span class="nx">deregister</span><span class="o">:</span> <span class="nx">checkRegisterPermissions</span><span class="p">(</span><span class="s1">&#39;filters&#39;</span><span class="p">,</span> <span class="nx">filters</span><span class="p">.</span><span class="nx">deregisterFilter</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">filters</span><span class="p">))</span>
+        <span class="p">},</span>
+        <span class="nx">helpers</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">register</span><span class="o">:</span> <span class="nx">checkRegisterPermissions</span><span class="p">(</span><span class="s1">&#39;helpers&#39;</span><span class="p">,</span> <span class="nx">helpers</span><span class="p">.</span><span class="nx">registerThemeHelper</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">helpers</span><span class="p">)),</span>
+            <span class="nx">registerAsync</span><span class="o">:</span> <span class="nx">checkRegisterPermissions</span><span class="p">(</span><span class="s1">&#39;helpers&#39;</span><span class="p">,</span> <span class="nx">helpers</span><span class="p">.</span><span class="nx">registerAsyncThemeHelper</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">helpers</span><span class="p">))</span>
+        <span class="p">},</span>
+        <span class="nx">api</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">posts</span><span class="o">:</span> <span class="nx">passThruAppContextToApi</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">,</span>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">,</span> <span class="s1">&#39;edit&#39;</span><span class="p">,</span> <span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;destroy&#39;</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="nx">tags</span><span class="o">:</span> <span class="nx">passThruAppContextToApi</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">,</span>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">tags</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="nx">notifications</span><span class="o">:</span> <span class="nx">passThruAppContextToApi</span><span class="p">(</span><span class="s1">&#39;notifications&#39;</span><span class="p">,</span>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">notifications</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">,</span> <span class="s1">&#39;add&#39;</span><span class="p">,</span> <span class="s1">&#39;destroy&#39;</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="nx">settings</span><span class="o">:</span> <span class="nx">passThruAppContextToApi</span><span class="p">(</span><span class="s1">&#39;settings&#39;</span><span class="p">,</span>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">api</span><span class="p">.</span><span class="nx">settings</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">,</span> <span class="s1">&#39;edit&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">}</span>
+    <span class="p">};</span>
+
+    <span class="k">return</span> <span class="nx">proxy</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="kd">function</span> <span class="nx">AppProxy</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Must provide an app name for api context&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">options</span><span class="p">.</span><span class="nx">permissions</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Must provide app permissions&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">generateProxyFunctions</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span> <span class="nx">options</span><span class="p">.</span><span class="nx">permissions</span><span class="p">));</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">AppProxy</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

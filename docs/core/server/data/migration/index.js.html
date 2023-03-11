@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/data/migration/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#reset">Reset</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">crypto</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;crypto&#39;</span><span class="p">),</span>
+    <span class="nx">sequence</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../utils/sequence&#39;</span><span class="p">),</span>
+    <span class="nx">path</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;path&#39;</span><span class="p">),</span>
+    <span class="nx">fs</span>              <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../errors&#39;</span><span class="p">),</span>
+    <span class="nx">commands</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./commands&#39;</span><span class="p">),</span>
+    <span class="nx">versioning</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../versioning&#39;</span><span class="p">),</span>
+    <span class="nx">models</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../models&#39;</span><span class="p">),</span>
+    <span class="nx">fixtures</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../fixtures&#39;</span><span class="p">),</span>
+    <span class="nx">schema</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../schema&#39;</span><span class="p">).</span><span class="nx">tables</span><span class="p">,</span>
+    <span class="nx">dataExport</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../export&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../config&#39;</span><span class="p">),</span>
+
+    <span class="nx">schemaTables</span>    <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">schema</span><span class="p">),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>private</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">logInfo</span><span class="p">,</span>
+    <span class="nx">populateDefaultSettings</span><span class="p">,</span>
+    <span class="nx">backupDatabase</span><span class="p">,</span>
+    <span class="nx">fixClientSecret</span><span class="p">,</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>public</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">init</span><span class="p">,</span>
+    <span class="nx">reset</span><span class="p">,</span>
+    <span class="nx">migrateUp</span><span class="p">,</span>
+    <span class="nx">migrateUpFreshDb</span><span class="p">;</span>
+
+<span class="nx">logInfo</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">logInfo</span><span class="p">(</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">errors</span><span class="p">.</span><span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Migrations&#39;</span><span class="p">,</span> <span class="nx">message</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">populateDefaultSettings</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">populateDefaultSettings</span><span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Initialise the default settings</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Populating default settings&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Settings</span><span class="p">.</span><span class="nx">populateDefaults</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Complete&#39;</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">backupDatabase</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">backupDatabase</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Creating database backup&#39;</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">dataExport</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">exportedData</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Save the exported data to the file system for download</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">dataExport</span><span class="p">.</span><span class="nx">fileName</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">fileName</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">fileName</span> <span class="o">=</span> <span class="nx">path</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">paths</span><span class="p">.</span><span class="nx">contentPath</span> <span class="o">+</span> <span class="s1">&#39;/data/&#39;</span> <span class="o">+</span> <span class="nx">fileName</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">promisify</span><span class="p">(</span><span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">)(</span><span class="nx">fileName</span><span class="p">,</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">exportedData</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Database backup written to: &#39;</span> <span class="o">+</span> <span class="nx">fileName</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>TODO: move to migration.to005() for next DB version</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">fixClientSecret</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Clients</span><span class="p">.</span><span class="nx">forge</span><span class="p">().</span><span class="nx">query</span><span class="p">(</span><span class="s1">&#39;where&#39;</span><span class="p">,</span> <span class="s1">&#39;secret&#39;</span><span class="p">,</span> <span class="s1">&#39;=&#39;</span><span class="p">,</span> <span class="s1">&#39;not_available&#39;</span><span class="p">).</span><span class="nx">fetch</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">updateClients</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">models</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">mapper</span><span class="p">(</span><span class="nx">client</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">NODE_ENV</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;testing&#39;</span><span class="p">)</span> <span class="o">!==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Updating client secret&#39;</span><span class="p">);</span>
+                <span class="nx">client</span><span class="p">.</span><span class="nx">secret</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">randomBytes</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="nx">toString</span><span class="p">(</span><span class="s1">&#39;hex&#39;</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="nx">models</span><span class="p">.</span><span class="nx">Client</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span><span class="nx">client</span><span class="p">,</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">id</span><span class="o">:</span> <span class="nx">client</span><span class="p">.</span><span class="nx">id</span><span class="p">});</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Check for whether data is needed to be bootstrapped or not</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">init</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tablesOnly</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">tablesOnly</span> <span class="o">=</span> <span class="nx">tablesOnly</span> <span class="o">||</span> <span class="kc">false</span><span class="p">;</span>
+
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>There are 4 possibilities:
+1. The database exists and is up-to-date
+2. The database exists but is out of date
+3. The database exists but the currentVersion setting does not or cannot be understood
+4. The database has not yet been created</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">return</span> <span class="nx">versioning</span><span class="p">.</span><span class="nx">getDatabaseVersion</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">databaseVersion</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">defaultVersion</span> <span class="o">=</span> <span class="nx">versioning</span><span class="p">.</span><span class="nx">getDefaultDatabaseVersion</span><span class="p">();</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">databaseVersion</span> <span class="o">&lt;</span> <span class="nx">defaultVersion</span> <span class="o">||</span> <span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">FORCE_MIGRATION</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<ol>
+<li>The database exists but is out of date
+Migrate to latest version</li>
+</ol>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Database upgrade required from version &#39;</span> <span class="o">+</span> <span class="nx">databaseVersion</span> <span class="o">+</span> <span class="s1">&#39; to &#39;</span> <span class="o">+</span>  <span class="nx">defaultVersion</span><span class="p">);</span>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">migrateUp</span><span class="p">(</span><span class="nx">databaseVersion</span><span class="p">,</span> <span class="nx">defaultVersion</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Finally update the databases current version</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">return</span> <span class="nx">versioning</span><span class="p">.</span><span class="nx">setDatabaseVersion</span><span class="p">();</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">databaseVersion</span> <span class="o">===</span> <span class="nx">defaultVersion</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<ol>
+<li>The database exists and is up-to-date</li>
+</ol>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Up to date at version &#39;</span> <span class="o">+</span> <span class="nx">databaseVersion</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>TODO: temporary fix for missing client.secret</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="k">return</span> <span class="nx">fixClientSecret</span><span class="p">();</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">databaseVersion</span> <span class="o">&gt;</span> <span class="nx">defaultVersion</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-13" id="section-13">&#182;</a>
+</div>
+<ol>
+<li>The database exists but the currentVersion setting does not or cannot be understood
+In this case we don't understand the version because it is too high</li>
+</ol>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logErrorAndExit</span><span class="p">(</span>
+                <span class="s1">&#39;Your database is not compatible with this version of Ghost&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;You will need to create a new database&#39;</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">err</span> <span class="o">===</span> <span class="s1">&#39;Settings table does not exist&#39;</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<ol>
+<li>The database has not yet been created
+Bring everything up from initial version.</li>
+</ol>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+            <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Database initialisation required for version &#39;</span> <span class="o">+</span> <span class="nx">versioning</span><span class="p">.</span><span class="nx">getDefaultDatabaseVersion</span><span class="p">());</span>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">migrateUpFreshDb</span><span class="p">(</span><span class="nx">tablesOnly</span><span class="p">);</span>
+        <span class="p">}</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-15" id="section-15">&#182;</a>
+</div>
+<ol>
+<li>The database exists but the currentVersion setting does not or cannot be understood
+In this case the setting was missing or there was some other problem</li>
+</ol>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">errors</span><span class="p">.</span><span class="nx">logErrorAndExit</span><span class="p">(</span><span class="s1">&#39;There is a problem with the database&#39;</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">message</span> <span class="o">||</span> <span class="nx">err</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="reset">
+  <h3>
+    <a href="#reset" name="reset" class="pilcrow">&#182;</a>
+    Reset
+  </h3>
+</div>
+
+
+<p>Delete all tables from the database in reverse order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">reset</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">tables</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">schemaTables</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">deleteTable</span><span class="p">(</span><span class="nx">table</span><span class="p">);</span>
+        <span class="p">};</span>
+    <span class="p">}).</span><span class="nx">reverse</span><span class="p">();</span>
+
+    <span class="k">return</span> <span class="nx">sequence</span><span class="p">(</span><span class="nx">tables</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>Only do this if we have no database at all</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">migrateUpFreshDb</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">tablesOnly</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">tableSequence</span><span class="p">,</span>
+        <span class="nx">tables</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">schemaTables</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Creating table: &#39;</span> <span class="o">+</span> <span class="nx">table</span><span class="p">);</span>
+                <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">createTable</span><span class="p">(</span><span class="nx">table</span><span class="p">);</span>
+            <span class="p">};</span>
+        <span class="p">});</span>
+    <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Creating tables...&#39;</span><span class="p">);</span>
+    <span class="nx">tableSequence</span> <span class="o">=</span> <span class="nx">sequence</span><span class="p">(</span><span class="nx">tables</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">tablesOnly</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">tableSequence</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nx">tableSequence</span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-18" id="section-18">&#182;</a>
+</div>
+<p>Load the fixtures</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">fixtures</span><span class="p">.</span><span class="nx">populate</span><span class="p">();</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">populateDefaultSettings</span><span class="p">();</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>Migrate from a specific version to the latest</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">migrateUp</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">fromVersion</span><span class="p">,</span> <span class="nx">toVersion</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">oldTables</span><span class="p">,</span>
+        <span class="nx">modifyUniCommands</span> <span class="o">=</span> <span class="p">[],</span>
+        <span class="nx">migrateOps</span> <span class="o">=</span> <span class="p">[];</span>
+
+    <span class="k">return</span> <span class="nx">backupDatabase</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">getTables</span><span class="p">();</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">tables</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">oldTables</span> <span class="o">=</span> <span class="nx">tables</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">oldTables</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">checkTables</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">migrateOps</span> <span class="o">=</span> <span class="nx">migrateOps</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">commands</span><span class="p">.</span><span class="nx">getDeleteCommands</span><span class="p">(</span><span class="nx">oldTables</span><span class="p">,</span> <span class="nx">schemaTables</span><span class="p">));</span>
+        <span class="nx">migrateOps</span> <span class="o">=</span> <span class="nx">migrateOps</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">commands</span><span class="p">.</span><span class="nx">getAddCommands</span><span class="p">(</span><span class="nx">oldTables</span><span class="p">,</span> <span class="nx">schemaTables</span><span class="p">));</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">oldTables</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">getIndexes</span><span class="p">(</span><span class="nx">table</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">indexes</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">modifyUniCommands</span> <span class="o">=</span> <span class="nx">modifyUniCommands</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">commands</span><span class="p">.</span><span class="nx">modifyUniqueCommands</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">indexes</span><span class="p">));</span>
+                <span class="p">});</span>
+            <span class="p">})</span>
+        <span class="p">);</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span>
+            <span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">oldTables</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">table</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">getColumns</span><span class="p">(</span><span class="nx">table</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">columns</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">migrateOps</span> <span class="o">=</span> <span class="nx">migrateOps</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">commands</span><span class="p">.</span><span class="nx">addColumnCommands</span><span class="p">(</span><span class="nx">table</span><span class="p">,</span> <span class="nx">columns</span><span class="p">));</span>
+                <span class="p">});</span>
+            <span class="p">})</span>
+        <span class="p">);</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="nx">migrateOps</span> <span class="o">=</span> <span class="nx">migrateOps</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">compact</span><span class="p">(</span><span class="nx">modifyUniCommands</span><span class="p">));</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-20" id="section-20">&#182;</a>
+</div>
+<p>execute the commands in sequence</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEmpty</span><span class="p">(</span><span class="nx">migrateOps</span><span class="p">))</span> <span class="p">{</span>
+            <span class="nx">logInfo</span><span class="p">(</span><span class="s1">&#39;Running migrations&#39;</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="nx">sequence</span><span class="p">(</span><span class="nx">migrateOps</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-21" id="section-21">&#182;</a>
+</div>
+<p>Ensure all of the current default settings are created (these are fixtures, so should be inserted first)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">populateDefaultSettings</span><span class="p">();</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>Finally, run any updates to the fixtures, including default settings</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">fixtures</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">fromVersion</span><span class="p">,</span> <span class="nx">toVersion</span><span class="p">);</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="nx">init</span><span class="o">:</span> <span class="nx">init</span><span class="p">,</span>
+    <span class="nx">reset</span><span class="o">:</span> <span class="nx">reset</span><span class="p">,</span>
+    <span class="nx">migrateUp</span><span class="o">:</span> <span class="nx">migrateUp</span><span class="p">,</span>
+    <span class="nx">migrateUpFreshDb</span><span class="o">:</span> <span class="nx">migrateUpFreshDb</span>
+<span class="p">};</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

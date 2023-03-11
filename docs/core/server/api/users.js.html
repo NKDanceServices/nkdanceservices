@@ -1,0 +1,1450 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>users.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/api/users.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#users%20api">Users API</a>
+      </div>
+      <div class="heading h3">
+        <a href="#users%20api%20methods">Users API Methods</a>
+      </div>
+      <div class="heading h2">
+        <a href="#browse">Browse</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#read">Read</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#edit">Edit</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#add%20user">Add user</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#destroy">Destroy</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#change%20password">Change Password</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+      <div class="heading h2">
+        <a href="#transfer%20ownership">Transfer Ownership</a>
+      </div>
+      <div class="heading h3">
+        <a href="#handle%20permissions">Handle Permissions</a>
+      </div>
+      <div class="heading h3">
+        <a href="#model%20query">Model Query</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="users%20api">
+  <h1>
+    <a href="#users%20api" name="users%20api" class="pilcrow">&#182;</a>
+    Users API
+  </h1>
+</div>
+
+
+<p>RESTful API for the User resource</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">dataProvider</span>    <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../models&#39;</span><span class="p">),</span>
+    <span class="nx">settings</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./settings&#39;</span><span class="p">),</span>
+    <span class="nx">canThis</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../permissions&#39;</span><span class="p">).</span><span class="nx">canThis</span><span class="p">,</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">globalUtils</span>     <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">mail</span>            <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./mail&#39;</span><span class="p">),</span>
+    <span class="nx">pipeline</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils/pipeline&#39;</span><span class="p">),</span>
+
+    <span class="nx">docName</span>         <span class="o">=</span> <span class="s1">&#39;users&#39;</span><span class="p">,</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>TODO: implement created_by, updated_by</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">allowedIncludes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;count.posts&#39;</span><span class="p">,</span> <span class="s1">&#39;permissions&#39;</span><span class="p">,</span> <span class="s1">&#39;roles&#39;</span><span class="p">,</span> <span class="s1">&#39;roles.permissions&#39;</span><span class="p">],</span>
+    <span class="nx">users</span><span class="p">,</span>
+    <span class="nx">sendInviteEmail</span><span class="p">;</span>
+
+<span class="nx">sendInviteEmail</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">sendInviteEmail</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">emailData</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span>
+        <span class="nx">users</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">created_by</span><span class="p">,</span> <span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}}),</span>
+        <span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;title&#39;</span><span class="p">}),</span>
+        <span class="nx">settings</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">},</span> <span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;dbHash&#39;</span><span class="p">})</span>
+    <span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">values</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">invitedBy</span> <span class="o">=</span> <span class="nx">values</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="nx">blogTitle</span> <span class="o">=</span> <span class="nx">values</span><span class="p">[</span><span class="mi">1</span><span class="p">].</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">,</span>
+            <span class="nx">expires</span> <span class="o">=</span> <span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="mi">14</span> <span class="o">*</span> <span class="nx">globalUtils</span><span class="p">.</span><span class="nx">ONE_DAY_MS</span><span class="p">),</span>
+            <span class="nx">dbHash</span> <span class="o">=</span> <span class="nx">values</span><span class="p">[</span><span class="mi">2</span><span class="p">].</span><span class="nx">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">value</span><span class="p">;</span>
+
+        <span class="nx">emailData</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">blogName</span><span class="o">:</span> <span class="nx">blogTitle</span><span class="p">,</span>
+            <span class="nx">invitedByName</span><span class="o">:</span> <span class="nx">invitedBy</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+            <span class="nx">invitedByEmail</span><span class="o">:</span> <span class="nx">invitedBy</span><span class="p">.</span><span class="nx">email</span>
+        <span class="p">};</span>
+
+        <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">generateResetToken</span><span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span> <span class="nx">expires</span><span class="p">,</span> <span class="nx">dbHash</span><span class="p">);</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">resetToken</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">baseUrl</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">forceAdminSSL</span> <span class="o">?</span> <span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">urlSSL</span> <span class="o">||</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">)</span> <span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">url</span><span class="p">;</span>
+
+        <span class="nx">emailData</span><span class="p">.</span><span class="nx">resetLink</span> <span class="o">=</span> <span class="nx">baseUrl</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/\/$/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/ghost/signup/&#39;</span> <span class="o">+</span> <span class="nx">globalUtils</span><span class="p">.</span><span class="nx">encodeBase64URLsafe</span><span class="p">(</span><span class="nx">resetToken</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span><span class="p">;</span>
+
+        <span class="k">return</span> <span class="nx">mail</span><span class="p">.</span><span class="nx">generateContent</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">emailData</span><span class="p">,</span> <span class="nx">template</span><span class="o">:</span> <span class="s1">&#39;invite-user&#39;</span><span class="p">});</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">emailContent</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="nx">mail</span><span class="o">:</span> <span class="p">[{</span>
+                <span class="nx">message</span><span class="o">:</span> <span class="p">{</span>
+                    <span class="nx">to</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">email</span><span class="p">,</span>
+                    <span class="nx">subject</span><span class="o">:</span> <span class="nx">emailData</span><span class="p">.</span><span class="nx">invitedByName</span> <span class="o">+</span> <span class="s1">&#39; has invited you to join &#39;</span> <span class="o">+</span> <span class="nx">emailData</span><span class="p">.</span><span class="nx">blogName</span><span class="p">,</span>
+                    <span class="nx">html</span><span class="o">:</span> <span class="nx">emailContent</span><span class="p">.</span><span class="nx">html</span><span class="p">,</span>
+                    <span class="nx">text</span><span class="o">:</span> <span class="nx">emailContent</span><span class="p">.</span><span class="nx">text</span>
+                <span class="p">},</span>
+                <span class="nx">options</span><span class="o">:</span> <span class="p">{}</span>
+            <span class="p">}]</span>
+        <span class="p">};</span>
+
+        <span class="k">return</span> <span class="nx">mail</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">payload</span><span class="p">,</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="users%20api%20methods">
+  <h3>
+    <a href="#users%20api%20methods" name="users%20api%20methods" class="pilcrow">&#182;</a>
+    Users API Methods
+  </h3>
+</div>
+
+  </div>
+  <div class="body"><p><strong>See:</strong> <a href="index.js.html#api%20methods">API Methods</a></p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">users</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="browse">
+  <h2>
+    <a href="#browse" name="browse" class="pilcrow">&#182;</a>
+    Browse
+  </h2>
+</div>
+
+
+<p>Fetch all users</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+      <span>(optional)</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;Users&gt;</span>
+      <span>Users Collection</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">browse</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">browse</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">extraOptions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">],</span>
+            <span class="nx">permittedOptions</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">browseDefaultOptions</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">extraOptions</span><span class="p">),</span>
+            <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findPage</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">permittedOptions</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;browse&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="read">
+  <h2>
+    <a href="#read" name="read" class="pilcrow">&#182;</a>
+    Read
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;Users&gt;</span>
+      <span>User</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">read</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">read</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;slug&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">,</span> <span class="s1">&#39;role&#39;</span><span class="p">],</span>
+            <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Special handling for id = 'me'</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="s1">&#39;me&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">,</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">attrs</span><span class="o">:</span> <span class="nx">attrs</span><span class="p">}),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">handlePublicPermissions</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="s1">&#39;read&#39;</span><span class="p">),</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span><span class="nx">users</span><span class="o">:</span> <span class="p">[</span><span class="nx">result</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)]};</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;User not found.&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="edit">
+  <h2>
+    <a href="#edit" name="edit" class="pilcrow">&#182;</a>
+    Edit
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">User</span>
+      <span>the user details to edit</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;User&gt;
+</span>
+      <span>{Promise<User>}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">edit</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">edit</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">extraOptions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;editRoles&#39;</span><span class="p">],</span>
+            <span class="nx">permittedOptions</span> <span class="o">=</span> <span class="nx">extraOptions</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="nx">utils</span><span class="p">.</span><span class="nx">idDefaultOptions</span><span class="p">),</span>
+            <span class="nx">tasks</span><span class="p">;</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">roles</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">{</span>
+            <span class="nx">options</span><span class="p">.</span><span class="nx">editRoles</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-14" id="section-14">&#182;</a>
+</div>
+<p>The password should never be set via this endpoint, if it is passed, ignore it</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">object</span><span class="p">.</span><span class="nx">users</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&amp;&amp;</span> <span class="nx">object</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">password</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">delete</span> <span class="nx">object</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">password</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action
+Edit user allows the related role object to be updated as well, with some rules:
+- No change permitted to the role of the owner
+- no change permitted to the role of the context user (user making the request)</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span> <span class="o">===</span> <span class="s1">&#39;me&#39;</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">edit</span><span class="p">.</span><span class="nx">user</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-16" id="section-16">&#182;</a>
+</div>
+<p>if roles aren't in the payload, proceed with the edit</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">roles</span> <span class="o">&amp;&amp;</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+                <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-17" id="section-17">&#182;</a>
+</div>
+<p>@TODO move role permissions out of here</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="kd">var</span> <span class="nx">role</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="nx">roleId</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">role</span><span class="p">.</span><span class="nx">id</span> <span class="o">||</span> <span class="nx">role</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+                    <span class="nx">editedUserId</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">(</span>
+                    <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">user</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">},</span> <span class="p">{</span><span class="nx">include</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;roles&#39;</span><span class="p">]}</span>
+                <span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">contextUser</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">contextRoleId</span> <span class="o">=</span> <span class="nx">contextUser</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">).</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span><span class="p">;</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">roleId</span> <span class="o">!==</span> <span class="nx">contextRoleId</span> <span class="o">&amp;&amp;</span> <span class="nx">editedUserId</span> <span class="o">===</span> <span class="nx">contextUser</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;You cannot change your own role.&#39;</span><span class="p">));</span>
+                    <span class="p">}</span>
+
+                    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">role</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">owner</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">contextUser</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="nx">owner</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">if</span> <span class="p">(</span><span class="nx">editedUserId</span> <span class="o">===</span> <span class="nx">owner</span><span class="p">.</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+                                <span class="k">if</span> <span class="p">(</span><span class="nx">owner</span><span class="p">.</span><span class="nx">related</span><span class="p">(</span><span class="s1">&#39;roles&#39;</span><span class="p">).</span><span class="nx">at</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="nx">id</span> <span class="o">!==</span> <span class="nx">roleId</span><span class="p">)</span> <span class="p">{</span>
+                                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Cannot change Owner\&#39;s role.&#39;</span><span class="p">));</span>
+                                <span class="p">}</span>
+                            <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">roleId</span> <span class="o">!==</span> <span class="nx">contextRoleId</span><span class="p">)</span> <span class="p">{</span>
+                                <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">assign</span><span class="p">.</span><span class="nx">role</span><span class="p">(</span><span class="nx">role</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                                    <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+                                <span class="p">});</span>
+                            <span class="p">}</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+                    <span class="p">});</span>
+                <span class="p">});</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="s1">&#39;You do not have permission to edit this user&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-19" id="section-19">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">permittedOptions</span><span class="p">}),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="p">{</span><span class="nx">users</span><span class="o">:</span> <span class="p">[</span><span class="nx">result</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">)]};</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NotFoundError</span><span class="p">(</span><span class="s1">&#39;User not found.&#39;</span><span class="p">));</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="add%20user">
+  <h2>
+    <a href="#add%20user" name="add%20user" class="pilcrow">&#182;</a>
+    Add user
+  </h2>
+</div>
+
+
+<p>The newly added user is invited to join the blog via email.</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">User</span>
+      <span>the user to create</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;User&gt;</span>
+      <span>Newly created user</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">add</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">add</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">newUser</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">add</span><span class="p">.</span><span class="nx">user</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">newUser</span><span class="p">.</span><span class="nx">roles</span> <span class="o">&amp;&amp;</span> <span class="nx">newUser</span><span class="p">.</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="p">{</span>
+                    <span class="kd">var</span> <span class="nx">roleId</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">newUser</span><span class="p">.</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">id</span> <span class="o">||</span> <span class="nx">newUser</span><span class="p">.</span><span class="nx">roles</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-22" id="section-22">&#182;</a>
+</div>
+<p>@TODO move this logic to permissible
+Make sure user is allowed to add a user with this role</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Role</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">roleId</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">role</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="nx">role</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;Owner&#39;</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">NoPermissionError</span><span class="p">(</span><span class="s1">&#39;Not allowed to create an owner user.&#39;</span><span class="p">));</span>
+                        <span class="p">}</span>
+
+                        <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">assign</span><span class="p">.</span><span class="nx">role</span><span class="p">(</span><span class="nx">role</span><span class="p">);</span>
+                    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+                    <span class="p">});</span>
+                <span class="p">}</span>
+
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="s1">&#39;You do not have permission to add this user&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">newUser</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">users</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="nx">user</span><span class="p">;</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="nx">newUser</span><span class="p">.</span><span class="nx">email</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">newUser</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="nx">newUser</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nx">newUser</span><span class="p">.</span><span class="nx">email</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">));</span>
+                <span class="nx">newUser</span><span class="p">.</span><span class="nx">password</span> <span class="o">=</span> <span class="nx">globalUtils</span><span class="p">.</span><span class="nx">uid</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+                <span class="nx">newUser</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;invited&#39;</span><span class="p">;</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;No email provided.&#39;</span><span class="p">));</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">getByEmail</span><span class="p">(</span>
+                <span class="nx">newUser</span><span class="p">.</span><span class="nx">email</span>
+            <span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">foundUser</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">foundUser</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">add</span><span class="p">(</span><span class="nx">newUser</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-24" id="section-24">&#182;</a>
+</div>
+<p>only invitations for already invited users are resent</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">foundUser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;invited&#39;</span> <span class="o">||</span> <span class="nx">foundUser</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;invited-pending&#39;</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">foundUser</span><span class="p">;</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">BadRequestError</span><span class="p">(</span><span class="s1">&#39;User is already registered.&#39;</span><span class="p">));</span>
+                    <span class="p">}</span>
+                <span class="p">}</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">invitedUser</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">user</span> <span class="o">=</span> <span class="nx">invitedUser</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+                <span class="k">return</span> <span class="nx">sendInviteEmail</span><span class="p">(</span><span class="nx">user</span><span class="p">);</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-25" id="section-25">&#182;</a>
+</div>
+<p>If status was invited-pending and sending the invitation succeeded, set status to invited.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">user</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;invited-pending&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">edit</span><span class="p">(</span>
+                        <span class="p">{</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;invited&#39;</span><span class="p">},</span> <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">options</span><span class="p">,</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">})</span>
+                    <span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">editedUser</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="nx">user</span> <span class="o">=</span> <span class="nx">editedUser</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+                        <span class="p">});</span>
+                <span class="p">}</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">users</span><span class="o">:</span> <span class="p">[</span><span class="nx">user</span><span class="p">]});</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">error</span> <span class="o">&amp;&amp;</span> <span class="nx">error</span><span class="p">.</span><span class="nx">errorType</span> <span class="o">===</span> <span class="s1">&#39;EmailError&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="s1">&#39;Error sending email: &#39;</span> <span class="o">+</span> <span class="nx">error</span><span class="p">.</span><span class="nx">message</span> <span class="o">+</span> <span class="s1">&#39; Please check your email settings and resend the invitation.&#39;</span><span class="p">;</span>
+                    <span class="nx">errors</span><span class="p">.</span><span class="nx">logWarn</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-26" id="section-26">&#182;</a>
+</div>
+<p>If sending the invitation failed, set status to invited-pending</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">edit</span><span class="p">({</span><span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;invited-pending&#39;</span><span class="p">},</span> <span class="p">{</span><span class="nx">id</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span> <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">},</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">user</span><span class="p">)</span> <span class="p">{</span>
+                            <span class="k">return</span> <span class="p">{</span><span class="nx">users</span><span class="o">:</span> <span class="p">[</span><span class="nx">user</span><span class="p">]};</span>
+                        <span class="p">});</span>
+                    <span class="p">});</span>
+                <span class="p">}</span>
+                <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-27" id="section-27">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="destroy">
+  <h2>
+    <a href="#destroy" name="destroy" class="pilcrow">&#182;</a>
+    Destroy
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">id</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;User&gt;
+</span>
+      <span>{Promise<User>}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">destroy</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">destroy</span><span class="p">.</span><span class="nx">user</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">id</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">permissionGranted</span><span class="p">()</span> <span class="p">{</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">status</span> <span class="o">=</span> <span class="s1">&#39;all&#39;</span><span class="p">;</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="s1">&#39;You do not have permission to destroy this user.&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">users</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Base</span><span class="p">.</span><span class="nx">transaction</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">t</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">options</span><span class="p">.</span><span class="nx">transacting</span> <span class="o">=</span> <span class="nx">t</span><span class="p">;</span>
+
+                    <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">([</span>
+                        <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Accesstoken</span><span class="p">.</span><span class="nx">destroyByUser</span><span class="p">(</span><span class="nx">options</span><span class="p">),</span>
+                        <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Refreshtoken</span><span class="p">.</span><span class="nx">destroyByUser</span><span class="p">(</span><span class="nx">options</span><span class="p">),</span>
+                        <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Post</span><span class="p">.</span><span class="nx">destroyByAuthor</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span>
+                    <span class="p">]).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                        <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">destroy</span><span class="p">(</span><span class="nx">options</span><span class="p">);</span>
+                    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                        <span class="nx">t</span><span class="p">.</span><span class="nx">commit</span><span class="p">();</span>
+                    <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">t</span><span class="p">.</span><span class="nx">rollback</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+                    <span class="p">});</span>
+                <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">result</span><span class="p">;</span>
+                <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">InternalServerError</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span>
+                <span class="p">});</span>
+            <span class="p">},</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-31" id="section-31">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="nx">docName</span><span class="p">,</span> <span class="p">{</span><span class="nx">opts</span><span class="o">:</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">idDefaultOptions</span><span class="p">}),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-32" id="section-32">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="change%20password">
+  <h2>
+    <a href="#change%20password" name="change%20password" class="pilcrow">&#182;</a>
+    Change Password
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">password</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">context</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;password&gt;</span>
+      <span>success message</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">changePassword</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">changePassword</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">edit</span><span class="p">.</span><span class="nx">user</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">password</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">user_id</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">permissionGranted</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="s1">&#39;You do not have permission to change the password for this user&#39;</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">changePassword</span><span class="p">(</span>
+                <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">password</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">])</span>
+            <span class="p">);</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-36" id="section-36">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="s1">&#39;password&#39;</span><span class="p">),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-37" id="section-37">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResponse</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">password</span><span class="o">:</span> <span class="p">[{</span><span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Password changed successfully.&#39;</span><span class="p">}]});</span>
+        <span class="p">});</span>
+    <span class="p">},</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="transfer%20ownership">
+  <h2>
+    <a href="#transfer%20ownership" name="transfer%20ownership" class="pilcrow">&#182;</a>
+    Transfer Ownership
+  </h2>
+</div>
+
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">object</span>
+      <span class="dox_type">owner</span>
+    </div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Promise&lt;User&gt;
+</span>
+      <span>{Promise<User>}</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">transferOwnership</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">transferOwnership</span><span class="p">(</span><span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">tasks</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="handle%20permissions">
+  <h3>
+    <a href="#handle%20permissions" name="handle%20permissions" class="pilcrow">&#182;</a>
+    Handle Permissions
+  </h3>
+</div>
+
+
+<p>We need to be an authorised user to perform this action</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">handlePermissions</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">Role</span><span class="p">.</span><span class="nx">findOne</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;Owner&#39;</span><span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">ownerRole</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">canThis</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">context</span><span class="p">).</span><span class="nx">assign</span><span class="p">.</span><span class="nx">role</span><span class="p">(</span><span class="nx">ownerRole</span><span class="p">);</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="model%20query">
+  <h3>
+    <a href="#model%20query" name="model%20query" class="pilcrow">&#182;</a>
+    Model Query
+  </h3>
+</div>
+
+
+<p>Make the call to the Model layer</p>
+  </div>
+  <div class="body">
+  </div>
+  <div class="details">
+    <div class="dox_tag_title">Params</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name">options</span>
+      <span class="dox_type">Object</span>
+    </div>
+    <div class="dox_tag_title">Returns</div>
+    <div class="dox_tag_detail">
+      <span class="dox_tag_name"></span>
+      <span class="dox_type">Object</span>
+      <span>options</span>
+    </div>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="kd">function</span> <span class="nx">doQuery</span><span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">dataProvider</span><span class="p">.</span><span class="nx">User</span><span class="p">.</span><span class="nx">transferOwnership</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">owner</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">options</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]));</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-41" id="section-41">&#182;</a>
+</div>
+<p>Push all of our tasks into a <code>tasks</code> array in the correct order</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">tasks</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">validate</span><span class="p">(</span><span class="s1">&#39;owner&#39;</span><span class="p">),</span>
+            <span class="nx">handlePermissions</span><span class="p">,</span>
+            <span class="nx">utils</span><span class="p">.</span><span class="nx">convertOptions</span><span class="p">(</span><span class="nx">allowedIncludes</span><span class="p">),</span>
+            <span class="nx">doQuery</span>
+        <span class="p">];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-42" id="section-42">&#182;</a>
+</div>
+<p>Pipeline calls each task passing the result of one to be the arguments for the next</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">return</span> <span class="nx">pipeline</span><span class="p">(</span><span class="nx">tasks</span><span class="p">,</span> <span class="nx">object</span><span class="p">,</span> <span class="nx">options</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">formatResult</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">({</span><span class="nx">users</span><span class="o">:</span> <span class="nx">result</span><span class="p">});</span>
+        <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">errors</span><span class="p">.</span><span class="nx">formatAndRejectAPIError</span><span class="p">(</span><span class="nx">error</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">users</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>context.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../../doc-style.css" />
+  <script src="../../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../../", thisFile = "core/server/controllers/frontend/context.js", defaultSidebar = true;
+  </script>
+  <script src="../../../../doc-script.js"></script>
+  <script src="../../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#response%20context">Response context</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs"><div class="dox">
+  <div class="summary">
+<div class="pilwrap" id="response%20context">
+  <h1>
+    <a href="#response%20context" name="response%20context" class="pilcrow">&#182;</a>
+    Response context
+  </h1>
+</div>
+
+  </div>
+  <div class="body"><p>Figures out which context we are currently serving. The biggest challenge with determining this
+is that the only way to determine whether or not we are a post, or a page, is with data after all the
+data for the template has been retrieved.</p>
+
+<p>Contexts are determined based on 3 pieces of information
+1. res.locals.relativeUrl - which never includes the subdirectory
+2. req.params.page - always has the page parameter, regardless of if the URL contains a keyword (RSS pages don't)
+3. data - used for telling the difference between posts and pages</p>
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">config</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../config&#39;</span><span class="p">),</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Context patterns, should eventually come from Channel configuration</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">tagPattern</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^\\/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="nx">tag</span> <span class="o">+</span> <span class="s1">&#39;\\/.+&#39;</span><span class="p">),</span>
+    <span class="nx">authorPattern</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^\\/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="nx">author</span> <span class="o">+</span> <span class="s1">&#39;\\/.+&#39;</span><span class="p">),</span>
+    <span class="nx">privatePattern</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^\\/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="kr">private</span> <span class="o">+</span> <span class="s1">&#39;\\/&#39;</span><span class="p">),</span>
+    <span class="nx">indexPattern</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^\\/&#39;</span> <span class="o">+</span> <span class="nx">config</span><span class="p">.</span><span class="nx">routeKeywords</span><span class="p">.</span><span class="nx">page</span> <span class="o">+</span> <span class="s1">&#39;\\/&#39;</span><span class="p">),</span>
+    <span class="nx">rssPattern</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^\\/rss\\/&#39;</span><span class="p">),</span>
+    <span class="nx">homePattern</span> <span class="o">=</span> <span class="k">new</span> <span class="nb">RegExp</span><span class="p">(</span><span class="s1">&#39;^\\/$&#39;</span><span class="p">);</span>
+
+<span class="kd">function</span> <span class="nx">setResponseContext</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">pageParam</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span> <span class="o">&amp;&amp;</span> <span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">page</span> <span class="o">!==</span> <span class="kc">undefined</span> <span class="o">?</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">params</span><span class="p">.</span><span class="nx">page</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span> <span class="o">:</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span> <span class="o">=</span> <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span> <span class="o">||</span> <span class="p">{};</span>
+    <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span> <span class="o">=</span> <span class="p">[];</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>If we don't have a relativeUrl, we can't detect the context, so return</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>paged context</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nb">isNaN</span><span class="p">(</span><span class="nx">pageParam</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">pageParam</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;paged&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">indexPattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">homePattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;home&#39;</span><span class="p">);</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;index&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">rssPattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;rss&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">privatePattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;private&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">tagPattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;tag&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">authorPattern</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">relativeUrl</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">post</span> <span class="o">&amp;&amp;</span> <span class="nx">data</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">page</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">locals</span><span class="p">.</span><span class="nx">context</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s1">&#39;post&#39;</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">setResponseContext</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>prev_next.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/prev_next.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#prevnext%20helper%20exposes%20methods%20for%20prev_post%20and%20next_post%20-%20separately%20defined%20in%20helpers%20index.">prevNext helper exposes methods for prev_post and next_post - separately defined in helpers index.</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>prev_next.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="prevnext%20helper%20exposes%20methods%20for%20prev_post%20and%20next_post%20-%20separately%20defined%20in%20helpers%20index.">
+  <h3>
+    <a href="#prevnext%20helper%20exposes%20methods%20for%20prev_post%20and%20next_post%20-%20separately%20defined%20in%20helpers%20index." name="prevnext%20helper%20exposes%20methods%20for%20prev_post%20and%20next_post%20-%20separately%20defined%20in%20helpers%20index." class="pilcrow">&#182;</a>
+    prevNext helper exposes methods for prev_post and next_post - separately defined in helpers index.
+  </h3>
+</div>
+
+
+<p>Example usages
+<code>{{#prev_post}}&lt;a href ="{{url}}&gt;previous post&lt;/a&gt;{{/prev_post}}'
+</code>{{#next_post}}<a href ="{{url absolute="true">next post</a>{{/next_post}}'</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">api</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">schema</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../data/schema&#39;</span><span class="p">).</span><span class="nx">checks</span><span class="p">,</span>
+    <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">fetch</span><span class="p">,</span> <span class="nx">prevNext</span><span class="p">;</span>
+
+<span class="nx">fetch</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">apiOptions</span><span class="p">,</span> <span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">posts</span><span class="p">.</span><span class="nx">read</span><span class="p">(</span><span class="nx">apiOptions</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kd">var</span> <span class="nx">related</span> <span class="o">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">posts</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nx">related</span><span class="p">.</span><span class="nx">previous</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">.</span><span class="nx">fn</span><span class="p">(</span><span class="nx">related</span><span class="p">.</span><span class="nx">previous</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">related</span><span class="p">.</span><span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">.</span><span class="nx">fn</span><span class="p">(</span><span class="nx">related</span><span class="p">.</span><span class="nx">next</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">options</span><span class="p">.</span><span class="nx">inverse</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>If prevNext method is called without valid post data then we must return a promise, if there is valid post data
+then the promise is handled in the api call.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="nx">prevNext</span> <span class="o">=</span>  <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="kd">var</span> <span class="nx">apiOptions</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="nx">include</span><span class="o">:</span> <span class="nx">options</span><span class="p">.</span><span class="nx">name</span> <span class="o">===</span> <span class="s1">&#39;prev_post&#39;</span> <span class="o">?</span> <span class="s1">&#39;previous,previous.author,previous.tags&#39;</span> <span class="o">:</span> <span class="s1">&#39;next,next.author,next.tags&#39;</span>
+    <span class="p">};</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">isPost</span><span class="p">(</span><span class="k">this</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">status</span> <span class="o">===</span> <span class="s1">&#39;published&#39;</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">apiOptions</span><span class="p">.</span><span class="nx">slug</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">slug</span><span class="p">;</span>
+        <span class="k">return</span> <span class="nx">fetch</span><span class="p">(</span><span class="nx">apiOptions</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">options</span><span class="p">.</span><span class="nx">inverse</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">prevNext</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

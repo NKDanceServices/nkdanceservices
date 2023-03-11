@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>downzero.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/utils/downzero.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>downzero.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+<p>Functions to imitate the behavior of <a href='mailto:Downsize@0.0.5'>Downsize@0.0.5</a> with 'words: "0"' (heavily based on Downsize)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">stack</span><span class="p">,</span> <span class="nx">tagName</span><span class="p">,</span> <span class="nx">tagBuffer</span><span class="p">,</span> <span class="nx">truncatedText</span><span class="p">,</span> <span class="nx">parseState</span><span class="p">,</span> <span class="nx">pointer</span><span class="p">,</span>
+    <span class="nx">states</span> <span class="o">=</span> <span class="p">{</span><span class="nx">unitialized</span><span class="o">:</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">tag_commenced</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">tag_string</span><span class="o">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="nx">tag_string_single</span><span class="o">:</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="nx">comment</span><span class="o">:</span> <span class="o">-</span><span class="mi">3</span><span class="p">},</span>
+    <span class="nx">voidElements</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;area&#39;</span><span class="p">,</span> <span class="s1">&#39;base&#39;</span><span class="p">,</span> <span class="s1">&#39;br&#39;</span><span class="p">,</span> <span class="s1">&#39;col&#39;</span><span class="p">,</span> <span class="s1">&#39;command&#39;</span><span class="p">,</span> <span class="s1">&#39;embed&#39;</span><span class="p">,</span> <span class="s1">&#39;hr&#39;</span><span class="p">,</span> <span class="s1">&#39;img&#39;</span><span class="p">,</span> <span class="s1">&#39;input&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;keygen&#39;</span><span class="p">,</span> <span class="s1">&#39;link&#39;</span><span class="p">,</span> <span class="s1">&#39;meta&#39;</span><span class="p">,</span> <span class="s1">&#39;param&#39;</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;track&#39;</span><span class="p">,</span> <span class="s1">&#39;wbr&#39;</span><span class="p">];</span>
+
+<span class="kd">function</span> <span class="nx">getTagName</span><span class="p">(</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">tagName</span> <span class="o">=</span> <span class="p">(</span><span class="nx">tag</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">match</span><span class="p">(</span><span class="sr">/&lt;\/*([a-z0-9\:\-\_]+)/i</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">tagName</span> <span class="o">?</span> <span class="nx">tagName</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">:</span> <span class="kc">null</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">closeTag</span><span class="p">(</span><span class="nx">openingTag</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">tagName</span> <span class="o">=</span> <span class="p">(</span><span class="nx">getTagName</span><span class="p">(</span><span class="nx">openingTag</span><span class="p">))</span> <span class="o">?</span> <span class="s1">&#39;&lt;/&#39;</span> <span class="o">+</span> <span class="nx">getTagName</span><span class="p">(</span><span class="nx">openingTag</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&gt;&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">tagName</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">downzero</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">stack</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="nx">tagName</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="nx">tagBuffer</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="nx">truncatedText</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="nx">parseState</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="nx">pointer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">for</span> <span class="p">(;</span> <span class="nx">pointer</span> <span class="o">&lt;</span> <span class="nx">text</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">pointer</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">!==</span> <span class="nx">states</span><span class="p">.</span><span class="nx">unitialized</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">tagBuffer</span> <span class="o">+=</span> <span class="nx">text</span><span class="p">[</span><span class="nx">pointer</span><span class="p">];</span>
+        <span class="p">}</span>
+
+        <span class="k">switch</span> <span class="p">(</span><span class="nx">text</span><span class="p">[</span><span class="nx">pointer</span><span class="p">])</span> <span class="p">{</span>
+            <span class="k">case</span> <span class="s1">&#39;&lt;&#39;</span><span class="o">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">unitialized</span> <span class="o">&amp;&amp;</span> <span class="nx">text</span><span class="p">[</span><span class="nx">pointer</span> <span class="o">+</span> <span class="mi">1</span><span class="p">].</span><span class="nx">match</span><span class="p">(</span><span class="sr">/[a-z0-9\-\_\/\!]/</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_commenced</span><span class="p">;</span>
+                    <span class="nx">tagBuffer</span> <span class="o">+=</span> <span class="nx">text</span><span class="p">[</span><span class="nx">pointer</span><span class="p">];</span>
+                <span class="p">}</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="s1">&#39;!&#39;</span><span class="o">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_commenced</span> <span class="o">&amp;&amp;</span> <span class="nx">text</span><span class="p">[</span><span class="nx">pointer</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">===</span> <span class="s1">&#39;&lt;&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">comment</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="s1">&#39;\&quot;&#39;</span><span class="o">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_string</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_commenced</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_string_single</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>if double quote is found in a single quote string, ignore it and let the string finish</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">!==</span> <span class="nx">states</span><span class="p">.</span><span class="nx">unitialized</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_string</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="s1">&#39;\&#39;&#39;</span><span class="o">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_string_single</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_commenced</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_string</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">!==</span> <span class="nx">states</span><span class="p">.</span><span class="nx">unitialized</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_string_single</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="s1">&#39;&gt;&#39;</span><span class="o">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">tag_commenced</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">unitialized</span><span class="p">;</span>
+                    <span class="nx">truncatedText</span> <span class="o">+=</span> <span class="nx">tagBuffer</span><span class="p">;</span>
+                    <span class="nx">tagName</span> <span class="o">=</span> <span class="nx">getTagName</span><span class="p">(</span><span class="nx">tagBuffer</span><span class="p">);</span>
+
+                    <span class="k">if</span> <span class="p">(</span><span class="nx">tagBuffer</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/&lt;\s*\//</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">getTagName</span><span class="p">(</span><span class="nx">stack</span><span class="p">[</span><span class="nx">stack</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span> <span class="o">===</span> <span class="nx">tagName</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="nx">stack</span><span class="p">.</span><span class="nx">pop</span><span class="p">();</span>
+                    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">voidElements</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">tagName</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">tagBuffer</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/\/\s*&gt;$/</span><span class="p">))</span> <span class="p">{</span>
+                        <span class="nx">stack</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">tagBuffer</span><span class="p">);</span>
+                    <span class="p">}</span>
+                    <span class="nx">tagBuffer</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+                    <span class="k">continue</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">if</span> <span class="p">(</span><span class="nx">parseState</span> <span class="o">===</span> <span class="nx">states</span><span class="p">.</span><span class="nx">comment</span> <span class="o">&amp;&amp;</span> <span class="nx">text</span><span class="p">.</span><span class="nx">substring</span><span class="p">(</span><span class="nx">pointer</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="nx">pointer</span><span class="p">)</span> <span class="o">===</span> <span class="s1">&#39;--&#39;</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="nx">parseState</span> <span class="o">=</span> <span class="nx">states</span><span class="p">.</span><span class="nx">unitialized</span><span class="p">;</span>
+                    <span class="nx">truncatedText</span> <span class="o">+=</span> <span class="nx">tagBuffer</span><span class="p">;</span>
+                    <span class="nx">tagBuffer</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+
+                    <span class="k">continue</span><span class="p">;</span>
+                <span class="p">}</span>
+
+                <span class="k">break</span><span class="p">;</span>
+            <span class="k">case</span> <span class="s1">&#39;-&#39;</span><span class="o">:</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">parseState</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="nx">truncatedText</span> <span class="o">+=</span> <span class="nx">tagBuffer</span><span class="p">;</span>
+
+    <span class="k">while</span> <span class="p">(</span><span class="nx">stack</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">truncatedText</span> <span class="o">+=</span> <span class="nx">closeTag</span><span class="p">(</span><span class="nx">stack</span><span class="p">.</span><span class="nx">pop</span><span class="p">());</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nx">truncatedText</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">downzero</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

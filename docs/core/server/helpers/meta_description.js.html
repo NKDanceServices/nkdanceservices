@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>meta_description.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/meta_description.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#meta%20description%20helper">Meta Description Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="meta%20description%20helper">
+  <h1>
+    <a href="#meta%20description%20helper" name="meta%20description%20helper" class="pilcrow">&#182;</a>
+    Meta Description Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{meta_description}}</code></p>
+
+<p>Page description used for sharing and SEO</p>
+
+<p>We use the name meta_description to match the helper for consistency:
+jscs:disable requireCamelCaseOrUpperCaseIdentifiers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>      <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">meta_description</span><span class="p">;</span>
+
+<span class="nx">meta_description</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">options</span> <span class="o">=</span> <span class="nx">options</span> <span class="o">||</span> <span class="p">{};</span>
+
+    <span class="kd">var</span> <span class="nx">context</span> <span class="o">=</span> <span class="nx">options</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">root</span><span class="p">.</span><span class="nx">context</span><span class="p">,</span>
+        <span class="nx">description</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">meta_description</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">description</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">meta_description</span><span class="p">;</span>  <span class="c1">// E.g. in {{#foreach}}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="s1">&#39;paged&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">description</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="s1">&#39;home&#39;</span><span class="p">))</span> <span class="p">{</span>
+        <span class="nx">description</span> <span class="o">=</span> <span class="nx">config</span><span class="p">.</span><span class="nx">theme</span><span class="p">.</span><span class="nx">description</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="s1">&#39;author&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">author</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">description</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">bio</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="s1">&#39;tag&#39;</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">description</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tag</span><span class="p">.</span><span class="nx">meta_description</span><span class="p">;</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">((</span><span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="s1">&#39;post&#39;</span><span class="p">)</span> <span class="o">||</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="s1">&#39;page&#39;</span><span class="p">))</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">post</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">description</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">meta_description</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="nx">description</span> <span class="o">||</span> <span class="s1">&#39;&#39;</span><span class="p">).</span><span class="nx">trim</span><span class="p">();</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">meta_description</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

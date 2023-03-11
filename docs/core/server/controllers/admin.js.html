@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>admin.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/controllers/admin.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>admin.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">_</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">api</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../api&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">updateCheck</span>   <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../update-check&#39;</span><span class="p">),</span>
+    <span class="nx">config</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../config&#39;</span><span class="p">),</span>
+    <span class="nx">adminControllers</span><span class="p">;</span>
+
+<span class="nx">adminControllers</span> <span class="o">=</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Route: index
+Path: /ghost/
+Method: GET</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">index</span><span class="o">:</span> <span class="kd">function</span> <span class="nx">index</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="p">{</span>
+        <span class="cm">/*jslint unparam:true*/</span>
+
+        <span class="kd">function</span> <span class="nx">renderIndex</span><span class="p">()</span> <span class="p">{</span>
+            <span class="kd">var</span> <span class="nx">configuration</span><span class="p">;</span>
+            <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">configuration</span><span class="p">.</span><span class="nx">browse</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">configuration</span> <span class="o">=</span> <span class="nx">data</span><span class="p">.</span><span class="nx">configuration</span><span class="p">;</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">getAPIClient</span><span class="p">()</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">clients</span><span class="p">.</span><span class="nx">read</span><span class="p">({</span><span class="nx">slug</span><span class="o">:</span> <span class="s1">&#39;ghost-admin&#39;</span><span class="p">});</span>
+            <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">renderIndex</span><span class="p">(</span><span class="nx">adminClient</span><span class="p">)</span> <span class="p">{</span>
+                <span class="nx">configuration</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;clientId&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">adminClient</span><span class="p">.</span><span class="nx">clients</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">slug</span><span class="p">});</span>
+                <span class="nx">configuration</span><span class="p">.</span><span class="nx">push</span><span class="p">({</span><span class="nx">key</span><span class="o">:</span> <span class="s1">&#39;clientSecret&#39;</span><span class="p">,</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">adminClient</span><span class="p">.</span><span class="nx">clients</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nx">secret</span><span class="p">});</span>
+
+                <span class="kd">var</span> <span class="nx">apiConfig</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="nx">configuration</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">omit</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">_</span><span class="p">.</span><span class="nx">contains</span><span class="p">([</span><span class="s1">&#39;environment&#39;</span><span class="p">,</span> <span class="s1">&#39;database&#39;</span><span class="p">,</span> <span class="s1">&#39;mail&#39;</span><span class="p">,</span> <span class="s1">&#39;version&#39;</span><span class="p">],</span> <span class="nx">value</span><span class="p">.</span><span class="nx">key</span><span class="p">);</span>
+                <span class="p">});</span>
+
+                <span class="nx">res</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="s1">&#39;default&#39;</span><span class="p">,</span> <span class="p">{</span>
+                    <span class="nx">skip_google_fonts</span><span class="o">:</span> <span class="nx">config</span><span class="p">.</span><span class="nx">isPrivacyDisabled</span><span class="p">(</span><span class="s1">&#39;useGoogleFonts&#39;</span><span class="p">),</span>
+                    <span class="nx">configuration</span><span class="o">:</span> <span class="nx">apiConfig</span>
+                <span class="p">});</span>
+            <span class="p">});</span>
+        <span class="p">}</span>
+
+        <span class="nx">updateCheck</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">()</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">updateCheck</span><span class="p">.</span><span class="nx">showUpdateNotification</span><span class="p">();</span>
+        <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">updateVersion</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">updateVersion</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="kd">var</span> <span class="nx">notification</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;upgrade&#39;</span><span class="p">,</span>
+                <span class="nx">location</span><span class="o">:</span> <span class="s1">&#39;settings-about-upgrade&#39;</span><span class="p">,</span>
+                <span class="nx">dismissible</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+                <span class="nx">status</span><span class="o">:</span> <span class="s1">&#39;alert&#39;</span><span class="p">,</span>
+                <span class="nx">message</span><span class="o">:</span> <span class="s1">&#39;Ghost &#39;</span> <span class="o">+</span> <span class="nx">updateVersion</span> <span class="o">+</span> <span class="s1">&#39; is available! Hot Damn. &lt;a href=&quot;http://support.ghost.org/how-to-upgrade/&quot; target=&quot;_blank&quot;&gt;Click here&lt;/a&gt; to upgrade.&#39;</span>
+            <span class="p">};</span>
+
+            <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">notifications</span><span class="p">.</span><span class="nx">browse</span><span class="p">({</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">results</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">some</span><span class="p">(</span><span class="nx">results</span><span class="p">.</span><span class="nx">notifications</span><span class="p">,</span> <span class="p">{</span><span class="nx">message</span><span class="o">:</span> <span class="nx">notification</span><span class="p">.</span><span class="nx">message</span><span class="p">}))</span> <span class="p">{</span>
+                    <span class="k">return</span> <span class="nx">api</span><span class="p">.</span><span class="nx">notifications</span><span class="p">.</span><span class="nx">add</span><span class="p">({</span><span class="nx">notifications</span><span class="o">:</span> <span class="p">[</span><span class="nx">notification</span><span class="p">]},</span> <span class="p">{</span><span class="nx">context</span><span class="o">:</span> <span class="p">{</span><span class="nx">internal</span><span class="o">:</span> <span class="kc">true</span><span class="p">}});</span>
+                <span class="p">}</span>
+            <span class="p">});</span>
+        <span class="p">}).</span><span class="k">finally</span><span class="p">(</span><span class="kd">function</span> <span class="nx">noMatterWhat</span><span class="p">()</span> <span class="p">{</span>
+            <span class="nx">renderIndex</span><span class="p">();</span>
+        <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">adminControllers</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

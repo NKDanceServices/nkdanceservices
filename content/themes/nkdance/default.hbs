@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en-US">
+    <head>
+        {{! Document Settings }}
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0"/>
+        
+        {{! Page Meta }}
+        <title>{{#is "post"}}NK Dance Services - {{/is}}{{#is "page"}}NK Dance Services - {{/is}} {{meta_title}}</title>
+        <meta name="description" content="{{meta_description}}" />
+        <link rel="shortcut icon" type="image/x-icon" href="{{asset "images/favicon/favicon.ico"}}">
+
+        {{! Styles'n'Scripts }}
+        <link rel='stylesheet'  type='text/css' media='all' href="{{asset "css/settings.css"}}" />
+        <link rel='stylesheet'  type='text/css' media='all' href="{{asset "css/main.css"}}" />
+        <link rel='stylesheet'  type='text/css' media='all' href="{{asset "css/shop.css"}}" />
+        <link rel='stylesheet'  type='text/css' media='all' href="{{asset "css/font-awesome.min.css"}}" />
+        <link rel='stylesheet'  type='text/css' media='all' href="{{asset "css/custom.css"}}" />
+        <link rel="stylesheet" type="text/css" href="{{asset "css/fa-snapchat.css"}}" />
+        <!-- Google fonts -->
+        <link href='http://fonts.googleapis.com/css?family=Quicksand:300,400,700' rel='stylesheet' type='text/css'>
+        <link rel='stylesheet' href='http://fonts.googleapis.com/css?family=PT+Sans:100,300,400,500,600,700,900,100italic,300italic,400italic,500italic,600italic,700italic,900italic' type='text/css' media='all'/>
+
+        <link id="style-main-color" rel="stylesheet" href="{{asset "css/colors/default.css"}}">
+        <script type='text/javascript' src="{{asset "js/libs/jquery.js"}}"></script>
+
+        <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+            <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+        <![endif]-->
+        <script src='https://www.google.com/recaptcha/api.js'></script>
+        {{! Ghost outputs important style and meta data with this tag }}
+        {{ghost_head}}
+    </head>
+    <body {{#is "home"}} class="home page-menu-center-vertical" {{/is}} {{#is "post"}} class="single single-post" {{/is}} {{#is "page"}} class="single single-noo_class" {{/is}}>
+        <div class="site">
+            
+            {{{body}}}
+            
+            <!-- Start Main Footer -->
+            {{> "main-footer"}}
+            <!-- End Main Footer -->
+            <!-- Start Mini Footer -->
+            {{> "mini-footer"}}
+            <!-- End Mini Footer -->
+            
+        </div>
+        <!-- End Site Wrapper -->
+        
+        <a href="#" class="go-to-top"><i class="fa fa-angle-up"></i></a>
+        {{> "templates"}}
+        {{> "bloghome"}}
+        <script type='text/javascript' src="{{asset "js/libs/underscore-min.js"}}"></script>
+        {{ghost_foot}}
+        <script type='text/javascript' src="{{asset "js/posts.js"}}"></script>
+        <script type="text/javascript" src="{{asset "js/libs/jquery.cookie.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/jquery-migrate.min.js"}}"></script>
+        {{#is "home"}}
+        <script type='text/javascript' src="{{asset "js/libs/jquery.themepunch.tools.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/jquery.themepunch.revolution.min.js"}}"></script>
+        {{/is}}
+        <script type='text/javascript' src="{{asset "js/libs/modernizr-2.7.1.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/jquery.touchSwipe.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/bootstrap.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/hoverIntent-r7.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/superfish-1.7.4.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/imagesloaded.pkgd.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/isotope-2.0.0.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/main.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/libs/jquery.carouFredSel-6.2.1.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/contactus.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/loadYT.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/playerYT.js"}}"></script>
+        <script src="https://apis.google.com/js/client.js?onload=initYT"></script>
+        <script type='text/javascript' src="{{asset "js/libs/twitterFetcher.min.js"}}"></script>
+        <script type='text/javascript' src="{{asset "js/twitter.js"}}"></script>
+        {{#is "post"}} <script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-56fc056f7d46e897"></script> {{/is}}
+
+        {{#is "home"}}
+        <script type="text/javascript">
+
+            /******************************************
+                -   PREPARE PLACEHOLDER FOR SLIDER  -
+            ******************************************/
+            
+
+            var setREVStartSize = function() {
+                var tpopt = new Object();
+                    tpopt.startwidth = 1170;
+                    tpopt.startheight = 350;
+                    tpopt.container = jQuery('#rev-slider');
+                    tpopt.fullScreen = "on";
+                    tpopt.forceFullWidth="on";
+
+                tpopt.container.closest(".rev_slider_wrapper").css({
+                    height: tpopt.container.height()
+                });
+                tpopt.width = parseInt(tpopt.container.width(), 0);
+                tpopt.height = parseInt(tpopt.container.height(), 0);
+                tpopt.bw = tpopt.width / tpopt.startwidth;
+                tpopt.bh = tpopt.height / tpopt.startheight;
+                if (tpopt.bh > tpopt.bw) tpopt.bh = tpopt.bw;
+                if (tpopt.bh < tpopt.bw) tpopt.bw = tpopt.bh;
+                if (tpopt.bw < tpopt.bh) tpopt.bh = tpopt.bw;
+                if (tpopt.bh > 1) {
+                    tpopt.bw = 1;
+                    tpopt.bh = 1
+                }
+                if (tpopt.bw > 1) {
+                    tpopt.bw = 1;
+                    tpopt.bh = 1
+                }
+                tpopt.height = Math.round(tpopt.startheight * (tpopt.width / tpopt.startwidth));
+                if (tpopt.height > tpopt.startheight && tpopt.autoHeight != "on") tpopt.height = tpopt.startheight;
+                if (tpopt.fullScreen == "on") {
+                    tpopt.height = tpopt.bw * tpopt.startheight;
+                    var cow = tpopt.container.parent().width();
+                    var coh = jQuery(window).height();
+                    if (tpopt.fullScreenOffsetContainer != undefined) {
+                        try {
+                            var offcontainers = tpopt.fullScreenOffsetContainer.split(",");
+                            jQuery.each(offcontainers, function(e, t) {
+                                coh = coh - jQuery(t).outerHeight(true);
+                                if (coh < tpopt.minFullScreenHeight) coh = tpopt.minFullScreenHeight
+                            })
+                        } catch (e) {}
+                    }
+                    tpopt.container.parent().height(coh);
+                    tpopt.container.height(coh);
+                    tpopt.container.closest(".rev_slider_wrapper").height(coh);
+                    tpopt.container.closest(".forcefullwidth_wrapper_tp_banner").find(".tp-fullwidth-forcer").height(coh);
+                    tpopt.container.css({
+                        height: "100%"
+                    });
+                    tpopt.height = coh;
+                } else {
+                    tpopt.container.height(tpopt.height);
+                    tpopt.container.closest(".rev_slider_wrapper").height(tpopt.height);
+                    tpopt.container.closest(".forcefullwidth_wrapper_tp_banner").find(".tp-fullwidth-forcer").height(tpopt.height);
+                }
+            };
+
+            /* CALL PLACEHOLDER */
+            setREVStartSize();
+
+
+            var tpj=jQuery;
+            tpj.noConflict();
+            var revapi2;
+
+            tpj(document).ready(function() {
+
+            if(tpj('#rev-slider').revolution == undefined){
+                revslider_showDoubleJqueryError('#rev-slider');
+            }else{
+                revapi2 = tpj('#rev-slider').show().revolution({    
+                    dottedOverlay:"none",
+                    delay:9000,
+                    startwidth:1170,
+                    startheight:350,
+                    hideThumbs:200,
+
+                    thumbWidth:100,
+                    thumbHeight:50,
+                    thumbAmount:2,
+                    
+                                            
+                    simplifyAll:"off",
+
+                    navigationType:"none",
+                    navigationArrows:"none",
+                    navigationStyle:"round-old",
+
+                    touchenabled:"on",
+                    onHoverStop:"off",
+                    nextSlideOnWindowFocus:"off",
+
+                    swipe_threshold: 75,
+                    swipe_min_touches: 1,
+                    drag_block_vertical: false,
+                    
+                                            
+                                            
+                    keyboardNavigation:"off",
+
+                    navigationHAlign:"center",
+                    navigationVAlign:"bottom",
+                    navigationHOffset:0,
+                    navigationVOffset:20,
+
+                    soloArrowLeftHalign:"left",
+                    soloArrowLeftValign:"center",
+                    soloArrowLeftHOffset:20,
+                    soloArrowLeftVOffset:0,
+
+                    soloArrowRightHalign:"right",
+                    soloArrowRightValign:"center",
+                    soloArrowRightHOffset:20,
+                    soloArrowRightVOffset:0,
+
+                    shadow:0,
+                    fullWidth:"off",
+                    fullScreen:"on",
+
+                    spinner:"spinner0",
+                                            
+                    stopLoop:"off",
+                    stopAfterLoops:-1,
+                    stopAtSlide:-1,
+
+                    shuffle:"off",
+
+                    
+                    forceFullWidth:"on",
+                    fullScreenAlignForce:"off",
+                    minFullScreenHeight:"",
+                    
+                    hideThumbsOnMobile:"off",
+                    hideNavDelayOnMobile:1500,
+                    hideBulletsOnMobile:"off",
+                    hideArrowsOnMobile:"off",
+                    hideThumbsUnderResolution:0,
+
+                    fullScreenOffsetContainer: "",
+                    fullScreenOffset: "",
+                    hideSliderAtLimit:0,
+                    hideCaptionAtLimit:0,
+                    hideAllCaptionAtLilmit:0,
+                    startWithSlide:0
+                });
+                }
+            }); /*ready*/
+
+        </script>
+        {{/is}}
+        
+        <script>
+            jQuery('document').ready(function ($) {
+                $('#noo-gallery .sliders').carouFredSel({
+                    infinite: true,
+                    circular: true,
+                    auto: false,
+                    responsive: true,
+                    prev: { button: "#noo-gallery-prev" },
+                    next: { button: "#noo-gallery-next" },
+                    pagination: { container: "#noo-gallery-pagination" }
+                });
+            });
+        </script>
+
+        <script type="text/javascript">
+            jQuery('document').ready(function ($) {
+                var postSliderOptions = {
+                    infinite: true,
+                    circular: true,
+                    responsive: true,
+                    debug : false,
+                    width: '100%',
+                    height: 'variable',
+                    scroll: {
+                        items: 1,
+                        duration: 600,
+                        pauseOnHover: "resume",
+                        fx: "scroll"
+                    },
+                    auto: {
+                        timeoutDuration: 3000,
+                        play: false
+                    },
+
+                    prev : {button:".noo-class .noo_slider_prev"},
+                    next : {button:".noo-class .noo_slider_next"},
+                    swipe: {
+                        onTouch: true,
+                        onMouse: true
+                    },
+                    items: {
+                        visible: {
+                            min: 1,
+                            max: 1                            },
+                        height:'variable'
+                    },
+                    pagination: {
+                        container: "#noo-class-slider-pagination"
+                    }
+                };
+                jQuery('.noo-class .widget-class-slider-content').carouFredSel(postSliderOptions);
+                jQuery(window).resize(function(){
+                    jQuery('.noo-class .widget-class-slider-content').trigger("destroy").carouFredSel(postSliderOptions);
+                });
+
+            });
+        </script>
+        {{> "disqus_count"}}
+    </body>
+</html>

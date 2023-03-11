@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>excerpt.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/excerpt.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#excerpt%20helper">Excerpt Helper</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="excerpt%20helper">
+  <h1>
+    <a href="#excerpt%20helper" name="excerpt%20helper" class="pilcrow">&#182;</a>
+    Excerpt Helper
+  </h1>
+</div>
+
+
+<p>Usage: <code>{{excerpt}}</code>, <code>{{excerpt words="50"}}</code>, <code>{{excerpt characters="256"}}</code></p>
+
+<p>Attempts to remove all HTML from the string, and then shortens the result according to the provided option.</p>
+
+<p>Defaults to words="50"</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">hbs</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">_</span>               <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+    <span class="nx">downsize</span>        <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;downsize&#39;</span><span class="p">),</span>
+    <span class="nx">excerpt</span><span class="p">;</span>
+
+<span class="nx">excerpt</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">options</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">truncateOptions</span> <span class="o">=</span> <span class="p">(</span><span class="nx">options</span> <span class="o">||</span> <span class="p">{}).</span><span class="nx">hash</span> <span class="o">||</span> <span class="p">{},</span>
+        <span class="nx">excerpt</span><span class="p">;</span>
+
+    <span class="nx">truncateOptions</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">pick</span><span class="p">(</span><span class="nx">truncateOptions</span><span class="p">,</span> <span class="p">[</span><span class="s1">&#39;words&#39;</span><span class="p">,</span> <span class="s1">&#39;characters&#39;</span><span class="p">]);</span>
+    <span class="nx">_</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">truncateOptions</span><span class="p">).</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">key</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">truncateOptions</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">truncateOptions</span><span class="p">[</span><span class="nx">key</span><span class="p">],</span> <span class="mi">10</span><span class="p">);</span>
+    <span class="p">});</span>
+
+    <span class="cm">/*jslint regexp:true */</span>
+    <span class="nx">excerpt</span> <span class="o">=</span> <span class="nb">String</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">html</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Strip inline and bottom footnotes</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">excerpt</span> <span class="o">=</span> <span class="nx">excerpt</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&lt;a href=&quot;#fn.*?rel=&quot;footnote&quot;&gt;.*?&lt;\/a&gt;/gi</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="nx">excerpt</span> <span class="o">=</span> <span class="nx">excerpt</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&lt;div class=&quot;footnotes&quot;&gt;&lt;ol&gt;.*?&lt;\/ol&gt;&lt;\/div&gt;/</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Strip other html</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">excerpt</span> <span class="o">=</span> <span class="nx">excerpt</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&lt;\/?[^&gt;]+&gt;/gi</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">);</span>
+    <span class="nx">excerpt</span> <span class="o">=</span> <span class="nx">excerpt</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/(\r\n|\n|\r)+/gm</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">);</span>
+    <span class="cm">/*jslint regexp:false */</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">truncateOptions</span><span class="p">.</span><span class="nx">words</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="nx">truncateOptions</span><span class="p">.</span><span class="nx">characters</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">truncateOptions</span><span class="p">.</span><span class="nx">words</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="k">new</span> <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">SafeString</span><span class="p">(</span>
+        <span class="nx">downsize</span><span class="p">(</span><span class="nx">excerpt</span><span class="p">,</span> <span class="nx">truncateOptions</span><span class="p">)</span>
+    <span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">excerpt</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

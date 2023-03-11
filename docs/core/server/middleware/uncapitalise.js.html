@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>uncapitalise.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/middleware/uncapitalise.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h1">
+        <a href="#uncapitalise%20middleware">uncapitalise Middleware</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="uncapitalise%20middleware">
+  <h1>
+    <a href="#uncapitalise%20middleware" name="uncapitalise%20middleware" class="pilcrow">&#182;</a>
+    uncapitalise Middleware
+  </h1>
+</div>
+
+
+<p>Usage: uncapitalise(req, res, next)
+After:
+Before:
+App: Admin|Blog|API</p>
+
+<p>Detect upper case in req.path.</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">utils</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../utils&#39;</span><span class="p">),</span>
+    <span class="nx">uncapitalise</span><span class="p">;</span>
+
+<span class="nx">uncapitalise</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">uncapitalise</span><span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">next</span><span class="p">)</span> <span class="p">{</span>
+    <span class="cm">/*jslint unparam:true*/</span>
+    <span class="kd">var</span> <span class="nx">pathToTest</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span>
+        <span class="nx">isSignupOrReset</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">path</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/(\/ghost\/(signup|reset)\/)/i</span><span class="p">),</span>
+        <span class="nx">isAPI</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">path</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/(\/ghost\/api\/v[\d\.]+\/.*?\/)/i</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isSignupOrReset</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">pathToTest</span> <span class="o">=</span> <span class="nx">isSignupOrReset</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Do not lowercase anything after /api/v0.1/ to protect :key/:slug</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isAPI</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">pathToTest</span> <span class="o">=</span> <span class="nx">isAPI</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>
+    <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>In node &lt; 0.11.1 req.path is not encoded, afterwards, it is always encoded such that | becomes %7C etc.
+That encoding isn't useful here, as it triggers an extra uncapitalise redirect, so we decode the path first</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="k">if</span> <span class="p">(</span><span class="sr">/[A-Z]/</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nb">decodeURIComponent</span><span class="p">(</span><span class="nx">pathToTest</span><span class="p">)))</span> <span class="p">{</span>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;Cache-Control&#39;</span><span class="p">,</span> <span class="s1">&#39;public, max-age=&#39;</span> <span class="o">+</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">ONE_YEAR_S</span><span class="p">);</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Adding baseUrl ensures subdirectories are kept</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">res</span><span class="p">.</span><span class="nx">redirect</span><span class="p">(</span><span class="mi">301</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">.</span><span class="nx">baseUrl</span> <span class="o">?</span> <span class="nx">req</span><span class="p">.</span><span class="nx">baseUrl</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="nx">req</span><span class="p">.</span><span class="nx">url</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="nx">pathToTest</span><span class="p">,</span> <span class="nx">pathToTest</span><span class="p">.</span><span class="nx">toLowerCase</span><span class="p">()));</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="nx">next</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">uncapitalise</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

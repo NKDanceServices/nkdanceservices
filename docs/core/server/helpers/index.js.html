@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/helpers/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">hbs</span>             <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;express-hbs&#39;</span><span class="p">),</span>
+    <span class="nx">Promise</span>         <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">errors</span>          <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../errors&#39;</span><span class="p">),</span>
+    <span class="nx">utils</span>           <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./utils&#39;</span><span class="p">),</span>
+    <span class="nx">coreHelpers</span>     <span class="o">=</span> <span class="p">{},</span>
+    <span class="nx">registerHelpers</span><span class="p">;</span>
+
+<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">utils</span><span class="p">.</span><span class="nx">isProduction</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">hbs</span><span class="p">.</span><span class="nx">handlebars</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">level</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">asset</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./asset&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">author</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./author&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">body_class</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./body_class&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">content</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./content&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">date</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./date&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">encode</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./encode&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">excerpt</span>  <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./excerpt&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">foreach</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./foreach&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">get</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./get&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">ghost_foot</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./ghost_foot&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">ghost_head</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./ghost_head&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">image</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./image&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">is</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./is&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">has</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./has&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">meta_description</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./meta_description&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">meta_title</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./meta_title&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">navigation</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./navigation&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">pagination</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./pagination&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">plural</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./plural&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">post_class</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./post_class&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">prev_post</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./prev_next&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">next_post</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./prev_next&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">tags</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./tags&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">title</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./title&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">url</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./url&#39;</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<p>Specialist helpers for certain templates</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">input_password</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./input_password&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">page_url</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./page_url&#39;</span><span class="p">);</span>
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">pageUrl</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./page_url&#39;</span><span class="p">).</span><span class="nx">deprecated</span><span class="p">;</span>
+
+<span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">helperMissing</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">arg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="nx">arguments</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="kc">undefined</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">errors</span><span class="p">.</span><span class="nx">logError</span><span class="p">(</span><span class="s1">&#39;Missing helper: &quot;&#39;</span> <span class="o">+</span> <span class="nx">arg</span> <span class="o">+</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">);</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<p>Register an async handlebars helper for a given handlebars instance</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">registerAsyncHelper</span><span class="p">(</span><span class="nx">hbs</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">hbs</span><span class="p">.</span><span class="nx">registerAsyncHelper</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">context</span><span class="p">,</span> <span class="nx">options</span><span class="p">,</span> <span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-4" id="section-4">&#182;</a>
+</div>
+<p>Handle the case where we only get context and cb</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">cb</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">cb</span> <span class="o">=</span> <span class="nx">options</span><span class="p">;</span>
+            <span class="nx">options</span> <span class="o">=</span> <span class="kc">undefined</span><span class="p">;</span>
+        <span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<p>Wrap the function passed in with a when.resolve so it can return either a promise or a value</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+        <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">fn</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">context</span><span class="p">,</span> <span class="nx">options</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">cb</span><span class="p">(</span><span class="nx">result</span><span class="p">);</span>
+        <span class="p">}).</span><span class="k">catch</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">err</span><span class="p">)</span> <span class="p">{</span>
+            <span class="nx">errors</span><span class="p">.</span><span class="nx">logAndThrowError</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span> <span class="s1">&#39;registerAsyncThemeHelper: &#39;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">);</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-6" id="section-6">&#182;</a>
+</div>
+<p>Register a handlebars helper for themes</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">hbs</span><span class="p">.</span><span class="nx">registerHelper</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-7" id="section-7">&#182;</a>
+</div>
+<p>Register an async handlebars helper for themes</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">registerAsyncThemeHelper</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">registerAsyncHelper</span><span class="p">(</span><span class="nx">hbs</span><span class="p">,</span> <span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">);</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-8" id="section-8">&#182;</a>
+</div>
+<p>Register a handlebars helper for admin</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="kd">function</span> <span class="nx">registerAdminHelper</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">adminHbs</span><span class="p">.</span><span class="nx">registerHelper</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span> <span class="nx">fn</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="nx">registerHelpers</span> <span class="o">=</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">adminHbs</span><span class="p">)</span> <span class="p">{</span>
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-9" id="section-9">&#182;</a>
+</div>
+<p>Expose hbs instance for admin</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">adminHbs</span> <span class="o">=</span> <span class="nx">adminHbs</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-10" id="section-10">&#182;</a>
+</div>
+<p>Register theme helpers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">asset</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;author&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">author</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;body_class&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">body_class</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">content</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;date&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">date</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;encode&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">encode</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;excerpt&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">excerpt</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;foreach&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">foreach</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;has&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">has</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;is&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">is</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">image</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;input_password&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">input_password</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;meta_description&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">meta_description</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;meta_title&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">meta_title</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;navigation&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">navigation</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;page_url&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">page_url</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;pageUrl&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">pageUrl</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;pagination&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">pagination</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;plural&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">plural</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;post_class&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">post_class</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">tags</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">title</span><span class="p">);</span>
+    <span class="nx">registerThemeHelper</span><span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">url</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-11" id="section-11">&#182;</a>
+</div>
+<p>Async theme helpers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">registerAsyncThemeHelper</span><span class="p">(</span><span class="s1">&#39;ghost_foot&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">ghost_foot</span><span class="p">);</span>
+    <span class="nx">registerAsyncThemeHelper</span><span class="p">(</span><span class="s1">&#39;ghost_head&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">ghost_head</span><span class="p">);</span>
+    <span class="nx">registerAsyncThemeHelper</span><span class="p">(</span><span class="s1">&#39;next_post&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">next_post</span><span class="p">);</span>
+    <span class="nx">registerAsyncThemeHelper</span><span class="p">(</span><span class="s1">&#39;prev_post&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">prev_post</span><span class="p">);</span>
+    <span class="nx">registerAsyncThemeHelper</span><span class="p">(</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">get</span><span class="p">);</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-12" id="section-12">&#182;</a>
+</div>
+<p>Register admin helpers</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+    <span class="nx">registerAdminHelper</span><span class="p">(</span><span class="s1">&#39;asset&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">asset</span><span class="p">);</span>
+    <span class="nx">registerAdminHelper</span><span class="p">(</span><span class="s1">&#39;input_password&#39;</span><span class="p">,</span> <span class="nx">coreHelpers</span><span class="p">.</span><span class="nx">input_password</span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">coreHelpers</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">loadCoreHelpers</span> <span class="o">=</span> <span class="nx">registerHelpers</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">registerThemeHelper</span> <span class="o">=</span> <span class="nx">registerThemeHelper</span><span class="p">;</span>
+<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">.</span><span class="nx">registerAsyncThemeHelper</span> <span class="o">=</span> <span class="nx">registerAsyncThemeHelper</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>

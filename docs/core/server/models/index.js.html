@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" media="all" href="../../../doc-style.css" />
+  <script src="../../../doc-filelist.js"></script>
+  <script>
+    var relativeDir = "../../../", thisFile = "core/server/models/index.js", defaultSidebar = true;
+  </script>
+  <script src="../../../doc-script.js"></script>
+  <script src="../../../fileSearch.js"></script>
+  <link rel="stylesheet" href="../../../fileSearch.css" />
+</head>
+<body>
+  <div id="sidebar_wrapper">
+    <div id="sidebar_switch">
+      <span class="tree">Files</span>
+      <span class="headings">Headings</span>
+    </div>
+    <div id="tree"></div>
+    <div id="headings">
+      <div class="heading h3">
+        <a href="#deleteallcontent">deleteAllContent</a>
+      </div>
+    </div>
+  </div>
+  <div id="sidebar-toggle"></div>
+  <div id="container"><div class="background highlight"></div>
+<table cellpadding="0" cellspacing="0">
+  <tbody>
+      <tr>
+        <td class="docs">
+          <h1>index.js</h1>
+        </td>
+        <td class="code highlight"></td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-1" id="section-1">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Dependencies</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;bluebird&#39;</span><span class="p">),</span>
+    <span class="nx">_</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;lodash&#39;</span><span class="p">),</span>
+
+    <span class="nx">exports</span><span class="p">,</span>
+    <span class="nx">models</span><span class="p">;</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-2" id="section-2">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Expose all models</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="nx">exports</span> <span class="o">=</span> <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="p">;</span>
+
+<span class="nx">models</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;accesstoken&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;app-field&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;app-setting&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;app&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;client-trusted-domain&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;client&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;permission&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;post&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;refreshtoken&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;role&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;settings&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;tag&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;user&#39;</span>
+<span class="p">];</span>
+
+<span class="kd">function</span> <span class="nx">init</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">exports</span><span class="p">.</span><span class="nx">Base</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./base&#39;</span><span class="p">);</span>
+
+    <span class="nx">models</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">name</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">(</span><span class="nx">exports</span><span class="p">,</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./&#39;</span> <span class="o">+</span> <span class="nx">name</span><span class="p">));</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">();</span>
+<span class="p">}</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-3" id="section-3">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>TODO: move to some other place</p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap" id="deleteallcontent">
+  <h3>
+    <a href="#deleteallcontent" name="deleteallcontent" class="pilcrow">&#182;</a>
+    deleteAllContent
+  </h3>
+</div>
+
+
+<p>Delete all content from the database (posts, tags, tags_posts)</p>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+<span class="nx">exports</span><span class="p">.</span><span class="nx">deleteAllContent</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">deleteAllContent</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">self</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">Post</span><span class="p">.</span><span class="nx">findAll</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">posts</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">posts</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span> <span class="kd">function</span> <span class="nx">mapper</span><span class="p">(</span><span class="nx">post</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">Post</span><span class="p">.</span><span class="nx">destroy</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">post</span><span class="p">.</span><span class="nx">id</span><span class="p">});</span>
+        <span class="p">}));</span>
+    <span class="p">}).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">findAll</span><span class="p">().</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span> <span class="nx">then</span><span class="p">(</span><span class="nx">tags</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">tags</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span> <span class="kd">function</span> <span class="nx">mapper</span><span class="p">(</span><span class="nx">tag</span><span class="p">)</span> <span class="p">{</span>
+                <span class="k">return</span> <span class="nx">self</span><span class="p">.</span><span class="nx">Tag</span><span class="p">.</span><span class="nx">destroy</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="nx">tag</span><span class="p">.</span><span class="nx">id</span><span class="p">});</span>
+            <span class="p">}));</span>
+        <span class="p">});</span>
+    <span class="p">});</span>
+<span class="p">};</span>
+
+
+</pre></div>
+        </td>
+      </tr>
+      <tr>
+        <td class="docs">
+<div class="pilwrap">
+  <a class="pilcrow" href="#section-5" id="section-5">&#182;</a>
+</div>
+<div class="dox">
+  <div class="summary"><p>Expose <code>init</code></p>
+  </div>
+  <div class="body">
+  </div>
+</div>
+        </td>
+        <td class="code highlight"><div class="highlight"><pre>
+
+<span class="nx">exports</span><span class="p">.</span><span class="nx">init</span> <span class="o">=</span> <span class="nx">init</span><span class="p">;</span>
+</pre></div>
+        </td>
+      </tr>
+  </tbody>
+</table>
+  </div>
+</body>
+</html>
